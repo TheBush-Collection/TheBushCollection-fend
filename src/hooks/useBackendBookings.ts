@@ -1,0 +1,231 @@
+import { useState, useEffect, useCallback } from 'react';
+import api from '@/lib/api';
+
+export type SafariBooking = {
+  id: string;
+  bookingId?: string;
+  confirmationNumber?: string;
+  guest_name?: string;
+  guest_email?: string;
+  guest_phone?: string;
+  property_name?: string;
+  package_id?: string;
+  safari_properties?: { name?: string } | null;
+  room_name?: string;
+  check_in?: string;
+  check_out?: string;
+  total_guests?: number;
+  adults?: number;
+  children?: number;
+  total_amount?: number;
+  status?: string;
+  created_at?: string;
+  special_requirements?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  transfer_details?: any;
+  deposit_paid?: number;
+  balance_due?: number;
+  // Keep original backend object handy
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _raw?: any;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mapBackendToUi = (b: any): SafariBooking => {
+  const id = b._id || b.id || b.bookingId || b.bookingId;
+  const statusMap: Record<string, string> = {
+    pending: 'inquiry',
+    deposit_paid: 'deposit-paid',
+    fully_paid: 'fully-paid',
+    confirmed: 'confirmed',
+    cancelled: 'cancelled'
+  };
+
+  const status = statusMap[b.status] || (b.status ? b.status.replace(/_/g, '-') : b.status);
+
+  const total = b.costs?.total ?? b.total ?? 0;
+  const amountPaid = b.amountPaid ?? b.deposit_paid ?? 0;
+  const balance = Math.max(0, total - amountPaid);
+
+  return {
+    id,
+    bookingId: b.bookingId,
+    confirmationNumber: b.confirmationNumber || b.confirmation_number || undefined,
+    guest_name: b.customerName || b.guest_name,
+    guest_email: b.customerEmail || b.guest_email,
+    guest_phone: b.customerPhone || b.guest_phone,
+    property_name: b.property?.name || b.property_name || (b.safari_properties && b.safari_properties.name),
+    safari_properties: b.property ? { name: b.property.name } : (b.safari_properties || null),
+    package_id: b.package?._id || b.packageId || b.package || b.package_id,
+    room_name: (b.rooms && b.rooms[0] && b.rooms[0].roomName) || b.room_name,
+    check_in: b.checkInDate ? new Date(b.checkInDate).toISOString() : b.check_in,
+    check_out: b.checkOutDate ? new Date(b.checkOutDate).toISOString() : b.check_out,
+    total_guests: b.totalGuests ?? b.total_guests ?? (b.adults || 0) + (b.children || 0),
+    adults: b.adults,
+    children: b.children,
+    total_amount: total,
+    status,
+    created_at: b.createdAt || b.created_at,
+    special_requirements: b.specialRequests || b.special_requirements,
+    transfer_details: b.airportTransfer || b.transfer_details,
+    deposit_paid: amountPaid,
+    balance_due: balance,
+    _raw: b
+  };
+};
+
+export const useBackendBookings = () => {
+  const [bookings, setBookings] = useState<SafariBooking[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [total, setTotal] = useState<number | null>(null);
+
+  const fetchAdminBookings = useCallback(async (params?: { status?: string; page?: number; limit?: number; search?: string }) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await api.get('/bookings/admin/bookings', { params });
+      // controller returns { data: bookings, total }
+      const data = res.data?.data ?? res.data ?? [];
+      const mapped = (Array.isArray(data) ? data : []).map(mapBackendToUi);
+      setBookings(mapped);
+      if (res.data?.total !== undefined) setTotal(res.data.total);
+      return mapped;
+    } catch (err: unknown) {
+      console.error('Failed to fetch admin bookings', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch bookings');
+      return [] as SafariBooking[];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const getAdminBooking = async (id: string) => {
+    try {
+      setLoading(true);
+      const res = await api.get(`/bookings/admin/bookings/${id}`);
+      return mapBackendToUi(res.data);
+    } catch (err: unknown) {
+      console.error('Failed to get booking', err);
+      setError(err instanceof Error ? err.message : 'Failed to get booking');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getBookingConfirmation = async (id: string) => {
+    try {
+      setLoading(true);
+      const res = await api.get(`/bookings/booking-confirmation/${id}`);
+      return res.data;
+    } catch (err: unknown) {
+      console.error('Failed to get booking confirmation', err);
+      setError(err instanceof Error ? err.message : 'Failed to get booking confirmation');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const createBooking = async (payload: any) => {
+    try {
+      setLoading(true);
+      const res = await api.post('/bookings/create', payload);
+      // API returns { success: true, booking }
+      const created = res.data?.booking ?? res.data;
+      const mapped = created ? mapBackendToUi(created) : null;
+      // Optionally refresh list
+      await fetchAdminBookings();
+      return mapped ?? res.data;
+    } catch (err: unknown) {
+      console.error('Failed to create booking', err);
+      setError(err instanceof Error ? err.message : 'Failed to create booking');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Admin actions
+  const setDepositPaid = async (id: string) => {
+    const res = await api.post(`/bookings/admin/bookings/${id}/deposit`);
+    await fetchAdminBookings();
+    return res.data;
+  };
+
+  const setConfirmed = async (id: string) => {
+    const res = await api.post(`/bookings/admin/bookings/${id}/confirm`);
+    await fetchAdminBookings();
+    return res.data;
+  };
+
+  const setFullyPaid = async (id: string) => {
+    const res = await api.post(`/bookings/admin/bookings/${id}/paid`);
+    await fetchAdminBookings();
+    return res.data;
+  };
+
+  const reopenBooking = async (id: string) => {
+    const res = await api.post(`/bookings/admin/bookings/${id}/reopen`);
+    await fetchAdminBookings();
+    return res.data;
+  };
+
+  const cancelBooking = async (id: string) => {
+    const res = await api.post(`/bookings/${id}/cancel`);
+    await fetchAdminBookings();
+    return res.data;
+  };
+
+  // Provide a generic updateBooking that maps status updates to admin endpoints
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateBooking = async (id: string, updates: any) => {
+    // Check for status changes and call appropriate endpoints
+    if (updates.status) {
+      const status = updates.status;
+      if (status === 'deposit-paid' || status === 'deposit_paid') return setDepositPaid(id);
+      if (status === 'fully-paid' || status === 'fully_paid') return setFullyPaid(id);
+      if (status === 'confirmed') return setConfirmed(id);
+      if (status === 'cancelled') return cancelBooking(id);
+      if (status === 'inquiry' || status === 'pending') return reopenBooking(id);
+    }
+
+    // If there are other updates not covered by admin endpoints, attempt to PATCH the booking (if backend supports it)
+    try {
+      const res = await api.patch(`/bookings/admin/bookings/${id}`, updates);
+      await fetchAdminBookings();
+      return res.data;
+    } catch (err) {
+      console.warn('PATCH not supported or failed, refetching bookings', err);
+      await fetchAdminBookings();
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    // Initial load
+    fetchAdminBookings();
+  }, [fetchAdminBookings]);
+
+  return {
+    bookings,
+    loading,
+    error,
+    total,
+    refetch: fetchAdminBookings,
+    fetchAdminBookings,
+    getAdminBooking,
+    getBookingConfirmation,
+    createBooking,
+    setDepositPaid,
+    setConfirmed,
+    setFullyPaid,
+    reopenBooking,
+    cancelBooking,
+    updateBooking
+  };
+};
+
+export default useBackendBookings;

@@ -1,0 +1,400 @@
+import { useState, useEffect, useCallback } from 'react';
+import api, { initAuthFromStorage, setAuthToken } from '@/lib/api';
+
+export interface Property {
+  id?: string;
+  _id?: string;
+  name: string;
+  location: string;
+  description: string;
+  type: string;
+  basePricePerNight?: number;
+  price?: number;
+  maxGuests: number;
+  rating: number;
+  numReviews?: number;
+  reviews?: number;
+  amenities: string[];
+  images: string[];
+  videos?: string[];
+  featured: boolean;
+  rooms?: Room[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Room {
+  id?: string;
+  _id?: string;
+  name: string;
+  type: string;
+  price: number;
+  max_guests?: number;
+  maxGuests?: number;
+  available: boolean;
+  amenities: string[];
+  images: string[];
+  description?: string;
+  property?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface UseBackendPropertiesOptions {
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+const API_BASE = '';
+
+export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Initialize auth header from localStorage (if present)
+  useEffect(() => {
+    initAuthFromStorage();
+  }, []);
+
+  const fetchProperties = useCallback(async (opts?: UseBackendPropertiesOptions) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Build query parameters
+      const params = new URLSearchParams();
+
+      if (opts?.search && opts.search !== '') {
+        params.append('search', opts.search);
+      }
+      if (opts?.page) {
+        params.append('page', opts.page.toString());
+      }
+      if (opts?.limit) {
+        params.append('limit', opts.limit.toString());
+      }
+
+  const endpoint = '/properties/collections';
+  const response = await api.get(endpoint, { params: Object.fromEntries(params) });
+
+      if (response.data.data) {
+        // Transform API response to match Property interface
+        const transformedProperties: Property[] = response.data.data.map((prop: Record<string, unknown>) => {
+          // Transform rooms array if present
+          const rooms = Array.isArray(prop.rooms) 
+            ? (prop.rooms as Record<string, unknown>[]).map((room: Record<string, unknown>) => ({
+                id: room._id || room.id,
+                _id: room._id,
+                name: room.name || '',
+                type: room.roomType || room.type || '',
+                price: room.pricePerNight || room.price || 0,
+                max_guests: room.maxGuests || room.max_guests || 1,
+                maxGuests: room.maxGuests || room.max_guests || 1,
+                available: room.availableForBooking !== false,
+                amenities: Array.isArray(room.amenities) ? room.amenities : [],
+                images: Array.isArray(room.images) ? room.images : [],
+                description: room.description || '',
+                property: room.property || '',
+              } as Room))
+            : [];
+
+          return {
+            id: prop._id as string,
+            _id: prop._id as string,
+            name: prop.name as string,
+            location: (prop.location as string) || '',
+            description: (prop.description as string) || '',
+            type: (prop.type as string) || 'lodge',
+            basePricePerNight: (prop.basePricePerNight as number) || 0,
+            price: (prop.basePricePerNight as number) || 0,
+            maxGuests: (prop.maxGuests as number) || 2,
+            rating: (prop.rating as number) || 4.5,
+            numReviews: (prop.numReviews as number) || 0,
+            reviews: (prop.numReviews as number) || 0,
+            amenities: Array.isArray(prop.amenities) ? prop.amenities as string[] : [],
+            images: Array.isArray(prop.images) ? prop.images as string[] : [],
+            videos: Array.isArray(prop.videos) ? prop.videos as string[] : [],
+            featured: (prop.featured as boolean) || false,
+            rooms,
+            createdAt: prop.createdAt as string,
+            updatedAt: prop.updatedAt as string,
+          };
+        });
+
+        setProperties(transformedProperties);
+      } else {
+        setProperties([]);
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch properties';
+      setError(message);
+      console.error('Error fetching properties:', message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProperties(options);
+  }, [options, fetchProperties]);
+
+  const addProperty = async (propertyData: Partial<Property>) => {
+    try {
+      const payload = {
+        name: propertyData.name,
+        location: propertyData.location,
+        description: propertyData.description,
+        type: propertyData.type,
+        basePricePerNight: propertyData.price || propertyData.basePricePerNight,
+        maxGuests: propertyData.maxGuests,
+        rating: propertyData.rating,
+        numReviews: propertyData.reviews || propertyData.numReviews,
+        amenities: Array.isArray(propertyData.amenities) 
+          ? propertyData.amenities.join(', ') 
+          : (propertyData.amenities || ''),
+        images: Array.isArray(propertyData.images)
+          ? propertyData.images.join(', ')
+          : (propertyData.images || ''),
+        videos: Array.isArray(propertyData.videos)
+          ? propertyData.videos.join(', ')
+          : (propertyData.videos || ''),
+        featured: propertyData.featured,
+      };
+
+  const response = await api.post(`http://localhost:5000/properties/admin/properties`, payload);
+      
+      if (response.data) {
+        const newProp: Property = {
+          id: (response.data._id as string) || '',
+          _id: (response.data._id as string) || '',
+          name: (propertyData.name as string) || '',
+          location: (propertyData.location as string) || '',
+          description: (propertyData.description as string) || '',
+          type: (propertyData.type as string) || 'lodge',
+          basePricePerNight: propertyData.price || propertyData.basePricePerNight,
+          price: propertyData.price || propertyData.basePricePerNight,
+          maxGuests: (propertyData.maxGuests as number) || 2,
+          rating: (propertyData.rating as number) || 4.5,
+          numReviews: (propertyData.reviews as number) || 0,
+          reviews: (propertyData.reviews as number) || 0,
+          amenities: (propertyData.amenities as string[]) || [],
+          images: (propertyData.images as string[]) || [],
+          videos: (propertyData.videos as string[]) || [],
+          featured: (propertyData.featured as boolean) || false,
+        };
+        setProperties([...properties, newProp]);
+        return newProp;
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to add property';
+      console.error('Error adding property:', message);
+      throw new Error(message);
+    }
+  };
+
+  const updateProperty = async (id: string, propertyData: Partial<Property>) => {
+    try {
+      const payload = {
+        name: propertyData.name,
+        location: propertyData.location,
+        description: propertyData.description,
+        type: propertyData.type,
+        basePricePerNight: propertyData.price || propertyData.basePricePerNight,
+        maxGuests: propertyData.maxGuests,
+        rating: propertyData.rating,
+        numReviews: propertyData.reviews || propertyData.numReviews,
+        amenities: Array.isArray(propertyData.amenities)
+          ? propertyData.amenities.join(', ')
+          : (propertyData.amenities || ''),
+        images: Array.isArray(propertyData.images)
+          ? propertyData.images.join(', ')
+          : (propertyData.images || ''),
+        videos: Array.isArray(propertyData.videos)
+          ? propertyData.videos.join(', ')
+          : (propertyData.videos || ''),
+        featured: propertyData.featured,
+      };
+
+  const response = await api.put(`/admin/properties/${id}`, payload);
+      
+      if (response.data) {
+        setProperties(properties.map(p => 
+          (p.id === id || p._id === id) 
+            ? { ...p, ...propertyData, price: propertyData.price || propertyData.basePricePerNight }
+            : p
+        ));
+        return response.data;
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to update property';
+      console.error('Error updating property:', message);
+      throw new Error(message);
+    }
+  };
+
+  const deleteProperty = async (id: string) => {
+    try {
+  await api.delete(`/admin/properties/${id}`);
+      setProperties(properties.filter(p => (p.id !== id && p._id !== id)));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to delete property';
+      console.error('Error deleting property:', message);
+      throw new Error(message);
+    }
+  };
+
+  const getPropertyById = async (id: string) => {
+    try {
+  const response = await api.get(`/properties/property/${id}`);
+      if (response.data) {
+        const transformedProp: Property = {
+          id: response.data._id,
+          _id: response.data._id,
+          name: response.data.name,
+          location: response.data.location || '',
+          description: response.data.description || '',
+          type: response.data.type || 'lodge',
+          basePricePerNight: response.data.basePricePerNight || 0,
+          price: response.data.basePricePerNight || 0,
+          maxGuests: response.data.maxGuests || 2,
+          rating: response.data.rating || 4.5,
+          numReviews: response.data.numReviews || 0,
+          reviews: response.data.numReviews || 0,
+          amenities: Array.isArray(response.data.amenities) ? response.data.amenities : [],
+          images: Array.isArray(response.data.images) ? response.data.images : [],
+          videos: Array.isArray(response.data.videos) ? response.data.videos : [],
+          featured: response.data.featured || false,
+          rooms: response.data.rooms || [],
+        };
+        return transformedProp;
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch property';
+      console.error('Error fetching property:', message);
+      throw new Error(message);
+    }
+  };
+
+  const addRoom = async (propertyId: string, roomData: Partial<Room>) => {
+    try {
+      // Ensure auth header is set from storage in case this hook
+      // was used before auth initialization completed
+      try {
+        initAuthFromStorage();
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        if (token) setAuthToken(token);
+      } catch (e) {
+        // ignore
+      }
+      const payload = {
+        property: propertyId,
+        name: roomData.name,
+        type: roomData.type,
+        price: roomData.price,
+        max_guests: roomData.maxGuests || roomData.max_guests,
+        amenities: roomData.amenities,
+        images: roomData.images,
+        description: roomData.description,
+      };
+
+      // Debug: log token/header state before request
+      try {
+        const debugToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+        const authHeader = (api as unknown as { defaults?: { headers?: { common?: { Authorization?: string } } } }).defaults?.headers?.common?.Authorization;
+        console.debug('[addRoom] token:', debugToken, 'axios Authorization header:', authHeader);
+        console.debug('[addRoom] payload:', payload);
+      } catch (e) {
+        // ignore
+      }
+
+      const response = await api.post(`/rooms`, payload);
+      return response.data;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to add room';
+      console.error('Error adding room:', message, err);
+      throw new Error(message);
+    }
+  };
+
+  const updateRoom = async (roomId: string, roomData: Partial<Room>) => {
+    try {
+      try {
+        initAuthFromStorage();
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        if (token) setAuthToken(token);
+      } catch (e) {
+        // ignore
+      }
+      const payload = {
+        name: roomData.name,
+        type: roomData.type,
+        price: roomData.price,
+        max_guests: roomData.maxGuests || roomData.max_guests,
+        amenities: roomData.amenities,
+        images: roomData.images,
+        description: roomData.description,
+      };
+
+  // Debug: log token/header state before request
+  try {
+    const debugToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+    const authHeader = (api as unknown as { defaults?: { headers?: { common?: { Authorization?: string } } } }).defaults?.headers?.common?.Authorization;
+    console.debug('[updateRoom] token:', debugToken, 'axios Authorization header:', authHeader);
+  } catch (e) {
+    // ignore
+  }
+
+  const response = await api.put(`/rooms/${roomId}`, payload);
+      return response.data;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to update room';
+      console.error('Error updating room:', message, err);
+      throw new Error(message);
+    }
+  };
+
+  const deleteRoom = async (roomId: string) => {
+    try {
+      try {
+        initAuthFromStorage();
+        const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+        if (token) setAuthToken(token);
+      } catch (e) {
+        // ignore
+      }
+  try {
+    const debugToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+    const authHeader = (api as unknown as { defaults?: { headers?: { common?: { Authorization?: string } } } }).defaults?.headers?.common?.Authorization;
+    console.debug('[deleteRoom] token:', debugToken, 'axios Authorization header:', authHeader);
+  } catch (e) {
+    // ignore
+  }
+
+  await api.delete(`/rooms/${roomId}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to delete room';
+      console.error('Error deleting room:', message, err);
+      throw new Error(message);
+    }
+  };
+
+  const refetch = () => {
+    fetchProperties(options);
+  };
+
+  return {
+    properties,
+    loading,
+    error,
+    addProperty,
+    updateProperty,
+    deleteProperty,
+    getPropertyById,
+    addRoom,
+    updateRoom,
+    deleteRoom,
+    refetch,
+  };
+};
