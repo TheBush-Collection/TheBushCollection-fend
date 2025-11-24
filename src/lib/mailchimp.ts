@@ -1,15 +1,14 @@
 /**
  * Mailchimp API integration helper
  * Handles contact/email subscription to Mailchimp audience
- */import dotenv from 'dotenv';
+ */
 
-dotenv.config();
 
 
 // Mailchimp API credentials
-const MAILCHIMP_API_KEY = process.env.MAILCHIMP_API_KEY;
-const MAILCHIMP_SERVER_PREFIX = process.env.MAILCHIMP_SERVER_PREFIX; // Extracted from API key suffix
-const MAILCHIMP_AUDIENCE_ID = process.env.MAILCHIMP_AUDIENCE_ID || 'YOUR_AUDIENCE_ID'; // You'll need to add this from your Mailchimp dashboard
+const MAILCHIMP_API_KEY = import.meta.env.VITE_MAILCHIMP_API_KEY;
+const MAILCHIMP_SERVER_PREFIX = import.meta.env.VITE_MAILCHIMP_SERVER_PREFIX; // Extracted from API key suffix
+const MAILCHIMP_AUDIENCE_ID = import.meta.env.VITE_MAILCHIMP_AUDIENCE_ID || 'YOUR_AUDIENCE_ID'; // You'll need to add this from your Mailchimp dashboard
 
 interface MailchimpContact {
   email: string;

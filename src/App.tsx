@@ -50,6 +50,8 @@ function AppContent() {
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isAdminLogin = location.pathname === '/admin/login';
 
+  // Admin protected routes
+
   if (isAdminRoute && !isAdminLogin) {
     return (
       <AdminLayout>
