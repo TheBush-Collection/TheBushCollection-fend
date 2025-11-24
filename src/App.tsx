@@ -11,6 +11,7 @@ import Chatbot from './components/Chatbot';
 import Index from './pages/Index';
 import Collections from './pages/Collections';
 import PropertyDetail from './pages/PropertyDetail';
+import RoomDetail from './pages/RoomDetail';
 import Packages from './pages/Packages';
 import PackageDetail from './pages/PackageDetail';
 import BookNow from './pages/BookNow';
@@ -156,6 +157,7 @@ function AppContent() {
         <Route path="/" element={<Index />} />
         <Route path="/collections" element={<Collections />} />
         <Route path="/property/:id" element={<PropertyDetail />} />
+        <Route path="/room/:id" element={<RoomDetail />} />
         <Route path="/packages" element={<Packages />} />
         <Route path="/package/:id" element={<PackageDetail />} />
         <Route path="/book" element={<BookNow />} />

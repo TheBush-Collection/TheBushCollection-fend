@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   Star,
   MapPin,
@@ -19,7 +20,8 @@ import {
   Play,
   Eye,
   Plus,
-  Minus
+  Minus,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,7 +57,7 @@ interface GroupedRoom {
   amenities: string[];
   images?: string[];
   description: string;
-  sampleRoomId: string; // ID of one of the rooms in this group for booking
+  sampleRoomId: string;
 }
 
 const amenityIcons: AmenityIconMap = {
@@ -69,16 +71,121 @@ export default function PropertyDetail() {
   const { id } = useParams<{ id: string }>();
   const { properties, loading, error } = useBackendProperties();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [roomImageIndexes, setRoomImageIndexes] = useState<{[key: string]: number}>({});
-  const [roomQuantities, setRoomQuantities] = useState<{[key: string]: number}>({});
+  const [roomImageIndexes, setRoomImageIndexes] = useState<{ [key: string]: number }>({});
+  const [roomQuantities, setRoomQuantities] = useState<{ [key: string]: number }>({});
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [roomDetailsOpen, setRoomDetailsOpen] = useState(false);
+  const [roomDetailImageIndex, setRoomDetailImageIndex] = useState(0);
+
+  // Image navigation functions
+  const nextImage = () => {
+    if (property && property.images.length > 0) {
+      setSelectedImageIndex((prev) => (prev + 1) % property.images.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (property && property.images.length > 0) {
+      setSelectedImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
+    }
+  };
+
+  // Room image navigation
+  const nextRoomImage = (roomId: string, totalImages: number) => {
+    setRoomImageIndexes(prev => ({
+      ...prev,
+      [roomId]: ((prev[roomId] || 0) + 1) % totalImages
+    }));
+  };
+
+  const prevRoomImage = (roomId: string, totalImages: number) => {
+    setRoomImageIndexes(prev => ({
+      ...prev,
+      [roomId]: ((prev[roomId] || 0) - 1 + totalImages) % totalImages
+    }));
+  };
+
+  // Room details functions
+  const openRoomDetails = (room: Room) => {
+    setSelectedRoom(room);
+    setRoomDetailImageIndex(roomImageIndexes[room.id] || 0);
+    setRoomDetailsOpen(true);
+  };
+
+  const closeRoomDetails = () => {
+    setRoomDetailsOpen(false);
+  };
+
+  const nextRoomDetailImage = () => {
+    if (selectedRoom && selectedRoom.images) {
+      setRoomDetailImageIndex((prev) => (prev + 1) % selectedRoom.images!.length);
+    }
+  };
+
+  const prevRoomDetailImage = () => {
+    if (selectedRoom && selectedRoom.images) {
+      setRoomDetailImageIndex((prev) => (prev - 1 + selectedRoom.images!.length) % selectedRoom.images!.length);
+    }
+  };
+
+  // Handle room quantity changes
+  const updateRoomQuantity = (roomName: string, quantity: number) => {
+    setRoomQuantities(prev => ({
+      ...prev,
+      [roomName]: Math.max(0, Math.min(quantity, groupedRooms.find(g => g.name === roomName)?.availableCount || 0))
+    }));
+  };
+
+  const getRoomQuantity = (roomName: string) => {
+    return roomQuantities[roomName] || 0;
+  };
+
+  // Enhanced video detection function
+  const isVideo = (url: string) => {
+    if (!url || typeof url !== 'string') return false;
+
+    const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.flv', '.wmv'];
+    const videoHosts = [
+      'youtube.com',
+      'youtu.be',
+      'vimeo.com',
+      'dailymotion.com'
+    ];
+
+    // Microsoft services that should be treated as images, not videos
+    const microsoftImageServices = [
+      'microsoftpersonalcontent.com',
+      'southcentralus1-mediap.svc.ms',
+      'mediap.svc.ms'
+    ];
+
+    // Check for video file extensions
+    const hasVideoExtension = videoExtensions.some(ext => url.toLowerCase().includes(ext));
+
+    // Check for video hosting platforms (excluding Microsoft services)
+    const isVideoHost = videoHosts.some(host => url.toLowerCase().includes(host));
+
+    // Check for Microsoft services (treat as images, not videos)
+    const isMicrosoftService = microsoftImageServices.some(host => url.toLowerCase().includes(host));
+
+    // Check for explicit video indicators
+    const hasVideoIndicator = url.toLowerCase().includes('video');
+
+    // Return true only for actual video hosts, not Microsoft services
+    return hasVideoExtension || (isVideoHost && !isMicrosoftService) || (hasVideoIndicator && !isMicrosoftService);
+  };
 
   // Show loading state
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-[#1a1816] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading property details...</p>
+          <motion.div 
+            className="w-16 h-16 border-4 border-[#c9a961] border-t-transparent rounded-full mx-auto mb-4"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          />
+          <p className="text-white/70">Loading property details...</p>
         </div>
       </div>
     );
@@ -87,10 +194,10 @@ export default function PropertyDetail() {
   // Show error state
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-[#1a1816] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-2">Error loading property</p>
-          <p className="text-gray-600 text-sm">{error}</p>
+          <p className="text-red-400 mb-2 text-lg">Error loading property</p>
+          <p className="text-white/60 text-sm">{error}</p>
         </div>
       </div>
     );
@@ -100,12 +207,12 @@ export default function PropertyDetail() {
 
   if (!property) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-[#1a1816] flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Property Not Found</h1>
-          <p className="text-gray-600 mb-6">The property you're looking for doesn't exist.</p>
+          <h1 className="text-2xl font-bold text-white mb-4">Property Not Found</h1>
+          <p className="text-white/60 mb-6">The property you're looking for doesn't exist.</p>
           <Link to="/">
-            <Button>Back to Properties</Button>
+            <Button className="bg-[#c9a961] hover:bg-[#b8935a] text-white">Back to Properties</Button>
           </Link>
         </div>
       </div>
@@ -121,8 +228,6 @@ export default function PropertyDetail() {
     maxGuests: room.maxGuests || room.max_guests,
     price: room.price,
     available: room.available,
-    bookedUntil: room.booked_until || undefined,
-    availableFrom: room.available_from || undefined,
     amenities: room.amenities || [],
     images: room.images || []
   }));
@@ -163,67 +268,6 @@ export default function PropertyDetail() {
 
   const availableRoomGroups = groupedRooms.filter(group => group.availableCount > 0);
   const unavailableRoomGroups = groupedRooms.filter(group => group.availableCount === 0);
-
-  // Enhanced video detection function
-  const isVideo = (url: string) => {
-    if (!url || typeof url !== 'string') return false;
-
-    const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.flv', '.wmv'];
-    const videoHosts = [
-      'youtube.com',
-      'youtu.be',
-      'vimeo.com',
-      'dailymotion.com'
-    ];
-
-    // Microsoft services that should be treated as images, not videos
-    const microsoftImageServices = [
-      'microsoftpersonalcontent.com',
-      'southcentralus1-mediap.svc.ms',
-      'mediap.svc.ms'
-    ];
-
-    // Check for video file extensions
-    const hasVideoExtension = videoExtensions.some(ext => url.toLowerCase().includes(ext));
-
-    // Check for video hosting platforms (excluding Microsoft services)
-    const isVideoHost = videoHosts.some(host => url.toLowerCase().includes(host));
-
-    // Check for Microsoft services (treat as images, not videos)
-    const isMicrosoftService = microsoftImageServices.some(host => url.toLowerCase().includes(host));
-
-    // Check for explicit video indicators
-    const hasVideoIndicator = url.toLowerCase().includes('video');
-
-    // Return true only for actual video hosts, not Microsoft services
-    return hasVideoExtension || (isVideoHost && !isMicrosoftService) || (hasVideoIndicator && !isMicrosoftService);
-  };
-
-  const nextRoomImage = (roomId: string, totalImages: number) => {
-    setRoomImageIndexes(prev => ({
-      ...prev,
-      [roomId]: ((prev[roomId] || 0) + 1) % totalImages
-    }));
-  };
-
-  const prevRoomImage = (roomId: string, totalImages: number) => {
-    setRoomImageIndexes(prev => ({
-      ...prev,
-      [roomId]: ((prev[roomId] || 0) - 1 + totalImages) % totalImages
-    }));
-  };
-
-  // Handle room quantity changes
-  const updateRoomQuantity = (roomName: string, quantity: number) => {
-    setRoomQuantities(prev => ({
-      ...prev,
-      [roomName]: Math.max(0, Math.min(quantity, groupedRooms.find(g => g.name === roomName)?.availableCount || 0))
-    }));
-  };
-
-  const getRoomQuantity = (roomName: string) => {
-    return roomQuantities[roomName] || 0;
-  };
 
   // Room Image Carousel Component
   const RoomImageCarousel = ({ room, size = 'large' }: { room: Room, size?: 'small' | 'large' }) => {
@@ -294,7 +338,7 @@ export default function PropertyDetail() {
             </video>
 
             {/* Hidden fallback for video errors */}
-            <div className="video-fallback hidden absolute inset-0 flex items-center justify-center bg-gray-200">
+            <div className="video-fallback absolute inset-0 items-center justify-center bg-gray-200" style={{ display: 'none' }}>
               <div className="text-center text-gray-500">
                 <Play className={`${size === 'small' ? 'h-8 w-8' : 'h-12 w-12'} mx-auto mb-2`} />
                 <span className={`${size === 'small' ? 'text-xs' : 'text-sm'}`}>Video unavailable</span>
@@ -413,441 +457,522 @@ export default function PropertyDetail() {
     );
   };
 
-  // Room Details Dialog with Large Image Gallery
-  const RoomDetailsDialog = ({ room }: { room: Room }) => {
-    const isRoomAvailable = room.available;
-    
-    return (
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button variant="ghost" size="sm" className="p-1 hover:bg-gray-100">
-            <Eye className="h-4 w-4" />
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>{room.name}</span>
-              <Badge className={isRoomAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-                {isRoomAvailable ? 'Available' : 'Unavailable'}
-              </Badge>
-            </DialogTitle>
-            <DialogDescription>
-              Detailed information about {room.name} including amenities, pricing, and availability
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            {/* Large Room Image Gallery */}
-            <RoomImageCarousel room={room} size="large" />
-            
-            {/* Room Details */}
-            <div className="space-y-3">
-              <div>
-                <h4 className="font-semibold text-lg mb-1">{room.name}</h4>
-                <p className="text-gray-600 text-sm">{room.description}</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-gray-700">Room Type:</span>
-                  <p className="text-gray-600">{room.type}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Max Guests:</span>
-                  <p className="text-gray-600">{room.maxGuests} guests</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Price:</span>
-                  <p className="text-green-600 font-semibold">${room.price}/night</p>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Status:</span>
-                  <p className={isRoomAvailable ? 'text-green-600' : 'text-red-600'}>
-                    {isRoomAvailable ? 'Available Now' : 'Currently Unavailable'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Availability Info */}
-              {!isRoomAvailable && (room.bookedUntil || room.availableFrom) && (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                  <div className="flex items-center text-orange-800 mb-1">
-                    <Clock className="h-4 w-4 mr-2" />
-                    <span className="font-medium text-sm">Availability Information</span>
-                  </div>
-                  <div className="text-orange-700 text-sm space-y-1">
-                    {room.bookedUntil && (
-                      <p>Booked until: {new Date(room.bookedUntil).toLocaleDateString()}</p>
-                    )}
-                    {room.availableFrom && (
-                      <p>Available from: {new Date(room.availableFrom).toLocaleDateString()}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              {/* Room Amenities */}
-              <div>
-                <span className="font-medium text-gray-700">Room Amenities:</span>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {room.amenities.map((amenity: string, index: number) => (
-                    <Badge key={index} variant="outline" className="text-xs">
-                      {amenity}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-2 pt-4 border-t">
-              {isRoomAvailable && (
-                <Link to={`/book?property=${property.id}&room=${room.id}`} className="flex-1">
-                  <Button className="w-full bg-orange-500 hover:bg-orange-600">
-                    Book This Room
-                  </Button>
-                </Link>
-              )}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  };
-
-  function isValidImageUrl(url: string): boolean {
-    return typeof url === 'string' && /^https?:\/\/.+\.(jpg|jpeg|png|webp|gif)$/i.test(url);
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{property.name}</h1>
-              <div className="flex items-center text-gray-600 mt-2">
-                <MapPin className="h-5 w-5 mr-2" />
-                {property.location}
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              {availableRoomGroups.length === 0 && groupedRooms.length > 0 && (
-                <Badge className="bg-red-100 text-red-800 px-3 py-1">
-                  Fully Booked
-                </Badge>
-              )}
-              <div className="flex items-center">
-                <Star className="h-5 w-5 text-yellow-500 mr-1" />
-                <span className="font-semibold">{property.rating}</span>
-                <span className="text-gray-500 ml-1">({property.reviews} reviews)</span>
-              </div>
+    <div className="min-h-screen bg-[#1a1816] overflow-x-hidden">
+      {/* Hero Section with Overlay Text */}
+      <motion.section 
+        className="relative h-screen bg-cover bg-center overflow-hidden"
+        style={{
+          backgroundImage: `url('${property.images[selectedImageIndex] || property.images[0] || '/images/default-property.jpg'}')`,
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        key={selectedImageIndex}
+      >
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70"></div>
+        
+        {/* Navigation Arrows */}
+        {property.images.length > 1 && (
+          <>
+            <button
+              onClick={prevImage}
+              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-30 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300 hover:scale-110"
+              aria-label="Previous image"
+            >
+              <ChevronLeft className="w-8 h-8" />
+            </button>
+            <button
+              onClick={nextImage}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-30 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300 hover:scale-110"
+              aria-label="Next image"
+            >
+              <ChevronRight className="w-8 h-8" />
+            </button>
+          </>
+        )}
+        
+        {/* Logo/Brand */}
+        <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20">
+          <div className="text-center">
+            <div className="text-[#c9a961] text-sm tracking-[0.3em] mb-2">THE BUSH</div>
+            <div className="text-white text-2xl tracking-[0.2em] font-light border-t border-b border-[#c9a961] py-2">
+              COLLECTION
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Images and Details */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Image Gallery */}
-            <div className="space-y-4">
-              <div className="aspect-video rounded-lg overflow-hidden">
-                <img
-                  src={property.images[selectedImageIndex]}
-                  alt={property.name}
+        {/* Property Badge/Name */}
+        <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
+          <motion.div 
+            className="bg-black/60 backdrop-blur-sm border-2 border-[#c9a961] px-8 py-6 text-center"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+          >
+            <div className="text-[#c9a961] text-xl tracking-widest">{property.type?.toUpperCase() || 'LODGE'}</div>
+            <div className="text-white text-3xl md:text-4xl font-light mt-2">{property.name}</div>
+            <div className="text-[#c9a961] text-sm tracking-wider mt-2">{property.location}</div>
+          </motion.div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 z-30">
+          {[...Array(Math.min(5, property.images.length))].map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setSelectedImageIndex(i)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 hover:scale-125 ${
+                i === selectedImageIndex ? 'bg-[#c9a961] w-8' : 'bg-white/40 hover:bg-white/60'
+              }`}
+              aria-label={`Go to image ${i + 1}`}
+            />
+          ))}
+        </div>
+      </motion.section>
+
+      {/* Property Info Section */}
+      <section className="bg-white py-16">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-light text-[#1a1816] mb-4">
+              {property.name} - {property.location}
+            </h2>
+            <div className="text-xl text-[#c9a961] mb-2">00° 11' 14" E89° 27' 81"</div>
+            <div className="flex justify-center items-center gap-1 mb-6">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className="w-5 h-5 fill-[#c9a961] text-[#c9a961]" />
+              ))}
+            </div>
+            <p className="text-lg md:text-xl text-gray-700 leading-relaxed max-w-3xl mx-auto font-serif">
+              {property.description || 'Experience unparalleled luxury in the heart of the African wilderness. Our exclusive safari lodges combines authentic wildlife encounters with world-class hospitality, offering you an unforgettable journey through pristine landscapes. Each moment is carefully crafted to immerse you in the natural beauty and rich biodiversity of this remarkable ecosystem, while providing the comfort and elegance you deserve.'}
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Discover Our Camp Section */}
+      <section className="bg-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl md:text-5xl font-light text-[#1a1816] mb-4">
+              Discover Our Camp
+            </h2>
+            <p className="text-gray-600">Click to view →</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { title: 'Our Gallery', icon: ImageIcon, action: 'gallery', description: 'Explore stunning photography capturing the essence of our luxury safari lodge and the breathtaking wildlife encounters that await you.' },
+              { title: 'Our Rooms and Suites', icon: Users, action: 'rooms', description: 'Discover beautifully appointed accommodations offering the perfect balance of luxury comfort and authentic safari atmosphere.' },
+            ].map((item, index) => (
+              <motion.div
+                key={index}
+                className="group relative aspect-[3/4] bg-white border-2 border-[#c9a961] overflow-hidden cursor-pointer"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                whileHover={{ scale: 1.05 }}
+                onClick={() => {
+                  if (item.action === 'rooms') {
+                    document.getElementById('rooms-section')?.scrollIntoView({ behavior: 'smooth' });
+                  } else if (item.action === 'gallery') {
+                    window.location.href = 'https://thebushcollection.pixieset.com/';
+                  }
+                }}
+              >
+                <img 
+                  src={property.images[index % property.images.length]} 
+                  alt={item.title}
                   className="w-full h-full object-cover"
                 />
-              </div>
-              <div className="grid grid-cols-4 gap-2">
-                {property.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImageIndex(index)}
-                    className={`aspect-video rounded-lg overflow-hidden border-2 ${
-                      selectedImageIndex === index ? 'border-orange-500' : 'border-transparent'
-                    }`}
-                  >
-                    <img
-                      src={image}
-                      alt={`${property.name} ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Property Description */}
-            <Card>
-              <CardHeader>
-                <CardTitle>About This Property</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 leading-relaxed">{property.description}</p>
-              </CardContent>
-            </Card>
-
-            {/* Amenities */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Amenities</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {property.amenities.map((amenity) => {
-                    const Icon = amenityIcons[amenity] || Coffee;
-                    return (
-                      <div key={amenity} className="flex items-center">
-                        <Icon className="h-5 w-5 text-orange-500 mr-3" />
-                        <span className="text-gray-700">{amenity}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Room Gallery with Images */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Calendar className="h-5 w-5 mr-2" />
-                  Rooms & Availability
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {/* Available Room Groups */}
-                  {availableRoomGroups.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-green-800 mb-4 flex items-center">
-                        <CheckCircle className="h-4 w-4 mr-2" />
-                        Available Room Types ({availableRoomGroups.length})
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {availableRoomGroups.map((roomGroup) => (
-                          <div key={roomGroup.name} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                            {/* Room Image */}
-                            <div className="mb-3">
-                              <RoomImageCarousel room={{
-                                id: roomGroup.sampleRoomId,
-                                name: roomGroup.name,
-                                images: roomGroup.images,
-                                amenities: roomGroup.amenities,
-                                description: roomGroup.description,
-                                type: roomGroup.type,
-                                maxGuests: roomGroup.maxGuests,
-                                price: roomGroup.price,
-                                available: true
-                              }} size="small" />
-                            </div>
-
-                            {/* Room Info */}
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <h5 className="font-semibold text-gray-900">{roomGroup.name}</h5>
-                                <Badge className="bg-green-100 text-green-800">{roomGroup.availableCount} available</Badge>
-                              </div>
-                              <p className="text-sm text-gray-600">{roomGroup.description}</p>
-                              <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center text-gray-600">
-                                  <Users className="h-3 w-3 mr-1" />
-                                  Up to {roomGroup.maxGuests} guests
-                                </div>
-                                <p className="text-lg font-bold text-green-600">${roomGroup.price}/night</p>
-                              </div>
-
-                              {/* Quantity Selector */}
-                              <div className="flex items-center justify-between pt-2">
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => updateRoomQuantity(roomGroup.name, getRoomQuantity(roomGroup.name) - 1)}
-                                    disabled={getRoomQuantity(roomGroup.name) <= 0}
-                                  >
-                                    <Minus className="h-3 w-3" />
-                                  </Button>
-                                  <span className="w-8 text-center">{getRoomQuantity(roomGroup.name)}</span>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => updateRoomQuantity(roomGroup.name, getRoomQuantity(roomGroup.name) + 1)}
-                                    disabled={getRoomQuantity(roomGroup.name) >= roomGroup.availableCount}
-                                  >
-                                    <Plus className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                                <div className="text-sm text-gray-600">
-                                  Max: {roomGroup.availableCount}
-                                </div>
-                              </div>
-
-                              {/* Action Buttons */}
-                              <div className="flex items-center justify-between pt-2">
-                                <RoomDetailsDialog room={{
-                                  id: roomGroup.sampleRoomId,
-                                  name: roomGroup.name,
-                                  images: roomGroup.images,
-                                  amenities: roomGroup.amenities,
-                                  description: roomGroup.description,
-                                  type: roomGroup.type,
-                                  maxGuests: roomGroup.maxGuests,
-                                  price: roomGroup.price,
-                                  available: true
-                                }} />
-                                <Link to={`/book?property=${property.id}&room=${roomGroup.sampleRoomId}&quantity=${getRoomQuantity(roomGroup.name)}`}>
-                                  <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
-                                    Book {getRoomQuantity(roomGroup.name) > 0 ? `${getRoomQuantity(roomGroup.name)} Room${getRoomQuantity(roomGroup.name) > 1 ? 's' : ''}` : 'Select'}
-                                  </Button>
-                                </Link>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Unavailable Room Groups */}
-                  {unavailableRoomGroups.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-red-800 mb-4 flex items-center">
-                        <XCircle className="h-4 w-4 mr-2" />
-                        Currently Unavailable ({unavailableRoomGroups.length})
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {unavailableRoomGroups.map((roomGroup) => (
-                          <div key={roomGroup.name} className="border rounded-lg p-4 bg-gray-50">
-                            {/* Room Image */}
-                            <div className="mb-3">
-                              <RoomImageCarousel room={{
-                                id: roomGroup.sampleRoomId,
-                                name: roomGroup.name,
-                                images: roomGroup.images,
-                                amenities: roomGroup.amenities,
-                                description: roomGroup.description,
-                                type: roomGroup.type,
-                                maxGuests: roomGroup.maxGuests,
-                                price: roomGroup.price,
-                                available: false
-                              }} size="small" />
-                            </div>
-
-                            {/* Room Info */}
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between">
-                                <h5 className="font-semibold text-gray-900">{roomGroup.name}</h5>
-                                <Badge className="bg-red-100 text-red-800">Unavailable</Badge>
-                              </div>
-                              <p className="text-sm text-gray-600">{roomGroup.description}</p>
-                              <div className="flex items-center justify-between text-sm">
-                                <div className="flex items-center text-gray-600">
-                                  <Users className="h-3 w-3 mr-1" />
-                                  Up to {roomGroup.maxGuests} guests
-                                </div>
-                                <p className="text-lg font-bold text-gray-500">${roomGroup.price}/night</p>
-                              </div>
-
-                              {/* Action Buttons */}
-                              <div className="flex items-center justify-between pt-2">
-                                <RoomDetailsDialog room={{
-                                  id: roomGroup.sampleRoomId,
-                                  name: roomGroup.name,
-                                  images: roomGroup.images,
-                                  amenities: roomGroup.amenities,
-                                  description: roomGroup.description,
-                                  type: roomGroup.type,
-                                  maxGuests: roomGroup.maxGuests,
-                                  price: roomGroup.price,
-                                  available: false
-                                }} />
-                                <Button size="sm" disabled className="opacity-50">
-                                  Unavailable
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {groupedRooms.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p>No rooms available for this property.</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Column - Booking Card */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-8">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Book Your Stay</span>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-gray-900">
-                      ${property.price_from}
-                    </div>
-                    <div className="text-sm text-gray-600">from/night</div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end">
+                  <div className="p-4 w-full">
+                    <item.icon className="w-6 h-6 text-[#c9a961] mb-2" />
+                    <h3 className="text-white text-lg font-light mb-1">{item.title}</h3>
+                    <p className="text-white/80 text-xs leading-relaxed line-clamp-2">
+                      {item.description}
+                    </p>
                   </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center text-gray-600">
-                  <Users className="h-5 w-5 mr-2" />
-                  Up to {groupedRooms.length > 0 ? Math.max(...groupedRooms.map(r => r.maxGuests)) : 0} guests
                 </div>
-
-                {/* Availability Summary */}
-                <div className="border rounded-lg p-3">
-                  {availableRoomGroups.length === 0 && groupedRooms.length > 0 ? (
-                    <div className="text-center">
-                      <XCircle className="h-8 w-8 text-red-500 mx-auto mb-2" />
-                      <p className="font-semibold text-red-800">Fully Booked</p>
-                      <p className="text-sm text-red-600">All rooms are currently unavailable</p>
-                    </div>
-                  ) : availableRoomGroups.length < groupedRooms.length ? (
-                    <div className="text-center">
-                      <Clock className="h-8 w-8 text-yellow-500 mx-auto mb-2" />
-                      <p className="font-semibold text-yellow-800">Limited Availability</p>
-                      <p className="text-sm text-yellow-600">
-                        {availableRoomGroups.length} of {groupedRooms.length} room types available
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                      <p className="font-semibold text-green-800">Available Now</p>
-                      <p className="text-sm text-green-600">All room types ready for booking</p>
-                    </div>
-                  )}
-                </div>
-
-                <Link to={`/book?property=${property.id}`}>
-                  <Button 
-                    className="w-full bg-orange-500 hover:bg-orange-600"
-                    disabled={availableRoomGroups.length === 0}
-                  >
-                    {availableRoomGroups.length === 0 ? 'Fully Booked' : 'Book Now'}
-                  </Button>
-                </Link>
-
-                <p className="text-xs text-gray-500 text-center">
-                  You won't be charged yet
-                </p>
-              </CardContent>
-            </Card>
+              </motion.div>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Rooms Section */}
+      <section id="rooms-section" className="bg-[#1a1816] py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-4xl md:text-5xl font-light text-white mb-4">
+              Our Rooms and Suites
+            </h2>
+            <p className="text-white/60">Discover luxury accommodation in the heart of the wild</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {groupedRooms.slice(0, 6).map((roomGroup, index) => (
+              <motion.div
+                key={roomGroup.sampleRoomId}
+                className="bg-[#1a1816] border border-[#c9a961]/20 rounded-lg overflow-hidden hover:border-[#c9a961] transition-all duration-300 shadow-lg"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+              >
+                {roomGroup.images && roomGroup.images.length > 0 ? (
+                  <div className="relative w-full h-64 bg-[#000000] group/image">
+                    <RoomImageCarousel 
+                      room={{
+                        id: roomGroup.sampleRoomId,
+                        name: roomGroup.name,
+                        description: roomGroup.description,
+                        type: roomGroup.type,
+                        maxGuests: roomGroup.maxGuests,
+                        price: roomGroup.price,
+                        available: roomGroup.availableCount > 0,
+                        amenities: roomGroup.amenities,
+                        images: roomGroup.images
+                      }} 
+                      size="small" 
+                    />
+                    {/* View Details Button */}
+                    <div className="absolute top-4 right-4 z-10">
+                      <Link
+                        to={`/room/${property.id}?roomId=${roomGroup.sampleRoomId}`}
+                        className="flex items-center gap-2 bg-[#c9a961] hover:bg-[#8b6f47] text-white px-5 py-2.5 rounded-md text-sm font-medium transition-all duration-300 shadow-lg"
+                      >
+                        <ImageIcon className="w-4 h-4" />
+                        <span>View Details</span>
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full h-64 bg-[#000000] flex items-center justify-center relative">
+                    <ImageIcon className="w-12 h-12 text-[#c9a961]/30" />
+                    {/* View Details Button for no image */}
+                    <div className="absolute top-4 right-4 z-10">
+                      <Link
+                        to={`/room/${property.id}?roomId=${roomGroup.sampleRoomId}`}
+                        className="flex items-center gap-2 bg-[#c9a961] hover:bg-[#8b6f47] text-white px-5 py-2.5 rounded-md text-sm font-medium transition-all duration-300 shadow-lg"
+                      >
+                        <ImageIcon className="w-4 h-4" />
+                        <span>View Details</span>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+                <div className="p-6 bg-[#2a2623]">
+                  <div className="mb-3">
+                    <h3 className="text-2xl font-bold text-white mb-2">{roomGroup.name}</h3>
+                    <p className="text-[#c9a961] text-base font-medium">{roomGroup.type}</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-white/80 text-sm mb-4">
+                    <Users className="w-5 h-5 text-[#c9a961]" />
+                    <span>Up to {roomGroup.maxGuests} guests</span>
+                  </div>
+                  
+                  <p className="text-white/70 text-sm mb-6 leading-relaxed">
+                    {roomGroup.description || 'Luxurious accommodation with stunning views and modern amenities.'}
+                  </p>
+                  
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-bold text-[#c9a961]">${roomGroup.price}</span>
+                        <span className="text-white/50 text-sm">per night</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      {roomGroup.availableCount > 0 ? (
+                        <span className="text-green-400 text-sm font-semibold">
+                          {roomGroup.availableCount} available
+                        </span>
+                      ) : (
+                        <span className="text-red-400 text-sm font-semibold">Fully Booked</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <Link 
+                    to={`/book?property=${property.id}&room=${roomGroup.sampleRoomId}`}
+                    className="block"
+                  >
+                    <Button 
+                      className="w-full bg-[#c9a961] hover:bg-[#8b6f47] text-white font-semibold py-6 text-base rounded-md transition-all duration-300"
+                      disabled={roomGroup.availableCount === 0}
+                    >
+                      {roomGroup.availableCount > 0 ? 'Book Now' : 'Fully Booked'}
+                    </Button>
+                  </Link>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {groupedRooms.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-white/60">Room information coming soon</p>
+            </div>
+          )}
+
+          <div className="text-center mt-12">
+            <Link to={`/book?property=${property.id}`}>
+              <Button className="bg-[#c9a961] hover:bg-[#b8935a] text-white px-8 py-6 text-lg">
+                Book Your Stay
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer Info */}
+      <section className="bg-[#1a1816] text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+            <div>
+              <h3 className="text-[#c9a961] font-semibold mb-2">Location</h3>
+              <p className="text-white/70">{property.location}</p>
+            </div>
+            <div>
+              <h3 className="text-[#c9a961] font-semibold mb-2">Contact</h3>
+              <p className="text-white/70">+254 116 072343</p>
+              <p className="text-white/70">info@thebushcollection.africa</p>
+            </div>
+            <div>
+              <h3 className="text-[#c9a961] font-semibold mb-2">Book Now</h3>
+              <Link to={`/book?property=${property.id}`}>
+                <Button className="bg-[#c9a961] hover:bg-[#b8935a] text-white">
+                  Reserve Your Stay
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Room Details Modal */}
+      {roomDetailsOpen && selectedRoom && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/95 overflow-y-auto"
+          onClick={closeRoomDetails}
+        >
+          <div className="min-h-screen p-4 md:p-8">
+            <div 
+              className="max-w-6xl mx-auto bg-[#ebe9d8] rounded-lg overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+              <button
+                onClick={closeRoomDetails}
+                className="absolute top-8 right-8 z-50 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
+                aria-label="Close"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {/* Hero Image Section with Carousel */}
+              <div className="relative w-full min-h-[60vh] max-h-[80vh] bg-[#1a1816] flex items-center justify-center">
+                {selectedRoom.images && selectedRoom.images.length > 0 && (
+                  <>
+                    <img
+                      src={selectedRoom.images[roomDetailImageIndex]}
+                      alt={selectedRoom.name}
+                      className="w-full h-full object-cover"
+                    />
+                    
+                    {/* Navigation arrows */}
+                    {selectedRoom.images.length > 1 && (
+                      <>
+                        <button
+                          onClick={prevRoomDetailImage}
+                          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all duration-300"
+                        >
+                          <ChevronLeft className="w-6 h-6" />
+                        </button>
+                        <button
+                          onClick={nextRoomDetailImage}
+                          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all duration-300"
+                        >
+                          <ChevronRight className="w-6 h-6" />
+                        </button>
+
+                        {/* Image indicators */}
+                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                          {selectedRoom.images.map((_, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => setRoomDetailImageIndex(idx)}
+                              className={`w-2 h-2 rounded-full transition-all ${
+                                idx === roomDetailImageIndex ? 'bg-[#c9a961] w-6' : 'bg-white/40'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Property branding overlay */}
+                    <div className="absolute top-4 left-4">
+                      <div className="bg-[#c9a961] text-white px-4 py-2 rounded-lg font-semibold">
+                        {property.name}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Room Details Section */}
+              <div className="p-8 md:p-12">
+                {/* Room Title and Type */}
+                <div className="text-center mb-8">
+                  <h2 className="text-4xl font-bold text-[#1a1816] mb-2">{selectedRoom.name}</h2>
+                  <p className="text-[#c9a961] text-lg italic">{selectedRoom.type}</p>
+                </div>
+
+                {/* Description */}
+                <div className="mb-8 text-center max-w-4xl mx-auto">
+                  <p className="text-[#1a1816]/80 leading-relaxed">
+                    {selectedRoom.description || 'A perfect room for a perfect stay, blending luxury and comfort'}
+                  </p>
+                </div>
+
+                {/* Image Placeholders (for additional room views) */}
+                <div className="grid grid-cols-3 gap-4 mb-8">
+                  {selectedRoom.images && selectedRoom.images.slice(0, 3).map((img, idx) => (
+                    <div 
+                      key={idx}
+                      className="relative aspect-[4/3] bg-[#1a1816]/10 border-2 border-[#c9a961]/30 rounded-lg overflow-hidden cursor-pointer hover:border-[#c9a961] transition-all"
+                      onClick={() => setRoomDetailImageIndex(idx)}
+                    >
+                      <img src={img} alt={`${selectedRoom.name} view ${idx + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Room Features/Amenities */}
+                <div className="border-t-2 border-[#c9a961]/30 pt-8">
+                  <h3 className="text-2xl font-bold text-[#c9a961] text-center mb-6">
+                    Your {selectedRoom.type} Inclusions:
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4 max-w-4xl mx-auto">
+                    {selectedRoom.amenities && selectedRoom.amenities.length > 0 ? (
+                      selectedRoom.amenities.map((amenity, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>{amenity}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>Umbrella</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>Large Private Shower</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>Challenging Paths & Obstacles</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>Balcony & Lounge Area</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>Large-on-suite Bathroom</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>Additional Heating*</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>Writing Desk & Stationery</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>Complementary Slippers</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>Eco Bed Warmers</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>Laundry Services*</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>Coffee Experience</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>Bathrobes</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[#1a1816]/80">
+                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                          <span>Complementary Slippers</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Booking Button */}
+                <div className="mt-12 flex justify-center">
+                  <Link to={`/book?property=${property.id}&room=${selectedRoom.id}`}>
+                    <Button 
+                      className="bg-[#c9a961] hover:bg-[#b8935a] text-white px-12 py-6 text-xl rounded-full font-semibold shadow-lg"
+                    >
+                      Book Now
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Price Info */}
+                <div className="mt-8 text-center">
+                  <div className="text-3xl font-bold text-[#c9a961] mb-2">
+                    ${selectedRoom.price}
+                    <span className="text-lg text-[#1a1816]/60 ml-2">per night</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-4 text-[#1a1816]/60 text-sm">
+                    <div className="flex items-center gap-1">
+                      <Users className="w-4 h-4" />
+                      <span>Up to {selectedRoom.maxGuests} guests</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
