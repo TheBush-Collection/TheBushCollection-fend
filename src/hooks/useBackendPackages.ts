@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api, { initAuthFromStorage } from '@/lib/api';
+import api, { initAuthFromStorage, API_BASE } from '@/lib/api';
 import { Package } from '@/types/package';
 
 interface PaginationData {
@@ -46,7 +46,24 @@ interface UseBackendPackagesOptions {
   limit?: number;
 }
 
-const API_BASE = '';
+// Normalize media URLs to absolute URLs so frontend can load them reliably.
+const normalizeMediaUrl = (value: unknown): string | null => {
+  if (!value) return null;
+  const s = String(value).trim();
+  if (!s) return null;
+
+  // If already absolute (http/https) or data/blob/file URI, return as-is
+  if (/^https?:\/\//i.test(s) || /^data:/i.test(s) || /^blob:/i.test(s) || /^file:/i.test(s)) return s;
+
+  // If the value already contains the API base, return it unchanged
+  if (API_BASE && s.startsWith(API_BASE)) return s;
+
+  if (s.startsWith('/')) return (API_BASE || '') + s;
+  if (s.startsWith('uploads/') || s.startsWith('public/uploads/') || s.startsWith('uploads\\')) {
+    return (API_BASE || '') + '/' + s.replace(/^public\//, '');
+  }
+  return (API_BASE ? API_BASE + '/' : '') + s;
+};
 
 /**
  * Hook to fetch packages from backend API with filtering and sorting
@@ -129,8 +146,8 @@ export const useBackendPackages = (options?: UseBackendPackagesOptions) => {
           featured: pkg.featured,
           maxGuests: pkg.maxGuests,
           destinations: pkg.destinations || [],
-          image: pkg.image || pkg.mainImage || '',
-          gallery: [],
+          image: normalizeMediaUrl(pkg.image || pkg.mainImage || '') || '',
+          gallery: Array.isArray((pkg as any).gallery) ? (pkg as any).gallery.map((g: unknown) => normalizeMediaUrl(g) || '') : [],
           highlights: pkg.highlights || [],
           includes: [],
           excludes: [],
@@ -178,8 +195,8 @@ export const useBackendPackages = (options?: UseBackendPackagesOptions) => {
           featured: pkg.featured,
           maxGuests: pkg.maxGuests,
           destinations: pkg.destinations || [],
-          image: pkg.image || pkg.mainImage || '',
-          gallery: [],
+          image: normalizeMediaUrl(pkg.image || pkg.mainImage || '') || '',
+          gallery: Array.isArray(pkg.gallery) ? (pkg.gallery as string[]).map(g => normalizeMediaUrl(g) || '') : [],
           highlights: pkg.highlights || [],
           includes: [],
           excludes: [],

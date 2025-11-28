@@ -4,10 +4,11 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface ProtectedRouteProps {
   children: ReactNode;
+  adminOnly?: boolean;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAdmin, loading } = useAuth();
+export function ProtectedRoute({ children, adminOnly = false }: ProtectedRouteProps) {
+  const { isAdmin, loading, user } = useAuth();
 
   if (loading) {
     return (
@@ -17,8 +18,17 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!isAdmin) {
-    return <Navigate to="/admin/login" replace />;
+  // Admin-only protection
+  if (adminOnly) {
+    if (!isAdmin) {
+      return <Navigate to="/admin/login" replace />;
+    }
+    return <>{children}</>;
+  }
+
+  // General authenticated protection (regular users)
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
   return <>{children}</>;

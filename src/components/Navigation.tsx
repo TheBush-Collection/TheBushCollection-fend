@@ -19,6 +19,11 @@ export default function Navigation() {
   const location = useLocation();
   const { user, logout } = useAuth();
 
+  // Support both backend user shape and frontend user properties
+  const displayName =
+    user?.fullName || user?.name ||
+    (user?.email ? user.email.split('@')[0] : 'User');
+
   const navItems = [
     { path: '/', label: 'Home', color: '#5C3B22', textColor: '#FFFFFF' }, 
     { path: '/about', label: 'About', color: '#A19B5C', textColor: '#FFFFFF' }, 
@@ -90,19 +95,15 @@ export default function Navigation() {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        {user.user_metadata?.full_name || user.email?.split('@')[0]}
-                      </p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
-                      </p>
+                      <p className="text-sm font-medium leading-none">{displayName}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild className="flex items-center space-x-2 cursor-pointer">
-                    <Link to="/profile" className="flex items-center space-x-2">
-                      <Settings className="h-4 w-4" />
-                      <span>My Profile</span>
+                    <Link to="/dashboard" className="flex items-center space-x-2">
+                      <Star className="h-4 w-4" />
+                      <span>Dashboard</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -116,16 +117,13 @@ export default function Navigation() {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild className="flex items-center space-x-2 cursor-pointer">
-                    <Link to="/cancellation-request" className="flex items-center space-x-2">
-                      <AlertTriangle className="h-4 w-4" />
-                      <span>Cancel Booking</span>
+                    <Link to="/profile" className="flex items-center space-x-2">
+                      <Settings className="h-4 w-4" />
+                      <span>My Profile</span>
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={logout}
-                    className="flex items-center space-x-2 cursor-pointer"
-                  >
+                  <DropdownMenuItem onClick={logout} className="flex items-center space-x-2 cursor-pointer">
                     <LogOut className="h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>
@@ -194,9 +192,7 @@ export default function Navigation() {
                           <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center">
                             <User className="h-3 w-3 text-white" />
                           </div>
-                          <span className="text-sm">
-                            {user.user_metadata?.full_name || user.email?.split('@')[0]}
-                          </span>
+                              <span className="text-sm">{displayName}</span>
                         </div>
                         <ChevronDown className="h-4 w-4" />
                       </Button>
@@ -204,9 +200,7 @@ export default function Navigation() {
                     <DropdownMenuContent align="end" className="w-56">
                       <DropdownMenuLabel className="font-normal">
                         <div className="flex flex-col space-y-1">
-                          <p className="text-sm font-medium leading-none">
-                            {user.user_metadata?.full_name || user.email?.split('@')[0]}
-                          </p>
+                          <p className="text-sm font-medium leading-none">{displayName}</p>
                           <p className="text-xs leading-none text-muted-foreground">
                             {user.email}
                           </p>
@@ -214,9 +208,9 @@ export default function Navigation() {
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild className="flex items-center space-x-2 cursor-pointer">
-                        <Link to="/profile" className="flex items-center space-x-2" onClick={() => setIsMenuOpen(false)}>
-                          <Settings className="h-4 w-4" />
-                          <span>My Profile</span>
+                        <Link to="/dashboard" className="flex items-center space-x-2" onClick={() => setIsMenuOpen(false)}>
+                          <Star className="h-4 w-4" />
+                          <span>Dashboard</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -230,9 +224,9 @@ export default function Navigation() {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild className="flex items-center space-x-2 cursor-pointer">
-                        <Link to="/cancellation-request" className="flex items-center space-x-2" onClick={() => setIsMenuOpen(false)}>
-                          <AlertTriangle className="h-4 w-4" />
-                          <span>Cancel Booking</span>
+                        <Link to="/profile" className="flex items-center space-x-2" onClick={() => setIsMenuOpen(false)}>
+                          <Settings className="h-4 w-4" />
+                          <span>My Profile</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />

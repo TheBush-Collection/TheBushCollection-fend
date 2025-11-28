@@ -57,88 +57,88 @@ function AppContent() {
       <AdminLayout>
         <Routes>
           <Route path="/admin" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminDashboard />
             </ProtectedRoute>
           } />
           <Route path="/admin/dashboard" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminDashboard />
             </ProtectedRoute>
           } />
           
           <Route path="/admin/analytics" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminAnalytics />
             </ProtectedRoute>
           } />
           <Route path="/admin/reports" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminReports />
             </ProtectedRoute>
           } />
           <Route path="/admin/bookings" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminBookings />
             </ProtectedRoute>
           } />
           <Route path="/admin/arrivals" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminArrivals />
             </ProtectedRoute>
           } />
           <Route path="/admin/calendar" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminCalendar />
             </ProtectedRoute>
           } />
           <Route path="/admin/customers" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminCustomers />
             </ProtectedRoute>
           } />
           <Route path="/admin/properties" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminProperties />
             </ProtectedRoute>
           } />
           <Route path="/admin/nairobi-hotels" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminNairobiHotels />
             </ProtectedRoute>
           } />
           <Route path="/admin/media-center" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminMediaCenter />
             </ProtectedRoute>
           } />
           <Route path="/admin/reviews" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminReviews />
             </ProtectedRoute>
           } />
           <Route path="/admin/cancellations" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminCancellationManagement />
             </ProtectedRoute>
           } />
           <Route path="/admin/room-availability" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminRoomAvailability />
             </ProtectedRoute>
           } />
           <Route path="/admin/packages" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminPackages />
             </ProtectedRoute>
           } />
           <Route path="/admin/amenities" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminAmenities />
             </ProtectedRoute>
           } />
           <Route path="/admin/settings" element={
-            <ProtectedRoute>
+            <ProtectedRoute adminOnly>
               <AdminSettings />
             </ProtectedRoute>
           } />

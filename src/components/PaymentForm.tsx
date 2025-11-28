@@ -440,8 +440,22 @@ export default function PaymentForm({ bookingDetails, customerDetails, onPayment
     }
   };
 
-  const handleEmailReceipt = () => {
-    toast.success(`Receipt sent to ${customerDetails.email}`);
+  const handleEmailReceipt = async () => {
+    try {
+      if (!bookingConfirmation) return;
+      const bookingId = bookingConfirmation.id;
+      const emailTo = bookingConfirmation.customerEmail || customerDetails.email;
+      const resp = await api.post(`/bookings/${bookingId}/email`, { email: emailTo });
+      if (resp.data && resp.data.success) {
+        toast.success(`Receipt sent to ${emailTo}`);
+      } else {
+        console.error('Email API response:', resp);
+        toast.error('Failed to send receipt.');
+      }
+    } catch (err) {
+      console.error('Email receipt error:', err);
+      toast.error('Error sending receipt.');
+    }
   };
 
   const handleDownloadReceipt = () => {

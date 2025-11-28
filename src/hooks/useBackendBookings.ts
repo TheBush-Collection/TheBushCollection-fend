@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 export type SafariBooking = {
   id: string;
@@ -75,16 +76,30 @@ const mapBackendToUi = (b: any): SafariBooking => {
 };
 
 export const useBackendBookings = () => {
+  const { isAdmin, loading: authLoading, user } = useAuth();
   const [bookings, setBookings] = useState<SafariBooking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState<number | null>(null);
 
-  const fetchAdminBookings = useCallback(async (params?: { status?: string; page?: number; limit?: number; search?: string }) => {
+  const fetchBookings = useCallback(async (params?: { status?: string; page?: number; limit?: number; search?: string }) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await api.get('/bookings/admin/bookings', { params });
+      // If auth is still initializing, wait briefly so we don't call user endpoints prematurely
+      if (authLoading) {
+        await new Promise((r) => setTimeout(r, 250));
+      }
+
+      // If user is not logged in and not admin, skip calling the user-only endpoint
+      if (!isAdmin && !user) {
+        setBookings([]);
+        setTotal(null);
+        return [] as SafariBooking[];
+      }
+
+      const path = isAdmin ? '/bookings/admin/bookings' : '/bookings/my';
+      const res = await api.get(path, { params });
       // controller returns { data: bookings, total }
       const data = res.data?.data ?? res.data ?? [];
       const mapped = (Array.isArray(data) ? data : []).map(mapBackendToUi);
@@ -92,13 +107,13 @@ export const useBackendBookings = () => {
       if (res.data?.total !== undefined) setTotal(res.data.total);
       return mapped;
     } catch (err: unknown) {
-      console.error('Failed to fetch admin bookings', err);
+      console.error('Failed to fetch bookings', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch bookings');
       return [] as SafariBooking[];
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAdmin, authLoading, user]);
 
   const getAdminBooking = async (id: string) => {
     try {
@@ -137,7 +152,7 @@ export const useBackendBookings = () => {
       const created = res.data?.booking ?? res.data;
       const mapped = created ? mapBackendToUi(created) : null;
       // Optionally refresh list
-      await fetchAdminBookings();
+      await fetchBookings();
       return mapped ?? res.data;
     } catch (err: unknown) {
       console.error('Failed to create booking', err);
@@ -151,31 +166,33 @@ export const useBackendBookings = () => {
   // Admin actions
   const setDepositPaid = async (id: string) => {
     const res = await api.post(`/bookings/admin/bookings/${id}/deposit`);
-    await fetchAdminBookings();
+    await fetchBookings();
     return res.data;
   };
 
   const setConfirmed = async (id: string) => {
     const res = await api.post(`/bookings/admin/bookings/${id}/confirm`);
-    await fetchAdminBookings();
+    await fetchBookings();
     return res.data;
   };
 
   const setFullyPaid = async (id: string) => {
     const res = await api.post(`/bookings/admin/bookings/${id}/paid`);
-    await fetchAdminBookings();
+    await fetchBookings();
     return res.data;
   };
 
   const reopenBooking = async (id: string) => {
     const res = await api.post(`/bookings/admin/bookings/${id}/reopen`);
-    await fetchAdminBookings();
+    await fetchBookings();
     return res.data;
   };
 
   const cancelBooking = async (id: string) => {
-    const res = await api.post(`/bookings/${id}/cancel`);
-    await fetchAdminBookings();
+    // Use admin cancel endpoint when current user is an admin
+    const path = isAdmin ? `/bookings/admin/bookings/${id}/cancel` : `/bookings/${id}/cancel`;
+    const res = await api.post(path);
+    await fetchBookings();
     return res.data;
   };
 
@@ -195,27 +212,34 @@ export const useBackendBookings = () => {
     // If there are other updates not covered by admin endpoints, attempt to PATCH the booking (if backend supports it)
     try {
       const res = await api.patch(`/bookings/admin/bookings/${id}`, updates);
-      await fetchAdminBookings();
+      await fetchBookings();
       return res.data;
     } catch (err) {
       console.warn('PATCH not supported or failed, refetching bookings', err);
-      await fetchAdminBookings();
+      await fetchBookings();
       throw err;
     }
   };
 
   useEffect(() => {
     // Initial load
-    fetchAdminBookings();
-  }, [fetchAdminBookings]);
+    fetchBookings();
+  }, [fetchBookings]);
+  // Send/resend notification for a booking. asAdmin toggles admin vs user endpoint
+  const notifyBooking = async (id: string, type = 'booking_created', asAdmin = false) => {
+    const path = asAdmin ? `/bookings/admin/bookings/${id}/notify` : `/bookings/${id}/notify`;
+    const res = await api.post(path, { type });
+    await fetchBookings();
+    return res.data;
+  };
 
   return {
     bookings,
     loading,
     error,
     total,
-    refetch: fetchAdminBookings,
-    fetchAdminBookings,
+    refetch: fetchBookings,
+    fetchBookings,
     getAdminBooking,
     getBookingConfirmation,
     createBooking,
@@ -224,7 +248,8 @@ export const useBackendBookings = () => {
     setFullyPaid,
     reopenBooking,
     cancelBooking,
-    updateBooking
+    updateBooking,
+    notifyBooking
   };
 };
 

@@ -36,7 +36,7 @@ interface BookingRow {
   balanceDue?: number;
 }
 export default function AdminBookings() {
-  const { bookings: supabaseBookings, loading, error, updateBooking, refetch } = useBackendBookings();
+  const { bookings: supabaseBookings, loading, error, updateBooking, refetch, notifyBooking } = useBackendBookings();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
@@ -168,6 +168,17 @@ export default function AdminBookings() {
     if (booking) {
       setSelectedBooking(booking);
       setIsDetailsOpen(true);
+    }
+  };
+
+  const handleNotify = async (bookingId: string, type = 'booking_created') => {
+    try {
+      toast.info('Sending notification...');
+      await notifyBooking(bookingId, type, true);
+      toast.success('Notification sent');
+    } catch (err) {
+      console.error('Failed to send notification:', err);
+      toast.error('Failed to send notification');
     }
   };
 
@@ -724,6 +735,15 @@ export default function AdminBookings() {
                           >
                             <Eye className="h-4 w-4 mr-1" />
                             View
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleNotify(booking.id, 'booking_created')}
+                            title="Resend confirmation/notification"
+                          >
+                            <RefreshCw className="h-4 w-4 mr-1" />
+                            Notify
                           </Button>
                           {getStatusActionButtons(booking)}
                         </div>

@@ -11,8 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { Plus, Edit2, Trash2, Upload, Play, Image as ImageIcon, Eye, Calendar, Save, X } from 'lucide-react';
-// import { useSupabasePackages } from '@/hooks/useSupabasePackages';
-// import { useSupabaseProperties } from '@/hooks/useSupabaseProperties';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface MediaItem {
@@ -20,8 +18,8 @@ interface MediaItem {
   type: 'image' | 'video';
   title: string;
   description: string;
-  url: string;
-  thumbnail: string;
+  url: string; // fileUrl on backend
+  thumbnail: string; // thumbnailUrl on backend
   date: string;
   category: string;
   featured?: boolean;
@@ -76,7 +74,32 @@ export default function AdminMediaCenter() {
   const loadMediaItems = useCallback(async () => {
     try {
       const res = await api.get('/media/media-center');
-      setMediaItems(res.data || []);
+      const raw = res.data || [];
+      const items = (raw as Array<Record<string, unknown>>).map((it) => {
+        const obj = it as Record<string, unknown>;
+        const id = String(obj['_id'] ?? obj['id'] ?? '');
+        const type = String(obj['type'] ?? 'image') as 'image' | 'video';
+        const title = String(obj['title'] ?? '');
+        const description = String(obj['description'] ?? '');
+        const fileUrl = String(obj['fileUrl'] ?? obj['thumbnailUrl'] ?? '');
+        const thumbnail = String(obj['thumbnailUrl'] ?? obj['fileUrl'] ?? '');
+        const date = String(obj['createdAt'] ?? obj['date'] ?? new Date().toISOString());
+        const category = String(obj['category'] ?? '');
+        const featured = Boolean(obj['featured'] ?? false);
+
+        return {
+          id,
+          type,
+          title,
+          description,
+          url: fileUrl,
+          thumbnail,
+          date,
+          category,
+          featured,
+        } as MediaItem;
+      });
+      setMediaItems(items);
     } catch (error) {
       console.error('Error loading media items:', error);
       toast.error('Failed to load media items');
@@ -104,15 +127,42 @@ export default function AdminMediaCenter() {
       if (editingItem) {
         try {
           // Try to call update endpoint if available
-          await api.put(`/media/admin/media/${editingItem.id}`, { ...formData, date });
+          await api.put(`/media/admin/media/${editingItem.id}`, {
+            title: formData.title,
+            type: formData.type,
+            category: formData.category,
+            thumbnailUrl: formData.thumbnail,
+            description: formData.description,
+            featured: formData.featured,
+            fileUrl: formData.url,
+            date,
+          });
           toast.success('Media item updated successfully');
         } catch (err) {
           console.warn('Update not supported on backend, attempting create fallback', err);
-          await api.post('/media/admin/media', { ...formData, date });
+          await api.post('/media/admin/media', {
+            title: formData.title,
+            type: formData.type,
+            category: formData.category,
+            thumbnailUrl: formData.thumbnail,
+            description: formData.description,
+            featured: formData.featured,
+            fileUrl: formData.url,
+            date,
+          });
           toast.success('Media item saved (fallback)');
         }
       } else {
-        await api.post('/media/admin/media', { ...formData, date });
+        await api.post('/media/admin/media', {
+          title: formData.title,
+          type: formData.type,
+          category: formData.category,
+          thumbnailUrl: formData.thumbnail,
+          description: formData.description,
+          featured: formData.featured,
+          fileUrl: formData.url,
+          date,
+        });
         toast.success('Media item added successfully');
       }
 
@@ -154,6 +204,35 @@ export default function AdminMediaCenter() {
       package_id: item.package_id
     });
     setIsDialogOpen(true);
+  };
+
+  // File upload handling
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [uploadingThumb, setUploadingThumb] = useState(false);
+
+  const handleFileUpload = async (file: File, target: 'media' | 'thumbnail') => {
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      if (target === 'media') setUploadingMedia(true); else setUploadingThumb(true);
+      const res = await api.post('/media/admin/upload', fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const fileUrl = res.data?.fileUrl;
+      if (fileUrl) {
+        if (target === 'media') setFormData(prev => ({ ...prev, url: fileUrl }));
+        else setFormData(prev => ({ ...prev, thumbnail: fileUrl }));
+        toast.success('File uploaded');
+      } else {
+        toast.error('Upload did not return file URL');
+      }
+    } catch (err) {
+      console.error('Upload error', err);
+      toast.error('File upload failed');
+    } finally {
+      if (target === 'media') setUploadingMedia(false); else setUploadingThumb(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -271,6 +350,29 @@ export default function AdminMediaCenter() {
                   placeholder="Enter media URL (YouTube embed, image URL, etc.)"
                   required
                 />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    id="mediaFile"
+                    type="file"
+                    accept={formData.type === 'video' ? 'video/*' : 'image/*'}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleFileUpload(f, 'media');
+                    }}
+                    className="hidden"
+                  />
+                  <label htmlFor="mediaFile">
+                    <Button size="sm" variant="outline" className="flex items-center">
+                      <Upload className="w-4 h-4 mr-2" />
+                      {uploadingMedia ? 'Uploading...' : 'Upload Media File'}
+                    </Button>
+                  </label>
+                  {formData.url && (
+                    <a href={formData.url} target="_blank" rel="noreferrer" className="text-sm text-blue-600 underline">
+                      View
+                    </a>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -282,6 +384,29 @@ export default function AdminMediaCenter() {
                   placeholder="Enter thumbnail image URL"
                   required
                 />
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    id="thumbFile"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleFileUpload(f, 'thumbnail');
+                    }}
+                    className="hidden"
+                  />
+                  <label htmlFor="thumbFile">
+                    <Button size="sm" variant="outline" className="flex items-center">
+                      <Upload className="w-4 h-4 mr-2" />
+                      {uploadingThumb ? 'Uploading...' : 'Upload Thumbnail'}
+                    </Button>
+                  </label>
+                  {formData.thumbnail && (
+                    <a href={formData.thumbnail} target="_blank" rel="noreferrer" className="text-sm text-blue-600 underline">
+                      View
+                    </a>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">

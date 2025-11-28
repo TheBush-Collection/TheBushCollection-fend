@@ -4,16 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
-import { Calendar, AlertTriangle, AlertCircle, CheckCircle, User, DollarSign, Trash2, MapPin, Users, Download } from 'lucide-react';
+import { Calendar, AlertTriangle, AlertCircle, CheckCircle, User, DollarSign, Trash2, MapPin, Users, Download, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useBackendBookings } from '@/hooks/useBackendBookings';
+import { useBackendBookings, type SafariBooking } from '@/hooks/useBackendBookings';
+import api from '@/lib/api';
 import { useReviews } from '@/hooks/useReviews';
+
+type UserBooking = SafariBooking & { property_name?: string; package_name?: string; package_id?: string };
 import ReviewSubmission from '@/components/ReviewSubmission';
 import { toast } from 'sonner';
 
 export default function UserDashboard() {
   const { user } = useAuth();
-  const { bookings } = useBackendBookings();
+  const { bookings, cancelBooking, notifyBooking } = useBackendBookings();
   const { reviews } = useReviews();
   const [activeTab, setActiveTab] = useState('bookings');
 
@@ -69,7 +72,7 @@ export default function UserDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Welcome back, {user.user_metadata?.full_name || user.email?.split('@')[0]}!
+                Welcome back, {user.fullName || user.email?.split('@')[0]}!
               </h1>
               <p className="text-gray-600 dark:text-gray-400 mt-1">
                 Manage your safari bookings and adventures
@@ -151,7 +154,7 @@ export default function UserDashboard() {
 
           {/* Bookings Tab */}
           <TabsContent value="bookings" className="space-y-6">
-            <BookingsTab />
+            <BookingsTab bookings={bookings} cancelBooking={cancelBooking} />
           </TabsContent>
 
           {/* Reviews Tab */}
@@ -169,7 +172,7 @@ export default function UserDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-gray-600">Full Name</label>
-                    <p className="text-sm text-gray-900">{user.user_metadata?.full_name || 'Not provided'}</p>
+                    <p className="text-sm text-gray-900">{user.fullName || 'Not provided'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-600">Email</label>
@@ -207,8 +210,7 @@ export default function UserDashboard() {
   );
 }
 
-function BookingsTab() {
-  const { bookings, cancelBooking } = useBackendBookings();
+function BookingsTab({ bookings, cancelBooking }: { bookings: UserBooking[]; cancelBooking: (id: string) => Promise<unknown> }) {
   const [cancellationLoading, setCancellationLoading] = useState<string | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState<string | null>(null);
   const [downloadingReceipt, setDownloadingReceipt] = useState<string | null>(null);
@@ -251,62 +253,15 @@ function BookingsTab() {
     }
   };
 
-  const handleDownloadReceipt = async (booking: any) => {
+  const handleDownloadReceipt = async (booking: SafariBooking) => {
     try {
-      setDownloadingReceipt(booking._id);
-      const response = await fetch(`/api/bookings/receipt/${booking.bookingId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || localStorage.getItem('authToken')}`
-        }
-      });
+      setDownloadingReceipt(booking.id);
+      const res = await api.get(`/bookings/receipt/${booking.bookingId}`);
+      if (!res.data || !res.data.receipt) throw new Error('No receipt returned');
+      const r = res.data.receipt;
 
-      if (!response.ok) {
-        throw new Error('Failed to download receipt');
-      }
+      const receiptContent = `BOOKING RECEIPT\n=====================================\nDate Generated: ${new Date(r.generatedAt || Date.now()).toLocaleDateString()}\n\nBOOKING INFORMATION\nBooking ID: ${r.bookingId}\nConfirmation #: ${r.confirmationNumber}\nStatus: ${r.status}\n\nCUSTOMER DETAILS\nName: ${r.customerName}\nEmail: ${r.customerEmail}\nPhone: ${r.customerPhone || 'N/A'}\n\nSTAY INFORMATION\nType: ${r.bookingType}\nCheck-in: ${new Date(r.checkInDate).toLocaleDateString()}\nCheck-out: ${new Date(r.checkOutDate).toLocaleDateString()}\nNights: ${r.nights}\nGuests: ${r.totalGuests}\n\nCOST BREAKDOWN\nTotal: $${(r.costs?.total || 0).toFixed(2)}\nAmount Paid: $${(r.amountPaid || 0).toFixed(2)}\n\n=====================================\nThank you for your booking!`;
 
-      const data = await response.json();
-      
-      // Create receipt object for download
-      const receiptContent = `
-BOOKING RECEIPT
-=====================================
-Date Generated: ${new Date().toLocaleDateString()}
-
-BOOKING INFORMATION
-Booking ID: ${booking.bookingId}
-Confirmation #: ${booking.confirmationNumber}
-Status: ${booking.status}
-
-CUSTOMER DETAILS
-Name: ${booking.customerName}
-Email: ${booking.customerEmail}
-Phone: ${booking.customerPhone || 'N/A'}
-
-STAY INFORMATION
-Type: ${booking.bookingType === 'property' ? 'Property' : 'Package'}
-Check-in: ${new Date(booking.checkInDate).toLocaleDateString()}
-Check-out: ${new Date(booking.checkOutDate).toLocaleDateString()}
-Nights: ${booking.nights}
-Guests: ${booking.totalGuests} (${booking.adults} adults, ${booking.children} children)
-
-COST BREAKDOWN
-Base Price: $${(booking.costs?.basePrice || 0).toFixed(2)}
-Amenities: $${(booking.costs?.amenitiesTotal || 0).toFixed(2)}
-Subtotal: $${(booking.costs?.subtotal || 0).toFixed(2)}
-Service Fee: $${(booking.costs?.serviceFee || 0).toFixed(2)}
-Taxes: $${(booking.costs?.taxes || 0).toFixed(2)}
-TOTAL: $${(booking.costs?.total || 0).toFixed(2)}
-
-PAYMENT STATUS
-Amount Paid: $${booking.amountPaid?.toFixed(2) || '0.00'}
-Payment Term: ${booking.paymentTerm}
-Status: ${booking.status}
-
-=====================================
-Thank you for your booking!
-      `;
-
-      // Download as text file
       const element = document.createElement('a');
       element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(receiptContent));
       element.setAttribute('download', `receipt_${booking.bookingId}.txt`);
@@ -324,7 +279,18 @@ Thank you for your booking!
     }
   };
 
-  const BookingCard = ({ booking, isPast }: { booking: any; isPast: boolean }) => (
+  const handleResendNotification = async (booking: SafariBooking) => {
+    try {
+      toast.info('Resending confirmation...');
+      await notifyBooking(booking.id, 'booking_created', false);
+      toast.success('Confirmation resent');
+    } catch (err) {
+      console.error('Resend notification failed:', err);
+      toast.error('Failed to resend confirmation');
+    }
+  };
+
+  const BookingCard = ({ booking, isPast }: { booking: UserBooking; isPast: boolean }) => (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <CardContent className="p-6">
         <div className="flex justify-between items-start mb-4">
@@ -347,10 +313,10 @@ Thank you for your booking!
             </div>
           </div>
           <div className="space-y-2">
-            {booking.guests && (
+            {(booking.total_guests || booking.adults || booking.children) && (
               <div className="flex items-center text-sm text-gray-600">
                 <Users className="w-4 h-4 mr-2" />
-                <span>{booking.guests} {booking.guests === 1 ? 'Guest' : 'Guests'}</span>
+                <span>{booking.total_guests ?? (booking.adults || 0) + (booking.children || 0)} {(booking.total_guests ?? (booking.adults || 0) + (booking.children || 0)) === 1 ? 'Guest' : 'Guests'}</span>
               </div>
             )}
             <div className="flex items-center text-sm font-semibold text-green-600">
@@ -362,22 +328,22 @@ Thank you for your booking!
 
         {!isPast && booking.status !== 'cancelled' && (
           <div className="flex gap-2">
-            {showCancelConfirm === booking._id ? (
+            {showCancelConfirm === booking.id ? (
               <div className="flex gap-2 w-full">
                 <Button
                   size="sm"
                   variant="destructive"
-                  onClick={() => handleCancelBooking(booking._id)}
-                  disabled={cancellationLoading === booking._id}
+                  onClick={() => handleCancelBooking(booking.id)}
+                  disabled={cancellationLoading === booking.id}
                   className="flex-1"
                 >
-                  {cancellationLoading === booking._id ? 'Cancelling...' : 'Confirm Cancel'}
+                  {cancellationLoading === booking.id ? 'Cancelling...' : 'Confirm Cancel'}
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => setShowCancelConfirm(null)}
-                  disabled={cancellationLoading === booking._id}
+                  disabled={cancellationLoading === booking.id}
                   className="flex-1"
                 >
                   Keep Booking
@@ -389,16 +355,25 @@ Thank you for your booking!
                   size="sm"
                   variant="outline"
                   onClick={() => handleDownloadReceipt(booking)}
-                  disabled={downloadingReceipt === booking._id}
+                  disabled={downloadingReceipt === booking.id}
                   className="flex-1"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  {downloadingReceipt === booking._id ? 'Downloading...' : 'Receipt'}
+                  {downloadingReceipt === booking.id ? 'Downloading...' : 'Receipt'}
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setShowCancelConfirm(booking._id)}
+                  onClick={() => handleResendNotification(booking)}
+                  className="flex-1"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Resend
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowCancelConfirm(booking.id)}
                   className="text-red-600 hover:text-red-700 flex-1"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
@@ -415,13 +390,13 @@ Thank you for your booking!
               size="sm"
               variant="outline"
               onClick={() => handleDownloadReceipt(booking)}
-              disabled={downloadingReceipt === booking._id}
+              disabled={downloadingReceipt === booking.id}
               className="flex-1"
             >
               <Download className="w-4 h-4 mr-2" />
-              {downloadingReceipt === booking._id ? 'Downloading...' : 'Receipt'}
+              {downloadingReceipt === booking.id ? 'Downloading...' : 'Receipt'}
             </Button>
-            <Link to={`/property/${booking.property_id}`} className="flex-1">
+            <Link to={`/property/${booking._raw?.property?._id || booking.package_id || ''}`} className="flex-1">
               <Button size="sm" variant="outline" className="w-full">
                 View Property & Review
               </Button>
@@ -461,7 +436,7 @@ Thank you for your booking!
         ) : (
           <div className="grid gap-4">
             {upcomingBookings.map(booking => (
-              <BookingCard key={booking._id} booking={booking} isPast={false} />
+              <BookingCard key={booking.id} booking={booking} isPast={false} />
             ))}
           </div>
         )}
@@ -479,7 +454,7 @@ Thank you for your booking!
         ) : (
           <div className="grid gap-4">
             {pastBookings.map(booking => (
-              <BookingCard key={booking._id} booking={booking} isPast={true} />
+              <BookingCard key={booking.id} booking={booking} isPast={true} />
             ))}
           </div>
         )}
@@ -487,3 +462,7 @@ Thank you for your booking!
     </div>
   );
 }
+function notifyBooking(id: string, arg1: string, arg2: boolean) {
+  throw new Error('Function not implemented.');
+}
+

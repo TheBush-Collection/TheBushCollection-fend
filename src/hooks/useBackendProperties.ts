@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import api, { initAuthFromStorage, setAuthToken } from '@/lib/api';
+import api, { initAuthFromStorage, setAuthToken, API_BASE } from '@/lib/api';
 
 export interface Property {
   id?: string;
@@ -46,8 +46,31 @@ interface UseBackendPropertiesOptions {
   limit?: number;
 }
 
-const API_BASE = '';
+// use API_BASE from api.ts
 
+// Normalize media URLs to absolute URLs so frontend can load them reliably.
+const normalizeMediaUrl = (value: unknown): string | null => {
+  if (!value) return null;
+  const s = String(value).trim();
+  if (!s) return null;
+
+  // If already absolute (http/https) or a data/blob/file URI, return as-is
+  if (/^https?:\/\//i.test(s) || /^data:/i.test(s) || /^blob:/i.test(s) || /^file:/i.test(s)) return s;
+
+  // If the value already contains the API base, return it unchanged
+  if (API_BASE && s.startsWith(API_BASE)) return s;
+
+  // If starts with a leading slash, join with API_BASE
+  if (s.startsWith('/')) return (API_BASE || '') + s;
+
+  // If starts with "uploads/" or "public/uploads/" treat as relative to server
+  if (s.startsWith('uploads/') || s.startsWith('public/uploads/') || s.startsWith('uploads\\') ) {
+    return (API_BASE || '') + '/' + s.replace(/^public\//, '');
+  }
+
+  // Otherwise, treat as a path on the server
+  return (API_BASE ? API_BASE + '/' : '') + s;
+};
 export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,8 +137,8 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
             numReviews: (prop.numReviews as number) || 0,
             reviews: (prop.numReviews as number) || 0,
             amenities: Array.isArray(prop.amenities) ? prop.amenities as string[] : [],
-            images: Array.isArray(prop.images) ? prop.images as string[] : [],
-            videos: Array.isArray(prop.videos) ? prop.videos as string[] : [],
+            images: Array.isArray(prop.images) ? (prop.images as string[]).map(i => normalizeMediaUrl(i) || '') : [],
+            videos: Array.isArray(prop.videos) ? (prop.videos as string[]).map(v => normalizeMediaUrl(v) || '') : [],
             featured: (prop.featured as boolean) || false,
             rooms,
             createdAt: prop.createdAt as string,
@@ -163,7 +186,7 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
         featured: propertyData.featured,
       };
 
-  const response = await api.post(`http://localhost:5000/properties/admin/properties`, payload);
+  const response = await api.post(`/properties/admin/properties`, payload);
       
       if (response.data) {
         const newProp: Property = {
@@ -217,7 +240,7 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
         featured: propertyData.featured,
       };
 
-  const response = await api.put(`/admin/properties/${id}`, payload);
+  const response = await api.put(`/properties/admin/properties/${id}`, payload);
       
       if (response.data) {
         setProperties(properties.map(p => 
@@ -236,7 +259,7 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
 
   const deleteProperty = async (id: string) => {
     try {
-  await api.delete(`/admin/properties/${id}`);
+  await api.delete(`/properties/admin/properties/${id}`);
       setProperties(properties.filter(p => (p.id !== id && p._id !== id)));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to delete property';
@@ -263,8 +286,8 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
           numReviews: response.data.numReviews || 0,
           reviews: response.data.numReviews || 0,
           amenities: Array.isArray(response.data.amenities) ? response.data.amenities : [],
-          images: Array.isArray(response.data.images) ? response.data.images : [],
-          videos: Array.isArray(response.data.videos) ? response.data.videos : [],
+          images: Array.isArray(response.data.images) ? (response.data.images as string[]).map(i => normalizeMediaUrl(i) || '') : [],
+          videos: Array.isArray(response.data.videos) ? (response.data.videos as string[]).map(v => normalizeMediaUrl(v) || '') : [],
           featured: response.data.featured || false,
           rooms: response.data.rooms || [],
         };

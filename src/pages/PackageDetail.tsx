@@ -107,7 +107,15 @@ export default function PackageDetail() {
   };
 
   const isVideo = (url: string) => {
-    return url.includes('video') || url.endsWith('.mp4') || url.endsWith('.webm') || url.endsWith('.mov');
+    if (!url || typeof url !== 'string') return false;
+    const lower = url.toLowerCase();
+    const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.flv', '.wmv'];
+    if (videoExtensions.some(ext => lower.includes(ext))) return true;
+    const videoHosts = ['youtube.com', 'youtu.be', 'vimeo.com', 'dailymotion.com'];
+    if (videoHosts.some(h => lower.includes(h))) return true;
+    const videoIndicators = ['/video/', '.video.', 'videoplayback', 'video=true', '1drv.ms', 'sharepoint.com', 'onedrive.live.com'];
+    if (videoIndicators.some(ind => lower.includes(ind))) return true;
+    return false;
   };
 
   return (

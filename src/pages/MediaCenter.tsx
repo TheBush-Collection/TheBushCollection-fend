@@ -51,7 +51,32 @@ export default function MediaCenter() {
       const params: { category?: string } = {};
       if (selectedCategory !== 'all') params.category = selectedCategory;
       const res = await api.get('/media/media-center', { params });
-      setMediaItems(res.data || []);
+      const raw = res.data || [];
+      const items = (raw as Array<Record<string, unknown>>).map((it) => {
+        const obj = it as Record<string, unknown>;
+        const id = String(obj['_id'] ?? obj['id'] ?? '');
+        const type = String(obj['type'] ?? 'image') as 'image' | 'video';
+        const title = String(obj['title'] ?? '');
+        const description = String(obj['description'] ?? '');
+        const fileUrl = String(obj['fileUrl'] ?? obj['url'] ?? '');
+        const thumbnail = String(obj['thumbnailUrl'] ?? obj['thumbnail'] ?? fileUrl ?? '');
+        const date = String(obj['createdAt'] ?? obj['date'] ?? new Date().toISOString());
+        const category = String(obj['category'] ?? '');
+        const featured = Boolean(obj['featured'] ?? false);
+
+        return {
+          id,
+          type,
+          title,
+          description,
+          url: fileUrl,
+          thumbnail,
+          date,
+          category,
+          featured,
+        } as MediaItem;
+      });
+      setMediaItems(items);
     } catch (error) {
       console.error('Error fetching media items:', error);
       toast({
@@ -71,6 +96,46 @@ export default function MediaCenter() {
   const handleMediaClick = (item: MediaItem) => {
     setSelectedMedia(item);
     setShowDialog(true);
+  };
+
+  // Determine how to render a video URL: iframe for embeds, <video> for direct files
+  const getVideoEmbed = (url?: string) => {
+    if (!url) return { kind: 'unknown' as const };
+    const u = url.trim();
+
+    // YouTube
+    const ytMatch = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/i);
+    if (ytMatch) return { kind: 'iframe' as const, src: `https://www.youtube.com/embed/${ytMatch[1]}` };
+
+    // Vimeo
+    const vMatch = u.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+    if (vMatch) return { kind: 'iframe' as const, src: `https://player.vimeo.com/video/${vMatch[1]}` };
+
+    // Facebook watch or videos
+    if (/facebook\.com|fb\.watch/i.test(u)) {
+      // Use Facebook video plugin which accepts the full URL as href
+      const encoded = encodeURIComponent(u);
+      return { kind: 'iframe' as const, src: `https://www.facebook.com/plugins/video.php?href=${encoded}&show_text=0` };
+    }
+
+    // Instagram post (p/ or reel/)
+    const igMatch = u.match(/instagram\.com\/(?:p|reel)\/([A-Za-z0-9_-]+)/i);
+    if (igMatch) return { kind: 'iframe' as const, src: `https://www.instagram.com/p/${igMatch[1]}/embed` };
+
+    // TikTok
+    const ttMatch = u.match(/tiktok\.com\/(?:@[^/]+\/video\/)?(\d+)/i);
+    if (ttMatch) return { kind: 'iframe' as const, src: `https://www.tiktok.com/embed/v2/${ttMatch[1]}` };
+
+    // Direct video file
+    if (/\.(mp4|webm|ogg|mov|mkv)(\?|$)/i.test(u)) {
+      return { kind: 'video' as const, src: u };
+    }
+
+    // If already an embed URL or player URL, keep as iframe
+    if (/embed|player\.vimeo|youtube\.com\/embed/i.test(u)) return { kind: 'iframe' as const, src: u };
+
+    // Fallback: treat as iframe attempt
+    return { kind: 'iframe' as const, src: u };
   };
 
   const handleDownload = async (url: string, title: string) => {
@@ -193,17 +258,26 @@ export default function MediaCenter() {
             </DialogHeader>
             <div className="mt-4">
               {selectedMedia.type === 'video' ? (
-                <div className="relative pt-[56.25%]">
-                  <iframe
+                // For video items: use iframe for YouTube embeds, otherwise use native video element
+                (/youtube|youtu.be|youtube-nocookie/.test(selectedMedia.url)) ? (
+                  <div className="relative pt-[56.25%]">
+                    <iframe
+                      src={selectedMedia.url}
+                      className="absolute top-0 left-0 w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : (
+                  <video
+                    controls
                     src={selectedMedia.url}
-                    className="absolute top-0 left-0 w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
+                    className="w-full h-auto max-h-[70vh] object-contain"
                   />
-                </div>
+                )
               ) : (
                 <img
-                  src={selectedMedia.url}
+                  src={selectedMedia.url || selectedMedia.thumbnail}
                   alt={selectedMedia.title}
                   className="w-full h-auto max-h-[70vh] object-contain"
                 />

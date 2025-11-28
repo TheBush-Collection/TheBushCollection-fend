@@ -1222,7 +1222,10 @@ export default function BookNow() {
                           <Calendar
                             mode="single"
                             selected={checkInDate}
-                            onSelect={setCheckInDate}
+                            onSelect={(date) => {
+                              console.log('BookNow: check-in selected', date);
+                              setCheckInDate(date as Date | undefined);
+                            }}
                             disabled={(date) => date < new Date()}
                             initialFocus
                           />
@@ -1249,7 +1252,10 @@ export default function BookNow() {
                           <Calendar
                             mode="single"
                             selected={checkOutDate}
-                            onSelect={setCheckOutDate}
+                            onSelect={(date) => {
+                              console.log('BookNow: check-out selected', date);
+                              setCheckOutDate(date as Date | undefined);
+                            }}
                             disabled={(date) => date <= (checkInDate || new Date())}
                             initialFocus
                           />
@@ -1280,7 +1286,10 @@ export default function BookNow() {
                           <Calendar
                             mode="single"
                             selected={packageStartDate}
-                            onSelect={setPackageStartDate}
+                            onSelect={(date) => {
+                              console.log('BookNow: package start selected', date);
+                              setPackageStartDate(date as Date | undefined);
+                            }}
                             disabled={(date) => date < new Date()}
                             initialFocus
                           />
@@ -1377,7 +1386,10 @@ export default function BookNow() {
                               <Calendar
                                 mode="single"
                                 selected={arrivalDate}
-                                onSelect={setArrivalDate}
+                                onSelect={(date) => {
+                                  console.log('BookNow: arrival date selected', date);
+                                  setArrivalDate(date as Date | undefined);
+                                }}
                                 disabled={(date) => date < new Date()}
                                 initialFocus
                               />
@@ -1430,7 +1442,10 @@ export default function BookNow() {
                               <Calendar
                                 mode="single"
                                 selected={departureDate}
-                                onSelect={setDepartureDate}
+                                onSelect={(date) => {
+                                  console.log('BookNow: departure date selected', date);
+                                  setDepartureDate(date as Date | undefined);
+                                }}
                                 disabled={(date) => date < (arrivalDate || new Date())}
                                 initialFocus
                               />
