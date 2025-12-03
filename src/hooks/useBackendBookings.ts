@@ -205,6 +205,12 @@ export const useBackendBookings = () => {
       if (status === 'deposit-paid' || status === 'deposit_paid') return setDepositPaid(id);
       if (status === 'fully-paid' || status === 'fully_paid') return setFullyPaid(id);
       if (status === 'confirmed') return setConfirmed(id);
+      if (status === 'completed') {
+        // Admin check-in / completed action
+        const res = await api.post(`/bookings/admin/bookings/${id}/complete`);
+        await fetchBookings();
+        return res.data;
+      }
       if (status === 'cancelled') return cancelBooking(id);
       if (status === 'inquiry' || status === 'pending') return reopenBooking(id);
     }

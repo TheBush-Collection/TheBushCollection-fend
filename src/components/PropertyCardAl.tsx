@@ -333,19 +333,19 @@ export default function PropertyCard({ property }: PropertyCardProps) {
   const { mediaContent, isVideo: videoCheck } = renderMedia();
 
   return (
-    <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 bg-[#ebe9d8] border-2 border-[#333033]">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <div className="relative">
         {mediaContent}
 
         {/* Property Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {videoCheck && (
-            <Badge className="bg-[#c9a961] hover:bg-[#b8935a] text-white text-xs">
+            <Badge variant="secondary" className="bg-red-600 text-white text-xs">
               VIDEO
             </Badge>
           )}
           {propertyFeatured && (
-            <Badge className="bg-orange-100 text-orange-800 text-xs">
+            <Badge className="bg-orange-500">
               Featured
             </Badge>
           )}
@@ -353,22 +353,22 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
         {/* Availability Badges */}
         {fullyBooked && (
-          <Badge className="absolute top-2 right-2 bg-red-500 text-white">
+          <Badge className="absolute top-2 right-2 bg-red-500">
             Fully Booked
           </Badge>
         )}
         {!fullyBooked && availableRooms < totalRooms && totalRooms > 0 && (
-          <Badge className="absolute top-2 right-2 bg-yellow-500 text-white">
+          <Badge className="absolute top-2 right-2 bg-yellow-500">
             Limited Availability
           </Badge>
         )}
       </div>
 
-      <CardContent className="p-4 bg-[#ebe9d8]">
+      <CardContent className="p-4">
         <div className="space-y-3">
           <div>
-            <h3 className="text-xl font-semibold text-[#333033] hover:text-[#c9a961] transition-colors duration-300">{propertyName}</h3>
-            <div className="flex items-center text-[#333033]/80 text-sm mt-1">
+            <h3 className="text-xl font-semibold text-gray-900">{propertyName}</h3>
+            <div className="flex items-center text-gray-600 text-sm mt-1">
               <MapPin className="h-4 w-4 mr-1" />
               {propertyLocation}
             </div>
@@ -376,12 +376,12 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center">
-              <Star className="h-4 w-4 text-[#c9a961] mr-1" />
-              <span className="font-medium text-[#333033]">{propertyRating}</span>
-              <span className="text-[#333033]/60 ml-1">({propertyReviews} reviews)</span>
+              <Star className="h-4 w-4 text-yellow-500 mr-1" />
+              <span className="font-medium">{propertyRating}</span>
+              <span className="text-gray-500 ml-1">({propertyReviews} reviews)</span>
             </div>
             {rooms.length > 0 && (
-              <div className="flex items-center text-[#333033]/80">
+              <div className="flex items-center text-gray-600">
                 <Users className="h-4 w-4 mr-1" />
                 Up to {Math.max(...rooms.map(r => (r.maxGuests || r.max_guests || 0)))} guests
               </div>
@@ -391,7 +391,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
           {/* Room Availability Status */}
           <div className="space-y-2">
             {fullyBooked ? (
-              <div className="bg-red-50 border-2 border-red-200 rounded-lg p-3">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                 <div className="flex items-center text-red-800">
                   <Calendar className="h-4 w-4 mr-2" />
                   <span className="font-medium">Fully Booked</span>
@@ -404,7 +404,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                 )}
               </div>
             ) : availableRooms < totalRooms ? (
-              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-3">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center text-yellow-800">
                     <Calendar className="h-4 w-4 mr-2" />
@@ -422,37 +422,34 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                 )}
               </div>
             ) : (
-              <div className="bg-[#ebe9d8] border-2 border-[#c9a961] rounded-lg p-3">
-                <div className="flex items-center text-[#333033]">
-                  <Calendar className="h-4 w-4 mr-2 text-[#c9a961]" />
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <div className="flex items-center text-green-800">
+                  <Calendar className="h-4 w-4 mr-2" />
                   <span className="font-medium">Available Now</span>
                 </div>
-                <span className="text-[#333033]/80 text-sm">
+                <span className="text-green-600 text-sm">
                   All {totalRooms} rooms available for booking
                 </span>
               </div>
             )}
           </div>
 
-          <p className="text-[#333033]/80 text-sm line-clamp-2">{propertyDescription}</p>
+          <p className="text-gray-600 text-sm line-clamp-2">{propertyDescription}</p>
 
           <div className="flex items-center justify-between pt-2">
             <div>
-              <span className="text-2xl font-bold text-[#c9a961]">${propertyPrice}</span>
-              <span className="text-[#333033]/60 text-sm ml-1">per night</span>
+              <span className="text-2xl font-bold text-gray-900">${propertyPrice}</span>
+              <span className="text-gray-600 text-sm ml-1">per night</span>
             </div>
             <div className="flex gap-2">
               <Link to={`/property/${propertyId}`}>
-                <Button 
-                  className="bg-[#ebe9d8] hover:bg-[#333033] text-[#333033] hover:text-[#ebe9d8] border-2 border-[#333033] transition-all duration-300"
-                  size="sm"
-                >
+                <Button variant="outline" size="sm">
                   View Details
                 </Button>
               </Link>
               <Link to={`/book?property=${propertyId}`}>
                 <Button
-                  className="bg-[#333033] hover:bg-[#ebe9d8] text-[#ebe9d8] hover:text-[#333033] border-2 border-[#333033] transition-all duration-300"
+                  className="bg-orange-500 hover:bg-orange-600"
                   disabled={fullyBooked}
                   size="sm"
                 >

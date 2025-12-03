@@ -30,10 +30,10 @@ export default function About() {
       bio: 'Expert in luxury travel and wildlife conservation'
     },
     {
-      name: 'Linda Ogutu',
-      role: 'Head of Reservations & Sales',
-      image: '/images/Linda.jpeg',
-      bio: 'A passionate hotelier dedicated to creating memorable guest experiences while driving sales growth and operational excellence.'
+      name: 'Linda',
+      role: 'Local Guide Coordinator',
+      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face',
+      bio: 'Born in Kenya, passionate about sharing African culture'
     },
     {
       name: 'Paul',
@@ -42,10 +42,10 @@ export default function About() {
       bio: 'Born in Kenya, passionate about sharing African culture'
     },
     {
-      name: 'Molly Obondi',
-      role: 'Sales and reservations',
-      image: '/images/Molly.jpeg',
-      bio: 'With a genuine love for hospitality, takes pride in connecting guests with the perfect stay experience.'
+      name: 'Moly',
+      role: 'Local Guide Coordinator',
+      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face',
+      bio: 'Born in Kenya, passionate about sharing African culture'
     },
     {
       name: 'Christine',
@@ -146,86 +146,66 @@ export default function About() {
 
   return (
     <div ref={containerRef} className="min-h-screen">
-      
       {/* Hero Section */}
-<motion.section
-  className="relative py-24 text-white overflow-hidden"
-  initial="hidden"
-  animate="visible"
-  variants={fadeInUp}
->
-  {/* Background Video */}
-  <div className="absolute inset-0 w-full h-full">
-    <video
-      className="w-full h-full object-cover"
-      autoPlay
-      loop
-      muted
-      playsInline
-    >
-      <source src="/images/16.mp4" type="video/mp4" />
-      Your browser does not support the video tag.
-    </video>
-    {/* Optional overlay for better text readability */}
-    <div className="absolute inset-0 bg-black/50"></div>
-  </div>
-
-  {/* Content */}
-  <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
-    <motion.h1
-      className="text-5xl md:text-6xl font-bold mb-6"
-      variants={letterVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {'Experience is Everything'.split('').map((letter, index) => (
-        <motion.span
-          key={index}
-          variants={letterVariants}
-          className="inline-block"
-        >
-          {letter === ' ' ? '\u00A0' : letter}
-        </motion.span>
-      ))}
-    </motion.h1>
-    <motion.p
-      className="text-xl md:text-2xl text-green-100 max-w-3xl mx-auto mb-8"
-      variants={fadeInUp}
-      initial="hidden"
-      animate="visible"
-      transition={{ delay: 0.3, duration: 0.8 }}
-    >
-      Spanning the breadth of Kenya and Tanzania, The Bush Collection brings together a group of
-affordable lodges & camps - all in optimal locations - that deliver exceptional hospitality with
-heartfelt warmth and authenticity.
-    </motion.p>
-    <motion.div
-      className="flex flex-col sm:flex-row gap-4 justify-center"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={staggerItem}>
-        <Link to="/packages">
-          <Button size="lg" className="bg-[#333033] hover:bg-[#ebe9d8] border-[#333033] hover:border-[#ebe9d8] border-2 px-8 py-3">
-            Explore Our Packages
-          </Button>
-        </Link>
-      </motion.div>
-      <motion.div variants={staggerItem}>
-        <Link to="/contact">
-          <Button size="lg" variant="outline" className="bg-[#ebe9d8] border-[#333033] text-[#333033] hover:bg-[#333033] hover:text-[#ebe9d8] px-8 py-3">
-            Contact Us
-          </Button>
-        </Link>
-      </motion.div>
-    </motion.div>
-  </div>
-</motion.section>
+      <motion.section
+        className="relative py-24 bg-gradient-to-r from-green-800 to-blue-800 text-white"
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.h1
+            className="text-5xl md:text-6xl font-bold mb-6"
+            variants={letterVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {'About Safari Tours'.split('').map((letter, index) => (
+              <motion.span
+                key={index}
+                variants={letterVariants}
+                className="inline-block"
+              >
+                {letter === ' ' ? '\u00A0' : letter}
+              </motion.span>
+            ))}
+          </motion.h1>
+          <motion.p
+            className="text-xl md:text-2xl text-green-100 max-w-3xl mx-auto mb-8"
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: 0.3, duration: 0.8 }}
+          >
+            Creating unforgettable African safari experiences for over 2 years. We're passionate about wildlife, conservation, and sharing the magic of Africa with the world.
+          </motion.p>
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.div variants={staggerItem}>
+              <Link to="/packages">
+                <Button size="lg" className="bg-orange-500 hover:bg-orange-600 px-8 py-3">
+                  Explore Our Packages
+                </Button>
+              </Link>
+            </motion.div>
+            <motion.div variants={staggerItem}>
+              <Link to="/contact">
+                <Button size="lg" variant="outline" className="border-white text-black hover:bg-white hover:text-green-800 px-8 py-3">
+                  Contact Us
+                </Button>
+              </Link>
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.section>
 
       {/* Stats Section */}
       <motion.section
-        className="py-16 bg-[#ebe9d8]"
+        className="py-16 bg-gray-50"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-100px' }}
@@ -236,16 +216,16 @@ heartfelt warmth and authenticity.
             {stats.map(({ icon: Icon, label, value }, index) => (
               <motion.div
                 key={index}
-                className="bg-[#333033] p-6 rounded-lg shadow-sm"
+                className="bg-white p-6 rounded-lg shadow-sm"
                 variants={staggerItem}
                 whileHover={{ y: -5, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="w-12 h-12 bg-[#ebe9d8] rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Icon className="h-6 w-6 text-[#333033]" />
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Icon className="h-6 w-6 text-green-600" />
                 </div>
-                <div className="text-3xl font-bold text-[#ebe9d8] mb-2">{value}</div>
-                <div className="text-[#ebe9d8]">{label}</div>
+                <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
+                <div className="text-gray-600">{label}</div>
               </motion.div>
             ))}
           </div>
@@ -253,8 +233,8 @@ heartfelt warmth and authenticity.
       </motion.section>
 
       {/* Our Story Section */}
-      <section className="py-16 bg-[#333033]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-[#333033]">
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial="hidden"
@@ -263,7 +243,7 @@ heartfelt warmth and authenticity.
               variants={fadeInLeft}
             >
               <motion.h2
-                className="text-3xl md:text-4xl font-bold text-[#ebe9d8] mb-6"
+                className="text-3xl md:text-4xl font-bold text-gray-900 mb-6"
                 variants={textVariants}
                 initial="hidden"
                 whileInView="visible"
@@ -279,7 +259,7 @@ heartfelt warmth and authenticity.
                   </motion.span>
                 ))}
               </motion.h2>
-              <div className="space-y-4 text-[#ebe9d8] leading-relaxed">
+              <div className="space-y-4 text-gray-700 leading-relaxed">
                 <motion.p variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
                   Founded in 2023 by safari enthusiast Andre, The Bush Collection began as a small operation with a big dream: to share the incredible wildlife and landscapes of Africa with travelers from around the world.
                 </motion.p>
@@ -315,15 +295,13 @@ heartfelt warmth and authenticity.
               viewport={{ once: true, margin: '-50px' }}
               variants={fadeInRight}
             >
-              <div className="bg-[#ebe9d8] p-4 rounded-lg">
-                <img
-                 src="/images/PNG-LOGO (1).png"
-                 alt="Safari landscape"
-                 className="rounded-lg shadow-lg"
-                />
-              </div>
+              <img
+                src="/images/PNG-LOGO (1).png"
+                alt="Safari landscape"
+                className="rounded-lg shadow-lg"
+              />
               <motion.div
-                className="absolute -bottom-6 -left-6 bg-[#ebe9d8] border-[#333033] border-2 p-4 rounded-lg shadow-lg"
+                className="absolute -bottom-6 -left-6 bg-white p-4 rounded-lg shadow-lg"
                 initial={{ opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
@@ -332,8 +310,8 @@ heartfelt warmth and authenticity.
                 <div className="flex items-center">
                   <Compass className="h-6 w-6 text-green-600 mr-3" />
                   <div>
-                    <div className="font-semibold text-[#333033]">2+ Years</div>
-                    <div className="text-sm text-[#333033]">Safari Experience</div>
+                    <div className="font-semibold text-gray-900">2+ Years</div>
+                    <div className="text-sm text-gray-600">Safari Experience</div>
                   </div>
                 </div>
               </motion.div>
@@ -344,7 +322,7 @@ heartfelt warmth and authenticity.
 
       {/* Values Section */}
       <motion.section
-        className="py-16 bg-[#ebe9d8]"
+        className="py-16 bg-gray-50"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-50px' }}
@@ -356,7 +334,7 @@ heartfelt warmth and authenticity.
             variants={fadeInUp}
           >
             <motion.h2
-              className="text-3xl md:text-4xl font-bold text-[#333033] mb-4"
+              className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
               variants={textVariants}
               initial="hidden"
               whileInView="visible"
@@ -373,7 +351,7 @@ heartfelt warmth and authenticity.
               ))}
             </motion.h2>
             <motion.p
-              className="text-xl text-[#333033] max-w-3xl mx-auto"
+              className="text-xl text-gray-600 max-w-3xl mx-auto"
               variants={fadeInUp}
               initial="hidden"
               whileInView="visible"
@@ -398,15 +376,15 @@ heartfelt warmth and authenticity.
                 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card className="h-full hover:shadow-lg transition-shadow bg-[#333033]">
+                <Card className="h-full hover:shadow-lg transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-start">
-                      <div className="w-12 h-12 bg-[#ebe9d8] rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
                         <Icon className="h-6 w-6 text-green-600" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold text-[#ebe9d8] mb-2">{title}</h3>
-                        <p className="text-[#ebe9d8]">{description}</p>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">{title}</h3>
+                        <p className="text-gray-600">{description}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -419,7 +397,7 @@ heartfelt warmth and authenticity.
 
       {/* Team Section */}
       <motion.section
-        className="py-16 bg-[#333033]"
+        className="py-16"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-50px' }}
@@ -431,7 +409,7 @@ heartfelt warmth and authenticity.
             variants={fadeInUp}
           >
             <motion.h2
-              className="text-3xl md:text-4xl font-bold text-[#ebe9d8] mb-4"
+              className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
               variants={textVariants}
               initial="hidden"
               whileInView="visible"
@@ -448,7 +426,7 @@ heartfelt warmth and authenticity.
               ))}
             </motion.h2>
             <motion.p
-              className="text-xl text-[#ebe9d8]"
+              className="text-xl text-gray-600"
               variants={fadeInUp}
               initial="hidden"
               whileInView="visible"
@@ -460,7 +438,7 @@ heartfelt warmth and authenticity.
 
           {/* Founder & CEO - Centered at top */}
           <motion.div
-            className="flex justify-center mb-12 bg-[#333033]"
+            className="flex justify-center mb-12"
             variants={staggerItem}
             initial="hidden"
             whileInView="visible"
@@ -469,20 +447,21 @@ heartfelt warmth and authenticity.
             <motion.div
               whileHover={{
                 y: -5,
+                scale: 1.02,
                 boxShadow: '0 15px 30px rgba(0,0,0,0.1)'
               }}
               transition={{ duration: 0.3 }}
             >
-              <Card className="bg-[#ebe9d8] text-center hover:shadow-lg transition-shadow w-[280px] h-[300px] flex flex-col">
-                <CardContent className="p-6 flex flex-col h-full">
+              <Card className="text-center hover:shadow-lg transition-shadow max-w-sm">
+                <CardContent className="p-6">
                   <img
                     src={team[0].image}
                     alt={team[0].name}
-                    className="w-20 h-20 rounded-full mx-auto mb-3 object-cover flex-shrink-0"
+                    className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
                   />
-                  <h3 className="text-lg font-semibold text-[#333033] mb-1 break-words">{team[0].name}</h3>
-                  <p className="text-[#333033] font-medium mb-2 text-sm break-words">{team[0].role}</p>
-                  <p className="text-[#333033] text-xs break-words">{team[0].bio}</p>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-1">{team[0].name}</h3>
+                  <p className="text-orange-600 font-medium mb-3">{team[0].role}</p>
+                  <p className="text-gray-600 text-sm">{team[0].bio}</p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -502,23 +481,24 @@ heartfelt warmth and authenticity.
                 <motion.div
                   key={`original-${index}`}
                   variants={staggerItem}
-                  className="flex-shrink-0 mx-4"
+                  className="min-w-[280px] flex-shrink-0 mx-4"
                   whileHover={{
                     y: -3,
+                    scale: 1.02,
                     boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
                   }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Card className="bg-[#ebe9d8] text-center hover:shadow-lg transition-shadow w-[280px] h-[300px] flex flex-col">
-                    <CardContent className="p-6 flex flex-col h-full">
+                  <Card className="text-center hover:shadow-lg transition-shadow h-full">
+                    <CardContent className="p-6">
                       <img
                         src={member.image}
                         alt={member.name}
-                        className="w-20 h-20 rounded-full mx-auto mb-3 object-cover flex-shrink-0"
+                        className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
                       />
-                      <h3 className="text-lg font-semibold text-[#333033] mb-1 break-words">{member.name}</h3>
-                      <p className="text-[#333033] font-medium mb-2 text-sm break-words">{member.role}</p>
-                      <p className="text-[#333033] text-xs break-words">{member.bio}</p>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-1">{member.name}</h3>
+                      <p className="text-orange-600 font-medium mb-3">{member.role}</p>
+                      <p className="text-gray-600 text-sm">{member.bio}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -528,23 +508,24 @@ heartfelt warmth and authenticity.
                 <motion.div
                   key={`duplicate-${index}`}
                   variants={staggerItem}
-                  className="flex-shrink-0 mx-4"
+                  className="min-w-[280px] flex-shrink-0 mx-4"
                   whileHover={{
                     y: -3,
+                    scale: 1.02,
                     boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
                   }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Card className="text-center hover:shadow-lg transition-shadow w-[280px] h-[300px] flex flex-col">
-                    <CardContent className="p-6 flex flex-col h-full">
+                  <Card className="text-center hover:shadow-lg transition-shadow h-full">
+                    <CardContent className="p-6">
                       <img
                         src={member.image}
                         alt={member.name}
-                        className="w-20 h-20 rounded-full mx-auto mb-3 object-cover flex-shrink-0"
+                        className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
                       />
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1 break-words">{member.name}</h3>
-                      <p className="text-orange-600 font-medium mb-2 text-sm break-words">{member.role}</p>
-                      <p className="text-gray-600 text-xs break-words">{member.bio}</p>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-1">{member.name}</h3>
+                      <p className="text-orange-600 font-medium mb-3">{member.role}</p>
+                      <p className="text-gray-600 text-sm">{member.bio}</p>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -638,7 +619,7 @@ heartfelt warmth and authenticity.
 
       {/* CTA Section */}
       <motion.section
-        className="py-16 bg-[#ebe9d8]"
+        className="py-16"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-50px' }}
@@ -646,7 +627,7 @@ heartfelt warmth and authenticity.
       >
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <motion.h2
-            className="text-3xl md:text-4xl font-bold text-[#333033] mb-4"
+            className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
             variants={textVariants}
             initial="hidden"
             whileInView="visible"
@@ -663,7 +644,7 @@ heartfelt warmth and authenticity.
             ))}
           </motion.h2>
           <motion.p
-            className="text-xl text-[#333033] mb-8"
+            className="text-xl text-gray-600 mb-8"
             variants={fadeInUp}
             initial="hidden"
             whileInView="visible"
@@ -680,14 +661,14 @@ heartfelt warmth and authenticity.
           >
             <motion.div variants={staggerItem}>
               <Link to="/packages">
-                <Button size="lg" className="bg-[#333033] hover:bg-[#ebe9d8] border-[#333033] hover:border-[#333033] hover:border py-3 text-white hover:text-[#333033]">
+                <Button size="lg" className="bg-orange-500 hover:bg-orange-600 px-8 py-3">
                   View Safari Packages
                 </Button>
               </Link>
             </motion.div>
             <motion.div variants={staggerItem}>
               <Link to="/contact">
-                <Button size="lg" variant="outline" className="bg-[#ebe9d8] hover:bg-[#333033] border-[#333033] hover:border-[#ebe9d8]  px-8 py-3">
+                <Button size="lg" variant="outline" className="px-8 py-3">
                   Plan Custom Safari
                 </Button>
               </Link>

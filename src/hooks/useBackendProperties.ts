@@ -54,8 +54,17 @@ const normalizeMediaUrl = (value: unknown): string | null => {
   const s = String(value).trim();
   if (!s) return null;
 
-  // If already absolute (http/https) or a data/blob/file URI, return as-is
-  if (/^https?:\/\//i.test(s) || /^data:/i.test(s) || /^blob:/i.test(s) || /^file:/i.test(s)) return s;
+  // If already absolute (http/https) or a blob/file URI, return as-is
+  if (/^https?:\/\//i.test(s) || /^blob:/i.test(s) || /^file:/i.test(s)) return s;
+
+  // If it's a data URI, validate it's a proper base64 image/data URL before returning
+  if (/^data:/i.test(s)) {
+    // Accept data:image/...;base64,BASE64DATA
+    const dataImagePattern = /^data:image\/[a-zA-Z0-9.+-]+;base64,[A-Za-z0-9+/=]+$/i;
+    if (dataImagePattern.test(s)) return s;
+    // otherwise treat as invalid media and return null so callers can fallback
+    return null;
+  }
 
   // If the value already contains the API base, return it unchanged
   if (API_BASE && s.startsWith(API_BASE)) return s;
@@ -103,6 +112,15 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
   const response = await api.get(endpoint, { params: Object.fromEntries(params) });
 
       if (response.data.data) {
+        // Debug: log raw response images for first few properties to help diagnose missing media
+        try {
+          console.debug('[useBackendProperties] fetched properties count:', Array.isArray(response.data.data) ? response.data.data.length : 'unknown');
+          if (Array.isArray(response.data.data) && response.data.data.length > 0) {
+            console.debug('[useBackendProperties] sample raw images for property[0]:', response.data.data[0].images);
+          }
+        } catch (e) {
+          // ignore
+        }
         // Transform API response to match Property interface
         const transformedProperties: Property[] = response.data.data.map((prop: Record<string, unknown>) => {
           // Transform rooms array if present
@@ -165,6 +183,12 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
 
   const addProperty = async (propertyData: Partial<Property>) => {
     try {
+      const toArray = (v: unknown) => {
+        if (v === undefined || v === null) return [];
+        if (Array.isArray(v)) return v.map(String).map(s => s.trim()).filter(Boolean);
+        return String(v).split(',').map(s => s.trim()).filter(Boolean);
+      };
+
       const payload = {
         name: propertyData.name,
         location: propertyData.location,
@@ -174,15 +198,9 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
         maxGuests: propertyData.maxGuests,
         rating: propertyData.rating,
         numReviews: propertyData.reviews || propertyData.numReviews,
-        amenities: Array.isArray(propertyData.amenities) 
-          ? propertyData.amenities.join(', ') 
-          : (propertyData.amenities || ''),
-        images: Array.isArray(propertyData.images)
-          ? propertyData.images.join(', ')
-          : (propertyData.images || ''),
-        videos: Array.isArray(propertyData.videos)
-          ? propertyData.videos.join(', ')
-          : (propertyData.videos || ''),
+        amenities: toArray(propertyData.amenities),
+        images: toArray(propertyData.images),
+        videos: toArray(propertyData.videos),
         featured: propertyData.featured,
       };
 
@@ -219,6 +237,12 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
 
   const updateProperty = async (id: string, propertyData: Partial<Property>) => {
     try {
+      const toArray = (v: unknown) => {
+        if (v === undefined || v === null) return [];
+        if (Array.isArray(v)) return v.map(String).map(s => s.trim()).filter(Boolean);
+        return String(v).split(',').map(s => s.trim()).filter(Boolean);
+      };
+
       const payload = {
         name: propertyData.name,
         location: propertyData.location,
@@ -228,15 +252,9 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
         maxGuests: propertyData.maxGuests,
         rating: propertyData.rating,
         numReviews: propertyData.reviews || propertyData.numReviews,
-        amenities: Array.isArray(propertyData.amenities)
-          ? propertyData.amenities.join(', ')
-          : (propertyData.amenities || ''),
-        images: Array.isArray(propertyData.images)
-          ? propertyData.images.join(', ')
-          : (propertyData.images || ''),
-        videos: Array.isArray(propertyData.videos)
-          ? propertyData.videos.join(', ')
-          : (propertyData.videos || ''),
+        amenities: toArray(propertyData.amenities),
+        images: toArray(propertyData.images),
+        videos: toArray(propertyData.videos),
         featured: propertyData.featured,
       };
 

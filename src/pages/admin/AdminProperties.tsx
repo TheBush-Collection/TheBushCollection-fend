@@ -203,6 +203,32 @@ export default function AdminProperties() {
     return hasVideoExtension || (isVideoHost && !isMicrosoftService) || (hasVideoIndicator && !isMicrosoftService);
   };
 
+  // Validate media URLs (allow http(s) URLs and permissive data:image base64 URIs)
+  const isValidMediaUrl = (url: string | undefined | null) => {
+    if (!url || typeof url !== 'string') return false;
+    const trimmed = url.trim();
+    if (!trimmed) return false;
+    try {
+      // Allow standard http(s) URLs
+      if (/^https?:\/\//i.test(trimmed)) return true;
+
+      // Allow data:image URIs (be permissive: accept data:image/...;base64, even if base64 is chunked/newlined)
+      if (trimmed.toLowerCase().startsWith('data:image/') && trimmed.toLowerCase().includes(';base64,')) return true;
+
+      // Allow blob URLs
+      if (trimmed.startsWith('blob:')) return true;
+
+      // Allow certain signed storage URLs (quick heuristic)
+      if (trimmed.includes('supabase.co') || trimmed.includes('storage.googleapis.com') || trimmed.includes('amazonaws.com')) return true;
+
+      // Log rejected media for debugging
+      console.warn('isValidMediaUrl: rejected media url', trimmed.slice(0, 200));
+      return false;
+    } catch (err) {
+      return false;
+    }
+  };
+
   const nextImage = (propertyId: string, totalImages: number) => {
     setCurrentImageIndex(prev => ({
       ...prev,
@@ -224,7 +250,8 @@ export default function AdminProperties() {
     }
 
     const amenitiesArray = newProperty.amenities.split(',').map(a => a.trim()).filter(a => a);
-    const imagesArray = newProperty.images.split(',').map(i => i.trim()).filter(i => i);
+    let imagesArray = newProperty.images.split(',').map(i => i.trim()).filter(i => i);
+    imagesArray = imagesArray.filter(isValidMediaUrl);
 
     const propertyData = {
       name: newProperty.name,
@@ -237,7 +264,7 @@ export default function AdminProperties() {
       price: newProperty.price,
       maxGuests: newProperty.maxGuests,
       amenities: amenitiesArray,
-      images: imagesArray.length > 0 ? imagesArray : ['https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&h=600&fit=crop'],
+          images: imagesArray.length > 0 ? imagesArray : ['https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&h=600&fit=crop'],
     };
 
     try {
@@ -315,7 +342,8 @@ export default function AdminProperties() {
     }
 
     const amenitiesArray = editPropertyForm.amenities.split(',').map(a => a.trim()).filter(a => a);
-    const imagesArray = editPropertyForm.images.split(',').map(i => i.trim()).filter(i => i);
+    let imagesArray = editPropertyForm.images.split(',').map(i => i.trim()).filter(i => i);
+    imagesArray = imagesArray.filter(isValidMediaUrl);
 
     const updatedData = {
       name: editPropertyForm.name,
@@ -328,11 +356,13 @@ export default function AdminProperties() {
       price: editPropertyForm.price,
       maxGuests: editingProperty.maxGuests,
       amenities: amenitiesArray,
-      images: imagesArray.length > 0 ? imagesArray : editingProperty.images
+      images: imagesArray.length > 0 ? imagesArray : (editingProperty.images || []).filter(isValidMediaUrl)
     };
 
     try {
-      await updateProperty(editingProperty.id, updatedData);
+      console.debug('handleUpdateProperty: sending updatedData for', editingProperty.id, updatedData);
+      const resp = await updateProperty(editingProperty.id, updatedData);
+      console.debug('handleUpdateProperty: update response', resp);
       toast.success('Property updated successfully!');
       refetch();
       
@@ -351,7 +381,8 @@ export default function AdminProperties() {
     }
 
     const amenitiesArray = newRoom.amenities.split(',').map(a => a.trim()).filter(a => a);
-    const imagesArray = newRoom.images.split(',').map(i => i.trim()).filter(i => i);
+    let imagesArray = newRoom.images.split(',').map(i => i.trim()).filter(i => i);
+    imagesArray = imagesArray.filter(isValidMediaUrl);
 
     try {
       // Create multiple rooms based on quantity
@@ -399,7 +430,8 @@ export default function AdminProperties() {
     }
 
     const amenitiesArray = editRoomForm.amenities.split(',').map(a => a.trim()).filter(a => a);
-    const imagesArray = editRoomForm.images.split(',').map(i => i.trim()).filter(i => i);
+    let imagesArray = editRoomForm.images.split(',').map(i => i.trim()).filter(i => i);
+    imagesArray = imagesArray.filter(isValidMediaUrl);
 
     try {
       // Find all rooms with the same name
@@ -410,13 +442,13 @@ export default function AdminProperties() {
         // Need to create additional rooms
         const roomsToCreate = newQuantity - currentQuantity;
         const roomPromises = Array.from({ length: roomsToCreate }, (_, index) => {
-          const roomData = {
+            const roomData = {
             name: `${editRoomForm.name}${roomsToCreate > 1 ? ` ${currentQuantity + index + 1}` : ''}`,
             type: editRoomForm.type,
             price: editRoomForm.price,
             maxGuests: editRoomForm.maxGuests,
             amenities: amenitiesArray,
-            images: imagesArray.length > 0 ? imagesArray : editingRoom.images,
+              images: imagesArray.length > 0 ? imagesArray : (editingRoom.images || []).filter(isValidMediaUrl),
             available: true,
             description: editRoomForm.description
           };
@@ -442,7 +474,7 @@ export default function AdminProperties() {
         price: editRoomForm.price,
         maxGuests: editRoomForm.maxGuests,
         amenities: amenitiesArray,
-        images: imagesArray.length > 0 ? imagesArray : editingRoom.images,
+        images: imagesArray.length > 0 ? imagesArray : (editingRoom.images || []).filter(isValidMediaUrl),
         description: editRoomForm.description
       };
 
@@ -489,7 +521,16 @@ export default function AdminProperties() {
 
   const MediaCarousel = ({ images, propertyId }: { images: string[], propertyId: string }) => {
     const currentIndex = currentImageIndex[propertyId] || 0;
-    const validImages = images.filter(img => img && img.trim() !== '');
+    const invalidImages: string[] = [];
+    const validImages = images.filter(img => {
+      const ok = isValidMediaUrl(img);
+      if (!ok && img) invalidImages.push(img);
+      return ok;
+    });
+
+    if (invalidImages.length > 0) {
+      console.warn('MediaCarousel: filtered out invalid media URLs for property', propertyId, invalidImages);
+    }
     
     if (!validImages || validImages.length === 0) {
       return (
@@ -638,10 +679,23 @@ export default function AdminProperties() {
             alt={`Property ${propertyId}`}
             className="w-full h-full object-cover"
             onError={(e) => {
-              e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2Y3Zjd2NyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjE4IiBmaWxsPSIjY2NjIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==';
+              console.error('Media image failed to load, replacing with placeholder', { src: e.currentTarget.src, propertyId, currentMedia });
+              e.currentTarget.removeAttribute('src');
+              e.currentTarget.style.display = 'none';
+              const container = e.currentTarget.closest('.relative');
+              const fallback = container?.querySelector('.media-placeholder') as HTMLDivElement;
+              if (fallback) fallback.classList.remove('hidden');
             }}
           />
         )}
+
+        {/* Fallback placeholder (hidden by default) */}
+        <div className="hidden media-placeholder absolute inset-0 flex items-center justify-center bg-gray-200 rounded-lg">
+          <div className="text-center text-gray-500">
+            <Image className="h-12 w-12 mx-auto mb-2" />
+            <span className="text-sm">No media available</span>
+          </div>
+        </div>
 
         {/* Navigation Arrows */}
         {validImages.length > 1 && (
