@@ -47,11 +47,13 @@ export default function Receipt({ booking, onEmailReceipt, onClose }: ReceiptPro
     const price = amenity.totalPrice || (amenity.price * quantity);
     return total + price;
   }, 0) || 0;
-  const roomTotal = booking.roomPrice * booking.nights;
+  // For packages, roomPrice is a package price per guest (not per night)
+  const isPackageBooking = booking.roomName === 'Package Booking' || !booking.propertyLocation;
+  const roomTotal = isPackageBooking
+    ? (booking.roomPrice || 0) * (booking.guests || 1)
+    : (booking.roomPrice || 0) * (booking.nights || 1);
   const receiptRef = useRef<HTMLDivElement>(null);
   
-  // Detect if this is a package booking
-  const isPackageBooking = booking.roomName === 'Package Booking' || !booking.propertyLocation;
 
   const handlePrint = () => window.print();
 
@@ -197,8 +199,7 @@ export default function Receipt({ booking, onEmailReceipt, onClose }: ReceiptPro
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>
-                    {isPackageBooking ? 'Package' : 'Room'} Rate ({booking.nights} {isPackageBooking ? 'day' : 'night'}
-                    {booking.nights > 1 ? 's' : ''})
+                    {isPackageBooking ? 'Package' : 'Room'} Rate {isPackageBooking ? `(${booking.guests} guests)` : `(${booking.nights} night${booking.nights > 1 ? 's' : ''})`}
                   </span>
                   <span>${roomTotal.toFixed(2)}</span>
                 </div>

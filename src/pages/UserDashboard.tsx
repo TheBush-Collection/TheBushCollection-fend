@@ -37,15 +37,8 @@ export default function UserDashboard() {
     );
   };
 
-  const getTotalSpent = () => {
-    return userBookings
-      .filter(booking => booking.status !== 'cancelled')
-      .reduce((total, booking) => total + (booking.total_amount || 0), 0);
-  };
-
   const upcomingBookings = getUpcomingBookings();
   const pastBookings = getPastBookings();
-  const totalSpent = getTotalSpent();
 
   if (!user) {
     return (
@@ -78,15 +71,11 @@ export default function UserDashboard() {
                 Manage your safari bookings and adventures
               </p>
             </div>
-            <div className="text-right">
-              <div className="text-sm text-gray-600 dark:text-gray-400">Total Spent</div>
-              <div className="text-2xl font-bold text-green-600">${totalSpent.toFixed(2)}</div>
-            </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -129,19 +118,7 @@ export default function UserDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Spent</p>
-                  <p className="text-2xl font-bold text-gray-900">${totalSpent.toFixed(2)}</p>
-                </div>
-                <div className="p-2 bg-green-100 rounded-full">
-                  <DollarSign className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Removed Total Spent card per request */}
         </div>
 
         {/* Main Content Tabs */}
@@ -182,7 +159,7 @@ export default function UserDashboard() {
 
                 <div className="pt-4 border-t">
                   <h3 className="font-medium text-gray-900 mb-2">Booking Statistics</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                     <div>
                       <div className="text-gray-600">Total Bookings</div>
                       <div className="font-medium">{userBookings.length}</div>
@@ -194,10 +171,6 @@ export default function UserDashboard() {
                     <div>
                       <div className="text-gray-600">Completed</div>
                       <div className="font-medium text-green-600">{pastBookings.length}</div>
-                    </div>
-                    <div>
-                      <div className="text-gray-600">Total Spent</div>
-                      <div className="font-medium text-green-600">${totalSpent.toFixed(2)}</div>
                     </div>
                   </div>
                 </div>
@@ -260,7 +233,11 @@ function BookingsTab({ bookings, cancelBooking }: { bookings: UserBooking[]; can
       if (!res.data || !res.data.receipt) throw new Error('No receipt returned');
       const r = res.data.receipt;
 
-      const receiptContent = `BOOKING RECEIPT\n=====================================\nDate Generated: ${new Date(r.generatedAt || Date.now()).toLocaleDateString()}\n\nBOOKING INFORMATION\nBooking ID: ${r.bookingId}\nConfirmation #: ${r.confirmationNumber}\nStatus: ${r.status}\n\nCUSTOMER DETAILS\nName: ${r.customerName}\nEmail: ${r.customerEmail}\nPhone: ${r.customerPhone || 'N/A'}\n\nSTAY INFORMATION\nType: ${r.bookingType}\nCheck-in: ${new Date(r.checkInDate).toLocaleDateString()}\nCheck-out: ${new Date(r.checkOutDate).toLocaleDateString()}\nNights: ${r.nights}\nGuests: ${r.totalGuests}\n\nCOST BREAKDOWN\nTotal: $${(r.costs?.total || 0).toFixed(2)}\nAmount Paid: $${(r.amountPaid || 0).toFixed(2)}\n\n=====================================\nThank you for your booking!`;
+      const paymentTermLabel = r.paymentTerm === 'deposit' ? 'Deposit (partial)' : 'Full payment';
+      const balanceDue = (r.costs?.total || 0) - (r.amountPaid || 0);
+      const balanceLine = r.paymentTerm === 'deposit' ? `Balance Due: $${balanceDue.toFixed(2)} (due ${r.paymentSchedule?.balanceDueDate || 'N/A'})\n` : '';
+
+      const receiptContent = `BOOKING RECEIPT\n=====================================\nDate Generated: ${new Date(r.generatedAt || Date.now()).toLocaleDateString()}\n\nBOOKING INFORMATION\nBooking ID: ${r.bookingId}\nConfirmation #: ${r.confirmationNumber}\nStatus: ${r.status}\n\nCUSTOMER DETAILS\nName: ${r.customerName}\nEmail: ${r.customerEmail}\nPhone: ${r.customerPhone || 'N/A'}\n\nSTAY INFORMATION\nType: ${r.bookingType}\nCheck-in: ${new Date(r.checkInDate).toLocaleDateString()}\nCheck-out: ${new Date(r.checkOutDate).toLocaleDateString()}\nNights: ${r.nights}\nGuests: ${r.totalGuests}\n\nCOST BREAKDOWN\nTotal: $${(r.costs?.total || 0).toFixed(2)}\nAmount Paid: $${(r.amountPaid || 0).toFixed(2)}\nPayment Term: ${paymentTermLabel}\n${balanceLine}\n=====================================\nThank you for your booking!`;
 
       const element = document.createElement('a');
       element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(receiptContent));

@@ -27,12 +27,14 @@ export const useReviews = (propertyId?: string, packageId?: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchReviews = useCallback(async () => {
+  const fetchReviews = useCallback(async (options?: { includePending?: boolean }) => {
     try {
       setLoading(true);
       setError(null);
 
-      const params: Record<string, string | boolean> = { is_approved: 'true' };
+      const params: Record<string, string | boolean> = {};
+      // By default only fetch approved reviews for public views.
+      if (!options?.includePending) params.is_approved = 'true';
       if (propertyId) params.property_id = propertyId;
       if (packageId) params.package_id = packageId;
 

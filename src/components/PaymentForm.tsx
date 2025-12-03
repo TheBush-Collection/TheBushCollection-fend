@@ -192,10 +192,10 @@ export default function PaymentForm({ bookingDetails, customerDetails, onPayment
     }
 
     return {
-      deposit_amount: Number(bookingDetails.paymentSchedule.depositAmount.toFixed(2)),
-      balance_amount: Number(bookingDetails.paymentSchedule.balanceAmount.toFixed(2)),
-      deposit_due_date: bookingDetails.paymentSchedule.depositDueDate,
-      balance_due_date: bookingDetails.paymentSchedule.balanceDueDate
+      depositAmount: Number(bookingDetails.paymentSchedule.depositAmount.toFixed(2)),
+      balanceAmount: Number(bookingDetails.paymentSchedule.balanceAmount.toFixed(2)),
+      depositDueDate: bookingDetails.paymentSchedule.depositDueDate,
+      balanceDueDate: bookingDetails.paymentSchedule.balanceDueDate
     };
   };
 
@@ -236,6 +236,37 @@ export default function PaymentForm({ bookingDetails, customerDetails, onPayment
         return new Date(dateString).toISOString().split('T')[0];
       };
 
+      // Compute costs consistently for package vs property
+      const isPackage = !!bookingDetails.packageId;
+      const amenitiesTotal = bookingDetails.selectedAmenities?.reduce((sum, a) =>
+        sum + ((a.price || a.amenity?.price || 0) * (a.quantity || 1)), 0) || 0;
+
+      let basePriceRaw = 0;
+      if (isPackage) {
+        // package price is treated as price per guest (not per night)
+        basePriceRaw = (bookingDetails.roomPrice || 0) * (bookingDetails.guests || 1);
+      } else {
+        // property: roomPrice is per person per night
+        basePriceRaw = (bookingDetails.roomPrice || 0) * (bookingDetails.guests || 1) * (bookingDetails.nights || 1);
+      }
+
+      const subtotalRaw = basePriceRaw + amenitiesTotal;
+      const serviceFeeRaw = subtotalRaw * 0.1; // 10% service fee
+      const taxRate = isPackage ? 0.12 : 0.15;
+      const taxesRaw = subtotalRaw * taxRate;
+      const totalRaw = subtotalRaw + serviceFeeRaw + taxesRaw;
+
+      const round = (v: number) => Number(v.toFixed(2));
+
+      const costsPayload = {
+        basePrice: round(basePriceRaw),
+        amenitiesTotal: round(amenitiesTotal),
+        subtotal: round(subtotalRaw),
+        serviceFee: round(serviceFeeRaw),
+        taxes: round(taxesRaw),
+        total: round(totalRaw)
+      };
+
       // Create booking data in format expected by backend controller
       const newBookingData = {
         // Booking type and IDs
@@ -268,7 +299,7 @@ export default function PaymentForm({ bookingDetails, customerDetails, onPayment
         
         // Airport transfer
         airportTransfer: airportTransferData || { needed: false },
-        
+
         // Amenities
         amenities: bookingDetails.selectedAmenities?.map(a => ({
           amenityId: a.id || a.amenity?.id,
@@ -277,18 +308,10 @@ export default function PaymentForm({ bookingDetails, customerDetails, onPayment
           pricePerUnit: a.price || a.amenity?.price || 0,
           totalPrice: (a.price || a.amenity?.price || 0) * (a.quantity || 1)
         })) || [],
-        
+
         // Costs
-        costs: {
-          basePrice: bookingDetails.roomPrice * bookingDetails.nights,
-          amenitiesTotal: bookingDetails.selectedAmenities?.reduce((sum, a) => 
-            sum + ((a.price || a.amenity?.price || 0) * (a.quantity || 1)), 0) || 0,
-          subtotal: bookingDetails.totalAmount * 0.87,
-          serviceFee: bookingDetails.totalAmount * 0.08,
-          taxes: bookingDetails.totalAmount * 0.05,
-          total: bookingDetails.totalAmount
-        },
-        
+        costs: costsPayload,
+
         // Payment terms
         paymentTerm: bookingDetails.paymentTerm || 'deposit',
         paymentSchedule: paymentScheduleData || {

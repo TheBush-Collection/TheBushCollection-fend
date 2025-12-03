@@ -121,23 +121,65 @@ export default function ReviewForm({ propertyId, packageId, bookingId: initialBo
         description: "Please write a comment about your experience.",
         variant: "destructive",
       });
+      return;
     }
 
     setIsSubmitting(true);
 
     try {
+      // Try to infer property_id or package_id from different possible booking shapes
+      const bookingAny = selectedBooking as any;
+      // First try common top-level keys (mapped shape)
+      let inferredPropertyId = bookingAny?.property_id || bookingAny?.propertyId || bookingAny?.property_id || null;
+      let inferredPackageId = bookingAny?.package_id || bookingAny?.packageId || null;
+
+      // Check nested mapped fields (e.g., safari_properties) - these often only contain name, so look into the raw backend object
+      if (!inferredPropertyId) {
+        inferredPropertyId = bookingAny?.safari_properties?.id || bookingAny?.safari_properties?._id || bookingAny?.safari_properties?.property_id || null;
+      }
+      if (!inferredPackageId) {
+        inferredPackageId = bookingAny?.safari_package?.id || bookingAny?.safari_package?._id || bookingAny?.safari_package_id || null;
+      }
+
+      // Lastly, inspect the raw backend object for the original property/package references
+      const raw = bookingAny?._raw || bookingAny;
+      if (!inferredPropertyId) {
+        inferredPropertyId = raw?.property?._id || raw?.property?._id || raw?.property_id || raw?.propertyId || null;
+      }
+      if (!inferredPackageId) {
+        inferredPackageId = raw?.package?._id || raw?.package?._id || raw?.package_id || raw?.packageId || null;
+      }
+
+      // Debug log (will help trace shapes during testing)
+      // eslint-disable-next-line no-console
+      console.debug('ReviewForm inferred ids', { inferredPropertyId, inferredPackageId, selectedBooking });
+
+      // Ensure at least one identifier is present - backend requires either property_id or package_id
+      if (!inferredPropertyId && !inferredPackageId) {
+        toast({
+          title: 'Booking Missing ID',
+          description: 'Selected booking does not contain a property_id or package_id. Please choose another booking or enter the booking ID.',
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       const reviewData: Record<string, unknown> = {
         user_id: user?.id || null,
-        property_id: (selectedBooking as Record<string, unknown>)?.property_id || null,
-        package_id: (selectedBooking as Record<string, unknown>)?.package_id || null,
+        property_id: inferredPropertyId || null,
+        package_id: inferredPackageId || null,
         booking_id: selectedBooking?.id,
         rating,
         title: title.trim() || null,
         comment: comment.trim(),
         is_featured: false,
-        is_approved: true
+        is_approved: true,
       };
 
+      // Debug log before sending
+      // eslint-disable-next-line no-console
+      console.debug('Submitting review', reviewData);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await addReview(reviewData as any);
 

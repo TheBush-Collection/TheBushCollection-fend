@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +41,17 @@ interface Review {
 
 export default function AdminReviews() {
   const { reviews, loading, updateReview, deleteReview, refetch: fetchReviews, getReviewsByStatus } = useReviews();
+  // On admin view, fetch all reviews including pending so admin can manage them
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    (async () => {
+      try {
+        await fetchReviews({ includePending: true } as any);
+      } catch (err) {
+        console.error('Failed to fetch pending reviews on admin page', err);
+      }
+    })();
+  }, []);
   const [filter, setFilter] = useState<'all' | 'approved' | 'pending' | 'featured'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingReview, setEditingReview] = useState<Review | null>(null);

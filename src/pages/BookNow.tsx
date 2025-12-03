@@ -99,7 +99,7 @@ interface RoomBreakdownItem {
 }
 
 interface PropertyCosts {
-  baseRate: number;
+  basePrice: number;
   extraGuestFees: number;
   amenitiesTotal: number;
   subtotal: number;
@@ -200,6 +200,9 @@ export default function BookNow() {
     return match ? parseInt(match[1]) : 1;
   };
 
+  // Round to 2 decimals for currency values
+  const round2 = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+
   // Auto-calculate package end date when start date changes
   useEffect(() => {
     if (packageStartDate && selectedPackage) {
@@ -289,17 +292,18 @@ export default function BookNow() {
   const calculatePropertyCosts = () => {
     const nights = calculateNights();
     if (!selectedProperty || nights <= 0) {
-      return {
-        baseRate: 0,
-        extraGuestFees: 0,
-        amenitiesTotal: calculateAmenitiesTotal(),
-        subtotal: calculateAmenitiesTotal(),
-        serviceFee: 0,
-        taxes: 0,
-        total: calculateAmenitiesTotal(),
-        nights: 0,
-        roomBreakdown: []
-      };
+        const amenities = calculateAmenitiesTotal();
+        return {
+          basePrice: 0,
+          extraGuestFees: 0,
+          amenitiesTotal: round2(amenities),
+          subtotal: round2(amenities),
+          serviceFee: 0,
+          taxes: 0,
+          total: round2(amenities),
+          nights: 0,
+          roomBreakdown: []
+        } as PropertyCosts;
     }
 
     let totalBaseRate = 0;
@@ -313,7 +317,7 @@ export default function BookNow() {
           const costs = calculateRoomCosts(booking, room, nights);
           totalBaseRate += costs.baseRate;
           totalExtraGuestFees += costs.extraGuestFee; // Always 0 now
-          
+
           roomBreakdown.push({
             roomName: room.name,
             quantity: booking.quantity,
@@ -326,21 +330,22 @@ export default function BookNow() {
         }
       }
     });
-    
-    const amenitiesTotal = calculateAmenitiesTotal();
-    const subtotal = totalBaseRate + totalExtraGuestFees + amenitiesTotal;
-    const serviceFee = subtotal * 0.1; // 10% service fee
-    const taxes = subtotal * 0.15; // 15% taxes
-    const total = subtotal + serviceFee + taxes;
 
+    const amenitiesTotal = calculateAmenitiesTotal();
+    const subtotalRaw = totalBaseRate + totalExtraGuestFees + amenitiesTotal;
+    const serviceFeeRaw = subtotalRaw * 0.1; // 10% service fee
+    const taxesRaw = subtotalRaw * 0.15; // 15% taxes
+    const totalRaw = subtotalRaw + serviceFeeRaw + taxesRaw;
+
+    // Align key names with backend receipt structure and round values
     return {
-      baseRate: totalBaseRate,
-      extraGuestFees: totalExtraGuestFees,
-      amenitiesTotal,
-      subtotal,
-      serviceFee,
-      taxes,
-      total,
+      basePrice: round2(totalBaseRate),
+      extraGuestFees: round2(totalExtraGuestFees),
+      amenitiesTotal: round2(amenitiesTotal),
+      subtotal: round2(subtotalRaw),
+      serviceFee: round2(serviceFeeRaw),
+      taxes: round2(taxesRaw),
+      total: round2(totalRaw),
       nights,
       roomBreakdown
     };
@@ -350,28 +355,28 @@ export default function BookNow() {
     if (!selectedPackage) {
       return {
         basePrice: 0,
-        amenitiesTotal: calculateAmenitiesTotal(),
-        subtotal: calculateAmenitiesTotal(),
+        amenitiesTotal: round2(calculateAmenitiesTotal()),
+        subtotal: round2(calculateAmenitiesTotal()),
         serviceFee: 0,
         taxes: 0,
-        total: calculateAmenitiesTotal()
+        total: round2(calculateAmenitiesTotal())
       };
     }
 
-    const basePrice = selectedPackage.price * bookingData.guests;
-    const amenitiesTotal = calculateAmenitiesTotal();
-    const subtotal = basePrice + amenitiesTotal;
-    const serviceFee = subtotal * 0.1; // 10% service fee
-    const taxes = subtotal * 0.12; // 12% taxes for packages
-    const total = subtotal + serviceFee + taxes;
+    const basePriceRaw = selectedPackage.price * bookingData.guests;
+    const amenitiesTotalRaw = calculateAmenitiesTotal();
+    const subtotalRaw = basePriceRaw + amenitiesTotalRaw;
+    const serviceFeeRaw = subtotalRaw * 0.1; // 10% service fee
+    const taxesRaw = subtotalRaw * 0.12; // 12% taxes for packages
+    const totalRaw = subtotalRaw + serviceFeeRaw + taxesRaw;
 
     return {
-      basePrice,
-      amenitiesTotal,
-      subtotal,
-      serviceFee,
-      taxes,
-      total
+      basePrice: round2(basePriceRaw),
+      amenitiesTotal: round2(amenitiesTotalRaw),
+      subtotal: round2(subtotalRaw),
+      serviceFee: round2(serviceFeeRaw),
+      taxes: round2(taxesRaw),
+      total: round2(totalRaw)
     };
   };
 
@@ -393,12 +398,12 @@ export default function BookNow() {
       // If check-in is within 30 days, balance is due immediately
       const isWithin30Days = balanceDueDate <= today;
       
-      const depositAmount = totalAmount * 0.3; // 30% deposit
-      const balanceAmount = totalAmount * 0.7; // 70% balance
-      
+      const depositAmountRaw = totalAmount * 0.3; // 30% deposit
+      const balanceAmountRaw = totalAmount * 0.7; // 70% balance
+
       setPaymentSchedule({
-        depositAmount,
-        balanceAmount: isWithin30Days ? balanceAmount : balanceAmount,
+        depositAmount: round2(depositAmountRaw),
+        balanceAmount: round2(balanceAmountRaw),
         depositDueDate: depositDueDate.toISOString().split('T')[0],
         balanceDueDate: isWithin30Days ? today.toISOString().split('T')[0] : balanceDueDate.toISOString().split('T')[0]
       });
@@ -1861,12 +1866,17 @@ export default function BookNow() {
                     <>
                       <div className="flex justify-between text-sm">
                         <span>Accommodation ({getTotalGuests()} guests × {'nights' in costs ? costs.nights : 0} nights)</span>
-                        <span>${('baseRate' in costs ? costs.baseRate : 0)?.toFixed(2) || '0.00'}</span>
+                        <span>${('basePrice' in costs ? costs.basePrice : 0)?.toFixed(2) || '0.00'}</span>
                       </div>
                       <div className="text-xs text-gray-500 ml-4">
                         ${selectedRoom?.price || 0}/person/night
                       </div>
                     </>
+                  )}
+                  {bookingType === 'package' && selectedPackage && (
+                    <div className="text-xs text-gray-500 ml-0">
+                      ${selectedPackage.price?.toFixed(2) || 0} per guest (package rate)
+                    </div>
                   )}
                   {costs.amenitiesTotal > 0 && (
                     <div className="flex justify-between text-sm text-purple-600">
