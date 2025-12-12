@@ -8,6 +8,7 @@ import { Star, MapPin, Users, Calendar, Clock, Camera, Binoculars, Plane, Car, U
 import { Link } from 'react-router-dom';
 import { useBackendPackages } from '@/hooks/useBackendPackages';
 import { Package } from '@/types/package';
+import slugify from '@/lib/slugify';
 
 export default function Packages() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -308,12 +309,12 @@ export default function Packages() {
               </div>
 
               <div className="flex gap-2">
-                <Link to={`/book?package=${pkg.id}`} className="flex-1">
+                <Link to={`/book?package=${(pkg as any).slug || slugify(pkg.name) || pkg.id}`} className="flex-1">
                   <Button className="w-full bg-[#c9a961] hover:bg-[#8b6f47] text-[#000000]">
                     Book Now
                   </Button>
                 </Link>
-                <Link to={`/package/${pkg.id}`} className="flex-1">
+                <Link to={`/package/${(pkg as any).slug || slugify(pkg.name) || pkg.id}`} className="flex-1">
                   <Button className="w-full bg-[#333033] hover:bg-[#8b6f47] text-[#ffffff]">
                     View Details
                   </Button>
@@ -444,12 +445,12 @@ export default function Packages() {
               </div>
 
               <div className="flex gap-2">
-                <Link to={`/book?package=${pkg.id}`} className="flex-1">
+                <Link to={`/book?package=${(pkg as any).slug || slugify(pkg.name) || pkg.id}`} className="flex-1">
                   <Button className="w-full bg-[#c9a961] hover:bg-[#8b6f47] text-[#000000]">
                     Book Now
                   </Button>
                 </Link>
-                <Link to={`/package/${pkg.id}`} className="flex-1">
+                <Link to={`/package/${(pkg as any).slug || slugify(pkg.name) || pkg.id}`} className="flex-1">
                   <Button className="w-full bg-[#333033] hover:bg-[#8b6f47] text-[#ffffff]">
                     View Details
                   </Button>

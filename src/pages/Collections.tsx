@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Star, MapPin, Users, Filter, Search, Sparkles, Award, Globe } from 'lucide-react';
+import slugify from '@/lib/slugify';
 import PropertyCard from '@/components/PropertyCard';
 import { useBackendProperties } from '@/hooks/useBackendProperties';
 
@@ -421,13 +422,19 @@ const Collections = () => {
                                     <Button 
                                       variant="outline" 
                                       className="flex-1 border-[#c9a961]/30 text-[#c9a961] hover:bg-[#c9a961]/10 hover:border-[#c9a961]"
-                                      onClick={() => window.location.href = `/property/${property.id}`}
+                                      onClick={() => {
+                                        const slug = (property as any).slug || slugify(property.name) || property.id;
+                                        window.location.href = `/property/${slug}`;
+                                      }}
                                     >
                                       View Details
                                     </Button>
                                     <Button
                                       className="flex-1 bg-[#c9a961] hover:bg-[#b8935a] text-white font-semibold"
-                                      onClick={() => window.location.href = `/book?property=${property.id}`}
+                                      onClick={() => {
+                                        const slug = (property as any).slug || slugify(property.name) || property.id;
+                                        window.location.href = `/book?property=${slug}`;
+                                      }}
                                     >
                                       Book Now
                                     </Button>

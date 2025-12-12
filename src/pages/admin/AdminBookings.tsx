@@ -807,6 +807,12 @@ export default function AdminBookings() {
                       <span className="font-medium text-gray-600">Status:</span>
                       <div>{getStatusBadge(selectedBooking.status as BookingStatus)}</div>
                     </div>
+                    {selectedBooking.status === 'cancelled' && (
+                      <div className="flex justify-between">
+                        <span className="font-medium text-gray-600">Cancellation Reason:</span>
+                        <span className="text-gray-900">{selectedBooking.cancellation_reason || selectedBooking._raw?.cancellationReason || 'Not provided'}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="font-medium text-gray-600">Booking Date:</span>
                       <span className="text-gray-900">

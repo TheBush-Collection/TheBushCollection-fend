@@ -45,6 +45,11 @@ export const useReviews = (propertyId?: string, packageId?: string) => {
       const mappedReviews = data.map((review: any) => ({
         id: review._id,
         user_id: review.user?._id || review.user,
+        // Provide a `users` object compatible with existing UI components
+        users: {
+          full_name: review.user?.fullName || review.user_name || null,
+          email: review.user?.email || review.user_email || null
+        },
         user_name: review.user_name,
         property_id: review.property?._id || review.property,
         property_name: review.property_name,
@@ -92,6 +97,10 @@ export const useReviews = (propertyId?: string, packageId?: string) => {
       const mappedReview = {
         id: res.data._id,
         user_id: res.data.user?._id || res.data.user,
+        users: {
+          full_name: res.data.user?.fullName || res.data.user_name || null,
+          email: res.data.user?.email || res.data.user_email || null
+        },
         user_name: res.data.user_name,
         property_id: res.data.property?._id || res.data.property,
         property_name: res.data.property_name,

@@ -188,10 +188,10 @@ export const useBackendBookings = () => {
     return res.data;
   };
 
-  const cancelBooking = async (id: string) => {
+  const cancelBooking = async (id: string, body?: Record<string, unknown>) => {
     // Use admin cancel endpoint when current user is an admin
     const path = isAdmin ? `/bookings/admin/bookings/${id}/cancel` : `/bookings/${id}/cancel`;
-    const res = await api.post(path);
+    const res = await api.post(path, body || {});
     await fetchBookings();
     return res.data;
   };

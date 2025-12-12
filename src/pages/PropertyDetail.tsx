@@ -28,6 +28,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useBackendProperties } from '@/hooks/useBackendProperties';
+import slugify from '@/lib/slugify';
 
 interface AmenityIconMap {
   [key: string]: React.ComponentType<{ className?: string }>;
@@ -58,6 +59,7 @@ interface GroupedRoom {
   images?: string[];
   description: string;
   sampleRoomId: string;
+  sampleRoomSlug?: string;
 }
 
 const amenityIcons: AmenityIconMap = {
@@ -203,7 +205,12 @@ export default function PropertyDetail() {
     );
   }
 
-  const property = properties.find(p => p.id === id);
+  // allow looking up by id, slug, or generated slug from name
+  const property = properties.find(p => {
+    const pId = p.id || (p as any)._id;
+    const pSlug = (p as any).slug || '';
+    return pId === id || pSlug === id || slugify(p.name) === id;
+  });
 
   if (!property) {
     return (
@@ -259,7 +266,9 @@ export default function PropertyDetail() {
         amenities: room.amenities || [],
         images: room.images || [],
         description: room.description,
-        sampleRoomId: room.id
+        sampleRoomId: room.id,
+        // include a slug for the room group so links can use a readable room name in the path
+        sampleRoomSlug: slugify(room.name || String(room.id))
       });
     }
 
@@ -659,7 +668,7 @@ export default function PropertyDetail() {
                     {/* View Details Button */}
                     <div className="absolute top-4 right-4 z-10">
                       <Link
-                        to={`/room/${property.id}?roomId=${roomGroup.sampleRoomId}`}
+                        to={`/property/${(property as any).slug || slugify(property.name)}/room/${roomGroup.sampleRoomSlug || slugify(roomGroup.name)}`}
                         className="flex items-center gap-2 bg-[#c9a961] hover:bg-[#8b6f47] text-white px-5 py-2.5 rounded-md text-sm font-medium transition-all duration-300 shadow-lg"
                       >
                         <ImageIcon className="w-4 h-4" />
@@ -673,7 +682,7 @@ export default function PropertyDetail() {
                     {/* View Details Button for no image */}
                     <div className="absolute top-4 right-4 z-10">
                       <Link
-                        to={`/room/${property.id}?roomId=${roomGroup.sampleRoomId}`}
+                        to={`/property/${(property as any).slug || slugify(property.name)}/room/${roomGroup.sampleRoomSlug || slugify(roomGroup.name)}`}
                         className="flex items-center gap-2 bg-[#c9a961] hover:bg-[#8b6f47] text-white px-5 py-2.5 rounded-md text-sm font-medium transition-all duration-300 shadow-lg"
                       >
                         <ImageIcon className="w-4 h-4" />

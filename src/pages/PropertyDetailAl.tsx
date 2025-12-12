@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import slugify from '@/lib/slugify';
 import { useParams, Link } from 'react-router-dom';
 import {
   Star,
@@ -96,7 +97,11 @@ export default function PropertyDetail() {
     );
   }
 
-  const property = properties.find(p => p.id === id);
+  const property = properties.find(p => {
+    const pId = p.id || (p as any)._id;
+    const pSlug = (p as any).slug || '';
+    return pId === id || pSlug === id || slugify(p.name) === id;
+  });
 
   if (!property) {
     return (

@@ -19,6 +19,14 @@ interface BookingDetails {
   roomPrice: number;
   totalAmount: number;
   paymentMethod: string;
+  paymentTerm?: 'deposit' | 'full';
+  paymentSchedule?: {
+    depositAmount?: number;
+    balanceAmount?: number;
+    depositDueDate?: string;
+    balanceDueDate?: string;
+  } | null;
+  amountPaid?: number;
   customerName: string;
   customerEmail: string;
   customerPhone: string;
@@ -218,11 +226,18 @@ export default function Receipt({ booking, onEmailReceipt, onClose }: ReceiptPro
                   <span>${taxes.toFixed(2)}</span>
                 </div>
                 <Separator />
-                <div className="flex justify-between font-semibold text-lg">
-                  <span>Total Paid</span>
-                  <span className="text-green-600">
-                    ${booking.totalAmount.toFixed(2)}
-                  </span>
+                {/* Payment term and breakdown */}
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Payment Term:</span>
+                  <span>{booking.paymentTerm === 'deposit' ? 'Deposit (Partial Payment)' : 'Full Payment'}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Amount Paid</span>
+                  <span className="text-green-600">${(booking.amountPaid ?? booking.totalAmount).toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Pending Balance</span>
+                  <span className="text-orange-600">${((booking.totalAmount || 0) - (booking.amountPaid ?? booking.totalAmount)).toFixed(2)}</span>
                 </div>
               </div>
             </div>

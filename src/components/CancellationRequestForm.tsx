@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,12 +57,12 @@ export default function CancellationRequestForm({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // Calculate refund when booking changes
-  useState(() => {
+  // Calculate refund when selected booking changes
+  useEffect(() => {
     if (selectedBooking) {
       calculateRefundAmount();
     }
-  });
+  }, [selectedBooking]);
 
   const searchBookingsByEmail = () => {
     if (!user?.email) {
@@ -166,7 +166,7 @@ export default function CancellationRequestForm({
             <CheckCircle className="w-16 h-16 mx-auto text-green-500 mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Request Submitted!</h2>
             <p className="text-gray-600 mb-4">
-              Your cancellation request has been submitted successfully.
+              Your cancellation request has been submitted and is pending review by our team. Your booking will remain active until the request is approved by an administrator.
             </p>
           </div>
 
@@ -175,8 +175,8 @@ export default function CancellationRequestForm({
             <AlertDescription>
               <strong>Next Steps:</strong><br />
               • A confirmation email has been sent to {formData.customer_email}<br />
-              • Our team will review your request within 24 hours<br />
-              • You will receive an email with the decision and refund details
+              • Our team will review your request (typically within 24-48 hours)<br />
+              • If approved, you will receive a follow-up email with refund details and the booking status will be updated
             </AlertDescription>
           </Alert>
 
@@ -204,6 +204,8 @@ export default function CancellationRequestForm({
         <CardTitle>Cancellation Request Form</CardTitle>
       </CardHeader>
       <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="max-h-[60vh] overflow-auto pr-2 space-y-4">
         {/* Error Message */}
         {error && (
           <Alert className="mb-4 border-red-200 bg-red-50">
@@ -565,6 +567,7 @@ export default function CancellationRequestForm({
           </AlertDescription>
         </Alert>
 
+        </div>
         {/* Submit Button */}
         {selectedBooking && (
           <Button
@@ -575,6 +578,7 @@ export default function CancellationRequestForm({
             {loading ? 'Submitting Request...' : 'Submit Cancellation Request'}
           </Button>
         )}
+        </form>
       </CardContent>
     </Card>
   );

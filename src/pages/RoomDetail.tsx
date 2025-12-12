@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, MapPin, X, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBackendProperties } from '@/hooks/useBackendProperties';
 import type { Property } from '@/hooks/useBackendProperties';
+import slugify from '@/lib/slugify';
 
 interface Room {
   id?: string;
@@ -20,15 +21,7 @@ interface Room {
 }
 
 export default function RoomDetail() {
-  const params = useParams<Record<string, string | undefined>>();
-  const [searchParams] = useSearchParams();
-  // Support multiple routing patterns:
-  // - /property/:id -> property detail route
-  // - /room/:roomId?property=<propertyId> (or ?roomId=...)
-  // - /room/:someId?roomId=... (some apps put property id in path)
-  const paramId = params.id || params.roomId || params.propertyId;
-  const queryRoomId = searchParams.get('roomId');
-  const queryPropertyId = searchParams.get('property') || searchParams.get('propertyId');
+  const { propertyId, roomSlug } = useParams<{ propertyId?: string; roomSlug?: string }>();
   
   const { properties, loading, error } = useBackendProperties();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -38,67 +31,53 @@ export default function RoomDetail() {
   useEffect(() => {
     if (!properties || properties.length === 0) return;
 
-    // If a query roomId is provided, find the property that contains that room.
-    if (queryRoomId) {
-      let foundProp: Property | undefined;
-      let foundRoom: Room | undefined;
-      for (const p of properties) {
-        const rooms = p.rooms || [];
-        const match = rooms.find(r => (r.id || (r as { _id?: string })._id) === queryRoomId);
-        if (match) {
-          foundProp = p;
-          foundRoom = match as Room;
-          break;
-        }
-      }
-      if (foundProp) setProperty(foundProp);
-      else setProperty(null);
-      setSelectedRoom(foundRoom || null);
-      return;
+    // Resolve property by id or slug (propertyId param may be an id, slug, or slugified name)
+    const effectivePropertyId = propertyId;
+    let foundProperty = null as Property | null;
+    if (effectivePropertyId) {
+      foundProperty = properties.find(p => {
+        const pId = p.id || (p as any)._id;
+        const pSlug = (p as any).slug || '';
+        return pId === effectivePropertyId || pSlug === effectivePropertyId || slugify(p.name) === effectivePropertyId;
+      }) || null;
     }
 
-    // If a property id is available (from query or path), resolve property and optional room
-    const effectivePropertyId = queryPropertyId || paramId;
-    if (effectivePropertyId) {
-      const foundProperty = properties.find(p => {
-        const pId = p.id || (p as { _id?: string })._id;
-        return pId === effectivePropertyId;
-      });
-      setProperty(foundProperty || null);
-
-      // Try to resolve a room id from either query param or path param (if path used roomId)
-      const candidateRoomId = queryRoomId || (params.roomId && params.roomId !== effectivePropertyId ? params.roomId : null);
-      if (foundProperty && candidateRoomId) {
-        const room = foundProperty.rooms?.find((r) => {
-          const rId = r.id || (r as { _id?: string })._id;
-          return rId === candidateRoomId;
+    if (foundProperty) {
+      setProperty(foundProperty);
+      // Resolve room by slug within the found property
+      if (roomSlug) {
+        const foundRoom = (foundProperty.rooms || []).find(r => {
+          const rSlug = (r as any).slug || slugify(r.name || '');
+          return rSlug === roomSlug;
         }) as Room | undefined;
-        setSelectedRoom(room || null);
+        setSelectedRoom(foundRoom || null);
       } else {
-        // no explicit room id, leave selectedRoom as null
         setSelectedRoom(null);
       }
       return;
     }
 
-    // Fallback: if the path param looks like a room id (and not a property), search across properties
-    if (params.roomId) {
+    // If property wasn't found (edge cases), try searching across properties by room slug
+    if (roomSlug) {
       let foundProp: Property | undefined;
       let foundRoom: Room | undefined;
       for (const p of properties) {
         const rooms = p.rooms || [];
-        const match = rooms.find(r => (r.id || (r as { _id?: string })._id) === params.roomId);
+        const match = rooms.find(r => {
+          const rSlug = (r as any).slug || slugify(r.name || '');
+          return rSlug === roomSlug;
+        });
         if (match) {
           foundProp = p;
           foundRoom = match as Room;
           break;
         }
       }
-      if (foundProp) setProperty(foundProp);
+      if (foundProp) setProperty(foundProp || null);
       else setProperty(null);
       setSelectedRoom(foundRoom || null);
     }
-  }, [properties, paramId, queryRoomId, queryPropertyId]);
+  }, [properties, propertyId, roomSlug]);
 
   const nextImage = () => {
     if (selectedRoom?.images && selectedRoom.images.length > 0) {

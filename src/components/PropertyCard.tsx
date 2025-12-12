@@ -1,4 +1,5 @@
 import { Star, MapPin, Users, Calendar, Clock, Play } from 'lucide-react';
+import slugify from '@/lib/slugify';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -332,6 +333,9 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
   const { mediaContent, isVideo: videoCheck } = renderMedia();
 
+  // prefer slug if available, otherwise generate from name, fallback to id
+  const propertySlug = (property as any).slug || slugify(propertyName) || propertyId;
+
   return (
     <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 bg-[#ebe9d8] border-2 border-[#333033]">
       <div className="relative">
@@ -442,7 +446,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               <span className="text-[#333033]/60 text-sm ml-1">per night</span>
             </div>
             <div className="flex gap-2">
-              <Link to={`/property/${propertyId}`}>
+              <Link to={`/property/${propertySlug}`}>
                 <Button 
                   className="bg-[#ebe9d8] hover:bg-[#333033] text-[#333033] hover:text-[#ebe9d8] border-2 border-[#333033] transition-all duration-300"
                   size="sm"
@@ -450,7 +454,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
                   View Details
                 </Button>
               </Link>
-              <Link to={`/book?property=${propertyId}`}>
+              <Link to={`/book?property=${propertySlug}`}>
                 <Button
                   className="bg-[#333033] hover:bg-[#ebe9d8] text-[#ebe9d8] hover:text-[#333033] border-2 border-[#333033] transition-all duration-300"
                   disabled={fullyBooked}

@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from 'react-router-dom';
 import { Calendar, AlertTriangle, AlertCircle, CheckCircle, User, DollarSign, Trash2, MapPin, Users, Download, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { CancellationDialog } from '@/components/BookingCancellation';
 import { useBackendBookings, type SafariBooking } from '@/hooks/useBackendBookings';
 import api from '@/lib/api';
 import { useReviews } from '@/hooks/useReviews';
@@ -185,7 +186,6 @@ export default function UserDashboard() {
 
 function BookingsTab({ bookings, cancelBooking }: { bookings: UserBooking[]; cancelBooking: (id: string) => Promise<unknown> }) {
   const [cancellationLoading, setCancellationLoading] = useState<string | null>(null);
-  const [showCancelConfirm, setShowCancelConfirm] = useState<string | null>(null);
   const [downloadingReceipt, setDownloadingReceipt] = useState<string | null>(null);
 
   const today = new Date();
@@ -217,7 +217,6 @@ function BookingsTab({ bookings, cancelBooking }: { bookings: UserBooking[]; can
       setCancellationLoading(bookingId);
       await cancelBooking(bookingId);
       toast.success('Booking cancelled successfully');
-      setShowCancelConfirm(null);
     } catch (error) {
       toast.error('Failed to cancel booking');
       console.error('Cancel booking error:', error);
@@ -305,59 +304,29 @@ function BookingsTab({ bookings, cancelBooking }: { bookings: UserBooking[]; can
 
         {!isPast && booking.status !== 'cancelled' && (
           <div className="flex gap-2">
-            {showCancelConfirm === booking.id ? (
-              <div className="flex gap-2 w-full">
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => handleCancelBooking(booking.id)}
-                  disabled={cancellationLoading === booking.id}
-                  className="flex-1"
-                >
-                  {cancellationLoading === booking.id ? 'Cancelling...' : 'Confirm Cancel'}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowCancelConfirm(null)}
-                  disabled={cancellationLoading === booking.id}
-                  className="flex-1"
-                >
-                  Keep Booking
-                </Button>
-              </div>
-            ) : (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDownloadReceipt(booking)}
-                  disabled={downloadingReceipt === booking.id}
-                  className="flex-1"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  {downloadingReceipt === booking.id ? 'Downloading...' : 'Receipt'}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleResendNotification(booking)}
-                  className="flex-1"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Resend
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowCancelConfirm(booking.id)}
-                  className="text-red-600 hover:text-red-700 flex-1"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Cancel
-                </Button>
-              </>
-            )}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleDownloadReceipt(booking)}
+              disabled={downloadingReceipt === booking.id}
+              className="flex-1"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              {downloadingReceipt === booking.id ? 'Downloading...' : 'Receipt'}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleResendNotification(booking)}
+              className="flex-1"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Resend
+            </Button>
+            <CancellationDialog
+              booking={booking}
+              onCancellationSuccess={() => window.location.reload()}
+            />
           </div>
         )}
 
@@ -373,7 +342,7 @@ function BookingsTab({ bookings, cancelBooking }: { bookings: UserBooking[]; can
               <Download className="w-4 h-4 mr-2" />
               {downloadingReceipt === booking.id ? 'Downloading...' : 'Receipt'}
             </Button>
-            <Link to={`/property/${booking._raw?.property?._id || booking.package_id || ''}`} className="flex-1">
+            <Link to={`/property/${booking._raw?.property?.slug || booking._raw?.property?._id || booking.package_id || ''}`} className="flex-1">
               <Button size="sm" variant="outline" className="w-full">
                 View Property & Review
               </Button>

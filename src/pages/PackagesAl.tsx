@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import slugify from '@/lib/slugify';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -308,12 +309,12 @@ export default function Packages() {
               </div>
 
               <div className="flex gap-2">
-                <Link to={`/book?package=${pkg.id}`} className="flex-1">
+                <Link to={`/book?package=${(pkg as any).slug || slugify(pkg.name) || pkg.id}`} className="flex-1">
                   <Button className="w-full bg-yellow-500 hover:bg-yellow-600">
                     Book Now
                   </Button>
                 </Link>
-                <Link to={`/package/${pkg.id}`} className="flex-1">
+                <Link to={`/package/${(pkg as any).slug || slugify(pkg.name) || pkg.id}`} className="flex-1">
                   <Button variant="outline" className="w-full">
                     View Details
                   </Button>
@@ -444,12 +445,12 @@ export default function Packages() {
               </div>
 
               <div className="flex gap-2">
-                <Link to={`/book?package=${pkg.id}`} className="flex-1">
+                <Link to={`/book?package=${(pkg as any).slug || slugify(pkg.name) || pkg.id}`} className="flex-1">
                   <Button className="w-full bg-yellow-500 hover:bg-yellow-600">
                     Book Now
                   </Button>
                 </Link>
-                <Link to={`/package/${pkg.id}`} className="flex-1">
+                <Link to={`/package/${(pkg as any).slug || slugify(pkg.name) || pkg.id}`} className="flex-1">
                   <Button variant="outline" className="w-full">
                     View Details
                   </Button>

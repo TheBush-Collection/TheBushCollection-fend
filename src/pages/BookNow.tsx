@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import slugify from '@/lib/slugify';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import { Package } from '@/types/package';
 import { BookingAmenity } from '@/types/amenity';
 import { toast } from 'sonner';
 import PaymentForm from '@/components/PaymentForm';
+import PesapalPaymentForm from '@/components/PesapalPaymentForm';
 import { AmenitySelector } from '@/components/AmenitySelector';
 
 // Country codes data
@@ -443,7 +445,11 @@ export default function BookNow() {
         setBookingType('property');
         console.log('Looking for property:', propertyId);
         
-        const property = properties.find(p => p.id === propertyId);
+        const property = properties.find(p => {
+          const pId = p.id || (p as any)._id;
+          const pSlug = (p as any).slug || '';
+          return pId === propertyId || pSlug === propertyId || slugify(p.name) === propertyId;
+        });
         console.log('Found property:', property);
         
         if (property) {
@@ -663,7 +669,7 @@ export default function BookNow() {
               Back to Booking Details
             </Button>
           </div>
-          <PaymentForm
+          <PesapalPaymentForm
             bookingDetails={bookingDetails}
             customerDetails={customerDetails}
             onPaymentSuccess={handlePaymentSuccess}

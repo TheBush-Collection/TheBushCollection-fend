@@ -156,8 +156,8 @@ function AppContent() {
         {/* Public Routes */}
         <Route path="/" element={<Index />} />
         <Route path="/collections" element={<Collections />} />
+        <Route path="/property/:propertyId/room/:roomSlug" element={<RoomDetail />} />
         <Route path="/property/:id" element={<PropertyDetail />} />
-        <Route path="/room/:roomId" element={<RoomDetail />} />
         <Route path="/packages" element={<Packages />} />
         <Route path="/package/:id" element={<PackageDetail />} />
         <Route path="/book" element={<BookNow />} />

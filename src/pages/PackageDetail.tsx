@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import slugify from '@/lib/slugify';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,12 @@ export default function PackageDetail() {
     const loadPackage = async () => {
       console.log('PackageDetail - ID:', id, 'Packages:', packages.length);
       if (id && packages.length > 0) {
+        // try local lookup by id or slug first
+        const local = packages.find(p => p.id === id || (p as any).slug === id || slugify(p.name) === id);
+        if (local) {
+          setSelectedPackage(local);
+          return;
+        }
         const pkg = await getPackageById(id);
         console.log('Found package:', pkg);
         setSelectedPackage(pkg || null);

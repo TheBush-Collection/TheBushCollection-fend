@@ -373,8 +373,11 @@ export const useBookingCancellation = () => {
       const booking = await getBooking(request.booking_id);
 
       // Update booking status to cancelled
-      // Use admin endpoint to cancel booking
-      await api.post(`/bookings/admin/bookings/${request.booking_id}/cancel`);
+      // Use admin endpoint to cancel booking and include the original reason and any admin notes
+      await api.post(`/bookings/admin/bookings/${request.booking_id}/cancel`, {
+        reason: request.reason,
+        admin_notes: adminNotes || request.admin_notes || ''
+      });
 
       // Update request status to processed
       request.status = 'processed';

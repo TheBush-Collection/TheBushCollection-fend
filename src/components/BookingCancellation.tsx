@@ -68,12 +68,14 @@ export function CancellationDialog({ booking, onCancellationSuccess }: Cancellat
       if (result.success) {
         setIsOpen(false);
         onCancellationSuccess?.();
-        toast.success(`Booking cancelled successfully! Refund: $${result.refundAmount.toFixed(2)}`);
+        toast.success(
+          `Cancellation request submitted. Refund (est.): $${(result.refundAmount || 0).toFixed(2)}. Your booking remains active until approved.`
+        );
       } else {
         toast.error(result.message);
       }
     } catch (error) {
-      toast.error('Failed to cancel booking');
+      toast.error('Failed to submit cancellation request');
     }
   };
 
@@ -105,14 +107,17 @@ export function CancellationDialog({ booking, onCancellationSuccess }: Cancellat
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300">
-          Cancel Booking
-        </Button>
-      </DialogTrigger>
+    <>
+      <Button
+        variant="outline"
+        className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+        onClick={() => setIsOpen(true)}
+      >
+        Cancel Booking
+      </Button>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
 
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -291,11 +296,12 @@ export function CancellationDialog({ booking, onCancellationSuccess }: Cancellat
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }
 
 // Main cancellation management component for user dashboard
-export default function BookingCancellation({ className = '' }: { className?: string }) {
+export default function BookingCancellation({ className = '' }: any) {
   const { user } = useAuth();
   const { bookings } = useBackendBookings();
   const { cancelBooking, getCancellationHistory } = useBookingCancellation();

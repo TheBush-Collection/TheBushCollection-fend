@@ -31,6 +31,7 @@ export default function ReviewCard({ review, showUser = true }: ReviewCardProps)
   };
 
   const formatDate = (dateString: string) => {
+    if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -76,11 +77,18 @@ export default function ReviewCard({ review, showUser = true }: ReviewCardProps)
               {showUser && (
                 <>
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                    <User className="h-4 w-4 text-orange-600" />
+                    {/* show initials if we have a name/email, otherwise generic user icon */}
+                    {review.users?.full_name || review.users?.email ? (
+                      <span className="text-xs font-semibold text-orange-600">
+                        {getInitials(review.users?.full_name || (review.users?.email?.split('@')[0] ?? null))}
+                      </span>
+                    ) : (
+                      <User className="h-4 w-4 text-orange-600" />
+                    )}
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                      {review.users?.full_name || 'Anonymous'}
+                      {review.users?.full_name || (review.users?.email ? review.users.email.split('@')[0] : 'Null')}
                     </p>
                     <div className="flex items-center gap-1 text-xs text-gray-500">
                       <Calendar className="h-3 w-3" />

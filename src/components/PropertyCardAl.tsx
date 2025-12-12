@@ -1,4 +1,5 @@
 import { Star, MapPin, Users, Calendar, Clock, Play } from 'lucide-react';
+import slugify from '@/lib/slugify';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -332,6 +333,8 @@ export default function PropertyCard({ property }: PropertyCardProps) {
 
   const { mediaContent, isVideo: videoCheck } = renderMedia();
 
+  const propertySlug = (property as any).slug || slugify(propertyName) || propertyId;
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <div className="relative">
@@ -442,7 +445,7 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               <span className="text-gray-600 text-sm ml-1">per night</span>
             </div>
             <div className="flex gap-2">
-              <Link to={`/property/${propertyId}`}>
+              <Link to={`/property/${propertySlug}`}>
                 <Button variant="outline" size="sm">
                   View Details
                 </Button>

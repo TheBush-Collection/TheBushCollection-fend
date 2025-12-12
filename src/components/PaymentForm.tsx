@@ -88,6 +88,13 @@ interface BookingConfirmation {
   confirmationNumber: string;
   // Payment details
   paymentType: 'deposit' | 'full';
+  paymentTerm?: 'deposit' | 'full';
+  paymentSchedule?: {
+    depositAmount?: number;
+    balanceAmount?: number;
+    depositDueDate?: string;
+    balanceDueDate?: string;
+  } | null;
   amountPaid: number;
   balanceDue?: number;
   balanceDueDate?: string;
@@ -408,6 +415,8 @@ export default function PaymentForm({ bookingDetails, customerDetails, onPayment
         }),
         confirmationNumber: bookingReference,
         paymentType: bookingDetails.paymentTerm || 'full',
+        paymentTerm: bookingDetails.paymentTerm || 'full',
+        paymentSchedule: bookingDetails.paymentSchedule || null,
         amountPaid: paymentAmount,
         balanceDue: bookingDetails.paymentTerm === 'deposit' ? bookingDetails.paymentSchedule?.balanceAmount : 0,
         balanceDueDate: bookingDetails.paymentTerm === 'deposit' ? bookingDetails.paymentSchedule?.balanceDueDate : undefined,
