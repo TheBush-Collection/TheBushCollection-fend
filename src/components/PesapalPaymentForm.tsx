@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import { Card, CardHeader, CardContent, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
 import { Banknote, Percent, AlertCircle } from "lucide-react";
-import axios from 'axios';
 
 export default function PaymentForm({ bookingDetails, customerDetails, onPaymentSuccess }) {
     const [isProcessing, setIsProcessing] = useState(false);
@@ -89,9 +88,10 @@ export default function PaymentForm({ bookingDetails, customerDetails, onPayment
                 }
             }
 
-            const response = await axios.post('https://jude-rattish-samir.ngrok-free.dev/payments/initiate', {
+            // Use the frontend API client so requests go to the configured `API_BASE`.
+            const response = await api.post('/payments/initiate', {
                 amount: paymentAmount,
-                currency: 'USD',
+                currency: 'KES',
                 description: `Booking for ${bookingDetails.propertyName}`,
                 email: customerDetails.email,
                 firstName: customerDetails.name.split(' ')[0],

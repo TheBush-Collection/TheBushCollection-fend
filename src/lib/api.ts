@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-export const API_BASE = 'http://localhost:5000';
-// export const API_BASE = 'https://jude-rattish-samir.ngrok-free.dev/';
+// export const API_BASE = 'http://localhost:5000';
+export const API_BASE = 'https://jude-rattish-samir.ngrok-free.dev/';
 
 const api = axios.create({
   baseURL: API_BASE,
