@@ -89,33 +89,48 @@ export default function PaymentForm({ bookingDetails, customerDetails, onPayment
             }
 
             // Use the frontend API client so requests go to the configured `API_BASE`.
-            const response = await api.post('/payments/initiate', {
+            // const response = await api.post('/payments/initiate', {
+            //     amount: paymentAmount,
+            //     currency: 'KES',
+            //     description: `Booking for ${bookingDetails.propertyName}`,
+            //     email: customerDetails.email,
+            //     firstName: customerDetails.name.split(' ')[0],
+            //     lastName: customerDetails.name.split(' ').slice(1).join(' '),
+            //     phoneNumber: customerDetails.phone,
+            //     bookingId: bookingIdToUse,
+            //     bookingReference: generateBookingReference(),
+            //     // Include full booking payload for backend fallback (optional)
+            //     bookingPayload: bookingDetails
+            // });
+
+            // if (response.data && response.data.success) {
+            //     if (response.data.embedIframeSrc) {
+            //         setEmbedSrc(response.data.embedIframeSrc);
+            //         if (response.data.orderTrackingId) setOrderTrackingId(response.data.orderTrackingId);
+            //         toast.success('Opening embedded PesaPal checkout');
+            //     } else if (response.data.redirectUrl) {
+            //         window.location.href = response.data.redirectUrl;
+            //     } else {
+            //         throw new Error('No redirect or embed URL returned from payment initiation');
+            //     }
+            // } else {
+            //     throw new Error(response.data?.error || 'Failed to initialize payment');
+            // }
+            const response = await api.post("/payments/store", {
                 amount: paymentAmount,
-                currency: 'KES',
                 description: `Booking for ${bookingDetails.propertyName}`,
                 email: customerDetails.email,
-                firstName: customerDetails.name.split(' ')[0],
-                lastName: customerDetails.name.split(' ').slice(1).join(' '),
-                phoneNumber: customerDetails.phone,
                 bookingId: bookingIdToUse,
                 bookingReference: generateBookingReference(),
-                // Include full booking payload for backend fallback (optional)
-                bookingPayload: bookingDetails
             });
 
-            if (response.data && response.data.success) {
-                if (response.data.embedIframeSrc) {
-                    setEmbedSrc(response.data.embedIframeSrc);
-                    if (response.data.orderTrackingId) setOrderTrackingId(response.data.orderTrackingId);
-                    toast.success('Opening embedded PesaPal checkout');
-                } else if (response.data.redirectUrl) {
-                    window.location.href = response.data.redirectUrl;
-                } else {
-                    throw new Error('No redirect or embed URL returned from payment initiation');
-                }
-            } else {
-                throw new Error(response.data?.error || 'Failed to initialize payment');
+            if (response.data?.success && response.data.redirectUrl) {
+                window.location.href = response.data.redirectUrl;
+                return;
             }
+
+            throw new Error(response.data?.error || "Failed to initialize payment");
+
 
         } catch (error) {
             console.error('💥 Payment error:', error);
