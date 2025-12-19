@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+import { useBackendProperties } from '@/hooks/useBackendProperties';
 
 export type SafariBooking = {
   id: string;
@@ -34,6 +35,49 @@ export type SafariBooking = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mapBackendToUi = (b: any): SafariBooking => {
   const id = b._id || b.id || b.bookingId || b.bookingId;
+  // Helper to extract room name from multiple backend shapes
+  const extractRoomName = (src: any): string | undefined => {
+    if (!src) return undefined;
+    // rooms may be array of strings or objects
+    if (Array.isArray(src.rooms) && src.rooms.length > 0) {
+      const r = src.rooms[0];
+      if (!r) return undefined;
+      if (typeof r === 'string') return r;
+      // Prefer explicit names, otherwise fall back to any roomId value (handle Mongo $oid)
+      const roomIdVal = r.roomId ? (typeof r.roomId === 'object' ? r.roomId.$oid || String(r.roomId) : String(r.roomId)) : undefined;
+      return r.roomName || r.room_name || r.name || roomIdVal || r.title || r.label || r.room?.name || r.room?.title || undefined;
+    }
+    // safari_rooms may be an array or object
+    if (Array.isArray(src.safari_rooms) && src.safari_rooms.length > 0) {
+      const r = src.safari_rooms[0];
+      if (!r) return undefined;
+      if (typeof r === 'string') return r;
+      const roomIdVal = r.roomId ? (typeof r.roomId === 'object' ? r.roomId.$oid || String(r.roomId) : String(r.roomId)) : undefined;
+      return r.name || r.roomName || r.room_name || roomIdVal || r.title || r.room?.name || undefined;
+    }
+    if (src.safari_rooms && typeof src.safari_rooms === 'object') {
+      return src.safari_rooms.name || src.safari_rooms.roomName || src.safari_rooms.room_name || undefined;
+    }
+    // single room object or string
+    if (typeof src.room === 'string') return src.room;
+    if (src.room && typeof src.room === 'object') return src.room.name || src.room.roomName || src.room.room_name || src.room.title || undefined;
+    // sometimes room info is nested under property
+    if (src.property && src.property.rooms && Array.isArray(src.property.rooms) && src.property.rooms[0]) {
+      const r = src.property.rooms[0];
+      if (typeof r === 'string') return r;
+      return r.name || r.roomName || r.room_name || r.title || undefined;
+    }
+    if (src.property && src.property.safari_rooms && Array.isArray(src.property.safari_rooms) && src.property.safari_rooms[0]) {
+      const r = src.property.safari_rooms[0];
+      if (typeof r === 'string') return r;
+      return r.name || r.roomName || r.room_name || r.title || undefined;
+    }
+    // flat fields
+    if (src.roomName) return src.roomName;
+    if (src.room_name) return src.room_name;
+    if (src.room_name) return src.room_name;
+    return undefined;
+  };
   const statusMap: Record<string, string> = {
     pending: 'inquiry',
     deposit_paid: 'deposit-paid',
@@ -58,7 +102,7 @@ const mapBackendToUi = (b: any): SafariBooking => {
     property_name: b.property?.name || b.property_name || (b.safari_properties && b.safari_properties.name) || b.propertyName || b.property?.title,
     safari_properties: b.property ? { name: b.property.name } : (b.safari_properties || null),
     package_id: b.package?._id || b.packageId || b.package || b.package_id,
-    room_name: (b.rooms && b.rooms[0] && (b.rooms[0].roomName || b.rooms[0].room_name || b.rooms[0].name)) || b.room_name || b.room?.name || (b.safari_rooms && b.safari_rooms.name) || b.roomName,
+    room_name: extractRoomName(b) || undefined,
     check_in: b.checkInDate ? new Date(b.checkInDate).toISOString() : b.check_in,
     check_out: b.checkOutDate ? new Date(b.checkOutDate).toISOString() : b.check_out,
     total_guests: b.totalGuests ?? b.total_guests ?? (b.adults || 0) + (b.children || 0),
@@ -77,6 +121,7 @@ const mapBackendToUi = (b: any): SafariBooking => {
 
 export const useBackendBookings = () => {
   const { isAdmin, loading: authLoading, user } = useAuth();
+  const { properties } = useBackendProperties();
   const [bookings, setBookings] = useState<SafariBooking[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,16 +148,55 @@ export const useBackendBookings = () => {
       // controller returns { data: bookings, total }
       const data = res.data?.data ?? res.data ?? [];
       const mapped = (Array.isArray(data) ? data : []).map(mapBackendToUi);
+      // Helper to identify Mongo/ObjectId strings (24 hex chars) or $oid wrappers
+      const looksLikeObjectId = (val: unknown) => {
+        if (!val) return false;
+        const s = String(val);
+        if (/^\$oid\:/i.test(s)) return true;
+        if (/^[a-fA-F0-9]{24}$/.test(s)) return true;
+        return false;
+      };
+
+      // Resolve room IDs to names using cached properties to avoid Unknown Room
+      const resolved = mapped.map((m) => {
+        // If room_name exists and does not look like an ObjectId, consider it resolved
+        if (m.room_name && !looksLikeObjectId(m.room_name)) return m;
+        try {
+          const raw = m._raw;
+          // try extract roomId from common shapes
+          const roomObj = raw?.rooms && Array.isArray(raw.rooms) ? raw.rooms[0] : undefined;
+          const candidateRoomId = roomObj?.roomId ? (typeof roomObj.roomId === 'object' ? roomObj.roomId.$oid || String(roomObj.roomId) : String(roomObj.roomId)) : undefined;
+          if (candidateRoomId && Array.isArray(properties)) {
+            for (const prop of properties) {
+              const rooms = (prop.rooms || prop.safari_rooms || []) as any[];
+              if (!rooms) continue;
+              for (const r of rooms) {
+                const rId = r._id || r.id || r.roomId || r._id?._id || (r._id && r._id.$oid) || undefined;
+                const rIdStr = rId ? (typeof rId === 'object' ? rId.$oid || String(rId) : String(rId)) : undefined;
+                if (rIdStr === candidateRoomId) {
+                  m.room_name = r.name || r.roomName || r.title || r.label || r.room_name || r.name;
+                  // also set property name if missing
+                  if (!m.property_name && prop.name) m.property_name = prop.name;
+                  return m;
+                }
+              }
+            }
+          }
+        } catch (e) {
+          // ignore resolution errors
+        }
+        return m;
+      });
       // Debug: log a sample mapped booking and its raw backend object to aid troubleshooting
       try {
-        if (mapped && mapped.length > 0) {
-          console.debug('[useBackendBookings] sample mapped booking:', mapped[0]);
-          console.debug('[useBackendBookings] sample raw booking payload:', mapped[0]._raw);
-        }
-      } catch (e) {
-        // ignore
-      }
-      setBookings(mapped);
+            if (resolved && resolved.length > 0) {
+              console.log('[useBackendBookings] sample mapped booking:', resolved[0]);
+              console.log('[useBackendBookings] sample raw booking payload:', resolved[0]._raw);
+            }
+          } catch (e) {
+            // ignore
+          }
+      setBookings(resolved);
       if (res.data?.total !== undefined) setTotal(res.data.total);
       return mapped;
     } catch (err: unknown) {
@@ -122,7 +206,7 @@ export const useBackendBookings = () => {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, authLoading, user]);
+  }, [isAdmin, authLoading, user, properties]);
 
   const getAdminBooking = async (id: string) => {
     try {

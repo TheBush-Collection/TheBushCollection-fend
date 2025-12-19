@@ -211,7 +211,7 @@ export default function AdminReports() {
     customerEmail: booking.guest_email || '',
     customerPhone: booking.guest_phone || '',
     propertyName: booking.safari_properties?.name || booking.property_name || 'Unknown Property',
-    roomName: booking.safari_rooms?.name || booking.room_name || 'Unknown Room',
+    roomName: booking.room_name || booking.safari_rooms?.name || ((booking as any).rooms && (booking as any).rooms[0] ? ((booking as any).rooms[0].roomName || (booking as any).rooms[0].name) : undefined) || (booking as any).roomName || 'Unknown Room',
     checkIn: booking.check_in,
     checkOut: booking.check_out,
     guests: booking.total_guests || (booking.adults + booking.children),

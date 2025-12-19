@@ -43,45 +43,36 @@ export default function AdminBookings() {
   const [selectedBooking, setSelectedBooking] = useState<SafariBooking | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  // Map Supabase bookings to the format expected by the component
-  const resolveRoomName = (b: SafariBooking | null | undefined) => {
+  const getRoomName = (b?: SafariBooking | null) => {
     if (!b) return 'Unknown Room';
-    if (b.room_name) return b.room_name;
-    // check raw backend payload
-    const raw = b._raw || (b as any);
-    if (raw) {
-      if (raw.rooms && Array.isArray(raw.rooms) && raw.rooms.length > 0) {
-        const r = raw.rooms[0];
-        return r.roomName || r.room_name || r.name || 'Unknown Room';
-      }
-      if (raw.safari_rooms && (raw.safari_rooms.name || raw.safari_rooms)) return raw.safari_rooms.name || raw.safari_rooms;
-      if (raw.roomName) return raw.roomName;
-      if (raw.room && raw.room.name) return raw.room.name;
-    }
-    return 'Unknown Room';
+    return b.room_name || (b as any).safari_rooms?.name || ((b as any).rooms && (b as any).rooms[0] ? ((b as any).rooms[0].roomName || (b as any).rooms[0].name) : undefined) || (b as any).roomName || 'Unknown Room';
   };
 
-  const bookings = supabaseBookings.map(booking => ({
-    id: booking.id,
-    customerName: booking.guest_name || 'Unknown Guest',
-    customerEmail: booking.guest_email || '',
-    customerPhone: booking.guest_phone || '',
-    propertyName: booking.safari_properties?.name || booking.property_name || 'Unknown Property',
-    roomName: resolveRoomName(booking),
-    checkIn: booking.check_in,
-    checkOut: booking.check_out,
-    guests: booking.total_guests || (booking.adults + booking.children),
-    nights: differenceInDays(new Date(booking.check_out), new Date(booking.check_in)),
-    pricePerNight: 0, // Not available in Supabase schema
-    total: booking.total_amount || 0,
-    status: booking.status as BookingStatus, // Use correct type
-    createdAt: booking.created_at,
-    specialRequests: booking.special_requirements || '',
-    airportTransfer: booking.transfer_details as unknown,
-    amenities: [] as unknown[], // Not available in current Supabase schema
-    depositPaid: booking.deposit_paid || 0,
-    balanceDue: booking.balance_due || 0
-  }));
+  // Map Supabase bookings to the format expected by the component
+  const bookings = supabaseBookings.map(booking => {
+    const roomName = booking.room_name || (booking as any).safari_rooms?.name || ((booking as any).rooms && (booking as any).rooms[0] ? ((booking as any).rooms[0].roomName || (booking as any).rooms[0].name) : undefined) || (booking as any).roomName || 'Unknown Room';
+    return {
+      id: booking.id,
+      customerName: booking.guest_name || 'Unknown Guest',
+      customerEmail: booking.guest_email || '',
+      customerPhone: booking.guest_phone || '',
+      propertyName: booking.safari_properties?.name || booking.property_name || 'Unknown Property',
+      roomName,
+      checkIn: booking.check_in,
+      checkOut: booking.check_out,
+      guests: booking.total_guests || (booking.adults + booking.children),
+      nights: differenceInDays(new Date(booking.check_out), new Date(booking.check_in)),
+      pricePerNight: 0, // Not available in Supabase schema
+      total: booking.total_amount || 0,
+      status: booking.status as BookingStatus, // Use correct type
+      createdAt: booking.created_at,
+      specialRequests: booking.special_requirements || '',
+      airportTransfer: booking.transfer_details as unknown,
+      amenities: [] as unknown[], // Not available in current Supabase schema
+      depositPaid: booking.deposit_paid || 0,
+      balanceDue: booking.balance_due || 0
+    };
+  });
 
   const getStatusBadge = (status: BookingStatus) => {
     switch (status) {
@@ -850,7 +841,7 @@ export default function AdminBookings() {
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <span className="font-medium text-gray-600 block">Room:</span>
-                    <span className="text-gray-900">{selectedBooking.room_name || 'Unknown Room'}</span>
+                    <span className="text-gray-900">{getRoomName(selectedBooking)}</span>
                   </div>
                   <div className="bg-gray-50 p-3 rounded-lg">
                     <span className="font-medium text-gray-600 block">Guests:</span>

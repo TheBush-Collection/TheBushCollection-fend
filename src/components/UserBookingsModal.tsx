@@ -152,8 +152,10 @@ export default function UserBookingsModal({ children }: UserBookingsModalProps) 
                               <h4 className="font-semibold text-lg">{booking.property_name || 'Safari Property'}</h4>
                               {booking.status && getStatusBadge(booking.status)}
                             </div>
-                            {booking.room_name && (
-                              <p className="text-sm text-gray-600 mb-1">Room: {booking.room_name}</p>
+                            {(
+                              booking.room_name || (booking as any).safari_rooms?.name || ((booking as any).rooms && (booking as any).rooms[0] ? ((booking as any).rooms[0].roomName || (booking as any).rooms[0].name) : undefined) || (booking as any).roomName
+                            ) && (
+                              <p className="text-sm text-gray-600 mb-1">Room: {booking.room_name || (booking as any).safari_rooms?.name || ((booking as any).rooms && (booking as any).rooms[0] ? ((booking as any).rooms[0].roomName || (booking as any).rooms[0].name) : undefined) || (booking as any).roomName}</p>
                             )}
                             <div className="flex items-center gap-4 text-sm text-gray-600">
                               <div className="flex items-center gap-1">

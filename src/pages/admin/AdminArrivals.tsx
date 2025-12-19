@@ -94,8 +94,8 @@ export default function AdminArrivals() {
       }
       bookings.forEach((booking) => {
         // Use the actual booking data structure from SafariBooking
-        let propertyName = booking.safari_properties?.name || 'Unknown Property';
-        let roomName = booking.safari_rooms?.name || 'Unknown Room';
+        let propertyName = booking.safari_properties?.name || booking.property_name || 'Unknown Property';
+        let roomName = booking.room_name || (booking as any).safari_rooms?.name || ((booking as any).rooms && (booking as any).rooms[0] ? ((booking as any).rooms[0].roomName || (booking as any).rooms[0].name) : undefined) || (booking as any).roomName || 'Unknown Room';
 
         // Handle package bookings - get property info from package data
         if (booking.package_id && booking.safari_packages) {

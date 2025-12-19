@@ -105,9 +105,10 @@ export default function AdminAnalytics() {
       return booking.safari_properties.name;
     }
     
-    // Attempt to infer from room name
-    if (booking.room_name) {
-      const roomName = booking.room_name.toLowerCase();
+    // Attempt to infer from room name (try multiple booking shapes)
+    const roomNameCandidate = booking.room_name || (booking as any).safari_rooms?.name || ((booking as any).rooms && (booking as any).rooms[0] ? ((booking as any).rooms[0].roomName || (booking as any).rooms[0].name) : undefined) || (booking as any).roomName;
+    if (roomNameCandidate) {
+      const roomName = String(roomNameCandidate).toLowerCase();
       const matchedProperty = properties.find(property => 
         property.rooms?.some(room => room.name.toLowerCase() === roomName)
       );
