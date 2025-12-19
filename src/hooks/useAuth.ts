@@ -16,7 +16,12 @@ interface AuthState {
   logout: () => void
 }
 
-export const AuthContext = createContext<AuthState | null>(null)
+interface AuthExtras {
+  requestPasswordReset: (email: string) => Promise<boolean>
+  resetPassword: (token: string, password: string) => Promise<boolean>
+}
+
+export const AuthContext = createContext<(AuthState & AuthExtras) | null>(null)
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
@@ -26,10 +31,12 @@ export const useAuth = () => {
   return context
 }
 
-export const useAuthState = (): AuthState => {
+export const useAuthState = (): AuthState & AuthExtras => {
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<User | null>(null)
+
+  const SESSION_DURATION_MS = 10 * 60 * 1000 // 10 minutes
 
   // Check if there's a stored token on mount and validate it
   useEffect(() => {
@@ -37,8 +44,20 @@ export const useAuthState = (): AuthState => {
       try {
         initAuthFromStorage()
         const token = localStorage.getItem('authToken')
-        
+
         if (!token) {
+          setLoading(false)
+          return
+        }
+
+        // Check session expiry
+        const sessionExpiry = Number(localStorage.getItem('sessionExpiry') || '0')
+        const now = Date.now()
+        if (!sessionExpiry || sessionExpiry <= now) {
+          // session expired
+          localStorage.removeItem('authToken')
+          localStorage.removeItem('sessionExpiry')
+          setAuthToken(null)
           setLoading(false)
           return
         }
@@ -64,6 +83,7 @@ export const useAuthState = (): AuthState => {
         // Token is invalid or expired, clear it
         console.error('Auth validation failed:', error)
         localStorage.removeItem('authToken')
+        localStorage.removeItem('sessionExpiry')
         setAuthToken(null)
         setIsAdmin(false)
         setUser(null)
@@ -75,19 +95,43 @@ export const useAuthState = (): AuthState => {
     initAuth()
   }, [])
 
+  // Session timeout handling: auto-logout when sessionExpiry reached
+  useEffect(() => {
+    let timer: number | undefined
+    const sessionExpiry = Number(localStorage.getItem('sessionExpiry') || '0')
+    const now = Date.now()
+    if (sessionExpiry && sessionExpiry > now) {
+      const ms = sessionExpiry - now
+      timer = window.setTimeout(() => {
+        // expire session
+        localStorage.removeItem('authToken')
+        localStorage.removeItem('sessionExpiry')
+        setAuthToken(null)
+        setUser(null)
+        setIsAdmin(false)
+      }, ms)
+    }
+    return () => {
+      if (timer) clearTimeout(timer)
+    }
+  }, [user])
+
   // Login with backend endpoint
   const login = useCallback(async (email: string, password: string, isAdminLogin: boolean = false): Promise<boolean> => {
     setLoading(true)
     try {
       const endpoint = isAdminLogin ? '/auth/admin/login' : '/auth/login'
       const response = await api.post(endpoint, { email, password })
-      
+
       const { token, user: userData, admin: adminData } = response.data
       const userInfo = userData || adminData
 
       if (token && userInfo) {
         // Store token in localStorage
         localStorage.setItem('authToken', token)
+        // set session expiry timestamp (10 minutes from now)
+        const expiry = Date.now() + SESSION_DURATION_MS
+        localStorage.setItem('sessionExpiry', String(expiry))
         setAuthToken(token)
 
         setUser({
@@ -119,7 +163,30 @@ export const useAuthState = (): AuthState => {
     setUser(null)
     setIsAdmin(false)
     localStorage.removeItem('authToken')
+    localStorage.removeItem('sessionExpiry')
     setAuthToken(null)
+  }, [])
+
+  // Request password reset (backend should send reset email)
+  const requestPasswordReset = useCallback(async (email: string): Promise<boolean> => {
+    try {
+      const res = await api.post('/auth/forgot-password', { email })
+      return res.status === 200 || res.data?.success === true
+    } catch (err) {
+      console.error('Forgot password error:', err)
+      return false
+    }
+  }, [])
+
+  // Reset password using token provided in email
+  const resetPassword = useCallback(async (token: string, password: string): Promise<boolean> => {
+    try {
+      const res = await api.post('/auth/reset-password', { token, password })
+      return res.status === 200 || res.data?.success === true
+    } catch (err) {
+      console.error('Reset password error:', err)
+      return false
+    }
   }, [])
 
   return {
@@ -127,6 +194,8 @@ export const useAuthState = (): AuthState => {
     loading,
     user,
     login,
-    logout
+    logout,
+    requestPasswordReset,
+    resetPassword
   }
 }

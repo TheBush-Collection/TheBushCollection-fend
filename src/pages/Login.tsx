@@ -103,6 +103,9 @@ export default function Login() {
                   placeholder="Enter your password"
                 />
               </div>
+              <div className="text-right text-sm">
+                <Link to="/forgot-password" className="text-yellow-500 hover:text-yellow-600">Forgot password?</Link>
+              </div>
 
               <Button
                 type="submit"

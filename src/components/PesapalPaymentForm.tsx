@@ -185,7 +185,7 @@ export default function PaymentForm({ bookingDetails, customerDetails, onPayment
                                 <div className="flex justify-between">
                                     <span className="text-blue-800">Amount to Pay Now:</span>
                                     <span className="font-bold text-blue-900">
-                                        KES {paymentAmount.toFixed(2)}
+                                        USD {paymentAmount.toFixed(2)}
                                     </span>
                                 </div>
                                 {isDepositPayment && bookingDetails.paymentSchedule && (
@@ -193,7 +193,7 @@ export default function PaymentForm({ bookingDetails, customerDetails, onPayment
                                         <div className="flex justify-between">
                                             <span className="text-blue-700">Balance Due Later:</span>
                                             <span className="text-blue-800">
-                                                KES {bookingDetails.paymentSchedule.balanceAmount.toFixed(2)}
+                                                USD {bookingDetails.paymentSchedule.balanceAmount.toFixed(2)}
                                             </span>
                                         </div>
                                         <div className="text-xs text-blue-600">
@@ -217,9 +217,9 @@ export default function PaymentForm({ bookingDetails, customerDetails, onPayment
                                     Processing Payment...
                                 </>
                             ) : isDepositPayment ? (
-                                `Pay KES ${paymentAmount.toFixed(2)} Deposit`
+                                `Pay usd ${paymentAmount.toFixed(2)} Deposit`
                             ) : (
-                                `Pay KES ${paymentAmount.toFixed(2)}`
+                                `Pay USD ${paymentAmount.toFixed(2)}`
                             )}
                         </Button>
                     </form>

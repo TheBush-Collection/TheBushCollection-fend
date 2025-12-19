@@ -9,12 +9,15 @@ import { useBackendProperties } from '@/hooks/useBackendProperties';
 import PropertyCard from '@/components/PropertyCard';
 import OptimizedImage from '@/components/OptimizedImage';
 import ReviewsSection from '@/components/ReviewsSection';
+import { subscribeToMailchimp } from '@/lib/mailchimp';
+import { toast } from 'sonner';
 
 export default function Index() {
   const { properties, loading, error } = useBackendProperties();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
 
   const carouselData = useMemo(() => [
     {
@@ -140,6 +143,44 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-[#1a1816]">
+      {/* Floating subscribe button */}
+      <button
+        onClick={() => setShowSubscribeModal(true)}
+        aria-label="Subscribe to newsletter"
+        className="fixed right-8 bottom-8 z-50 flex items-center gap-4 bg-[#c9a961] text-black px-5 py-3 rounded-full shadow-lg hover:opacity-95"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-18 8h18" />
+        </svg>
+        <span className="font-medium">Subscribe to Newsletter</span>
+      </button>
+
+      {/* Subscribe Modal */}
+      {showSubscribeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowSubscribeModal(false)} />
+          <div className="relative z-50 w-full max-w-md px-4">
+            <div className="bg-transparent">
+              <div onClick={(e) => e.stopPropagation()}>
+                <div className="flex justify-end mb-2">
+                  <button
+                    onClick={() => setShowSubscribeModal(false)}
+                    className="text-white text-xl leading-none p-2"
+                    aria-label="Close subscribe modal"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="mx-auto">
+                  <div className="p-0">
+                    <NewsletterForm onClose={() => setShowSubscribeModal(false)} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Hero Section with Carousel */}
       <section className="relative h-screen flex items-center justify-center text-white overflow-hidden bg-[#1a1816]">
         {/* Background Slides */}
@@ -611,6 +652,62 @@ export default function Index() {
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function NewsletterForm() {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  // const toast = useToast();
+
+  const handleSubscribe = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!email || !email.includes('@')) return toast.error('Enter a valid email');
+    setLoading(true);
+    try {
+      const res = await subscribeToMailchimp({ email });
+      if (res.success) {
+        toast.success('Subscribed — check your inbox for updates');
+        setEmail('');
+      } else {
+        toast.error(res.error || 'Subscription failed');
+      }
+    } catch (err) {
+      console.error('Subscribe error:', err);
+      toast.error('Subscription failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mx-auto max-w-xl">
+      <div className="relative bg-[#0f0e0d] border border-[#c9a961] rounded-lg p-8 text-center shadow-lg">
+        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-[#c9a961] rounded-full w-12 h-12 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12H8m0 0l4-4m-4 4l4 4" />
+          </svg>
+        </div>
+
+        <h3 className="text-2xl font-semibold text-white mb-2">Subscribe to Our Newsletter</h3>
+        <p className="text-sm text-white/70 mb-6">Get exclusive safari deals, travel tips, and updates delivered to your inbox.</p>
+
+        <form onSubmit={handleSubscribe} className="flex flex-col sm:flex-row items-center gap-3">
+          <Input
+            placeholder="Enter your email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            type="email"
+            className="bg-[#1b1918] border-[#2a2a2a] text-white"
+          />
+          <Button type="submit" className="bg-[#c9a961] text-black px-6" disabled={loading}>
+            {loading ? 'Subscribing...' : 'Subscribe Now'}
+          </Button>
+        </form>
+
+        <p className="text-xs text-white/50 mt-4">We respect your privacy. Unsubscribe at any time.</p>
+      </div>
     </div>
   );
 }

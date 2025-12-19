@@ -62,7 +62,8 @@ export async function subscribeToMailchimp(contact: MailchimpContact): Promise<{
   try {
     // Send to your backend endpoint instead of directly to Mailchimp
     // This protects your API key from being exposed in the browser
-    const backendUrl = 'http://localhost:5000'; // Backend URL
+    const BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || '';
+    const backendUrl = BACKEND_BASE || '';
     const response = await fetch(`${backendUrl}/api/mailchimp/subscribe`, {
       method: 'POST',
       headers: {

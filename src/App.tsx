@@ -23,6 +23,8 @@ import MediaCenter from './pages/MediaCenter';
 import FAQ from './pages/FAQ';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import CancellationRequest from './pages/CancellationRequest';
 import UserDashboard from './pages/UserDashboard';
 import { AdminLogin } from './pages/admin/AdminLogin';
@@ -169,6 +171,8 @@ function AppContent() {
         <Route path="/faq" element={<FAQ />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/cancellation-request" element={<CancellationRequest />} />
         <Route path="/profile" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />

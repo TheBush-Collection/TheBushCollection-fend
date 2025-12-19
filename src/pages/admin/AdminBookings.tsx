@@ -44,13 +44,30 @@ export default function AdminBookings() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   // Map Supabase bookings to the format expected by the component
+  const resolveRoomName = (b: SafariBooking | null | undefined) => {
+    if (!b) return 'Unknown Room';
+    if (b.room_name) return b.room_name;
+    // check raw backend payload
+    const raw = b._raw || (b as any);
+    if (raw) {
+      if (raw.rooms && Array.isArray(raw.rooms) && raw.rooms.length > 0) {
+        const r = raw.rooms[0];
+        return r.roomName || r.room_name || r.name || 'Unknown Room';
+      }
+      if (raw.safari_rooms && (raw.safari_rooms.name || raw.safari_rooms)) return raw.safari_rooms.name || raw.safari_rooms;
+      if (raw.roomName) return raw.roomName;
+      if (raw.room && raw.room.name) return raw.room.name;
+    }
+    return 'Unknown Room';
+  };
+
   const bookings = supabaseBookings.map(booking => ({
     id: booking.id,
     customerName: booking.guest_name || 'Unknown Guest',
     customerEmail: booking.guest_email || '',
     customerPhone: booking.guest_phone || '',
     propertyName: booking.safari_properties?.name || booking.property_name || 'Unknown Property',
-    roomName: booking.room_name || 'Unknown Room',
+    roomName: resolveRoomName(booking),
     checkIn: booking.check_in,
     checkOut: booking.check_out,
     guests: booking.total_guests || (booking.adults + booking.children),

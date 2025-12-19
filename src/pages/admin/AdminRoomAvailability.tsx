@@ -38,7 +38,7 @@ type BookingItem = {
 
 export default function AdminRoomAvailability() {
   const { properties, loading, error, updateRoom, refetch } = useBackendProperties();
-  type LocalProperty = { id: string; name: string; location?: string; safari_rooms?: SupabaseRoom[] };
+  type LocalProperty = { id: string; name: string; location?: string; rooms?: SupabaseRoom[] };
   const props = properties as unknown as LocalProperty[];
   const [selectedProperty, setSelectedProperty] = useState<string>('all');
   const [editingRoom, setEditingRoom] = useState<{ propertyId: string; roomId: string } | null>(null);
@@ -164,13 +164,13 @@ export default function AdminRoomAvailability() {
     return <span className="text-sm text-green-600">Ready for booking</span>;
   };
 
-  const totalRooms = props.reduce((sum, property) => sum + (property.safari_rooms?.length || 0), 0);
+  const totalRooms = props.reduce((sum, property) => sum + (property.rooms?.length || 0), 0);
   const availableRooms = props.reduce((sum, property) => 
-    sum + (property.safari_rooms?.filter((room: SupabaseRoom) => room.available).length || 0), 0
+    sum + (property.rooms?.filter((room: SupabaseRoom) => room.available).length || 0), 0
   );
   const unavailableRooms = totalRooms - availableRooms;
   const fullyBookedProperties = props.filter(p => {
-    const rooms = p.safari_rooms || [];
+    const rooms = p.rooms || [];
     return rooms.length > 0 && rooms.every((r: SupabaseRoom) => !r.available);
   }).length;
 
@@ -304,21 +304,21 @@ export default function AdminRoomAvailability() {
                     <div className="flex items-center gap-2 text-sm text-gray-600">
                       <MapPin className="h-4 w-4" />
                       <span>{property.location}</span>
-                      {property.safari_rooms && property.safari_rooms.length > 0 && property.safari_rooms.every(r => !r.available) && (
+                      {property.rooms && property.rooms.length > 0 && property.rooms.every(r => !r.available) && (
                         <Badge className="bg-red-100 text-red-800 ml-2">Fully Booked</Badge>
                       )}
                     </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-600">
-                    {(property.safari_rooms || []).filter(r => r.available).length} / {(property.safari_rooms || []).length} available
+                    <p className="text-sm text-gray-600">
+                    {(property.rooms || []).filter(r => r.available).length} / {(property.rooms || []).length} available
                   </p>
                   <div className="w-32 bg-gray-200 rounded-full h-2 mt-1">
                     <div 
                       className="bg-green-500 h-2 rounded-full transition-all duration-300"
                       style={{ 
-                        width: `${(property.safari_rooms || []).length > 0 ? ((property.safari_rooms || []).filter(r => r.available).length / (property.safari_rooms || []).length) * 100 : 0}%` 
+                        width: `${(property.rooms || []).length > 0 ? ((property.rooms || []).filter(r => r.available).length / (property.rooms || []).length) * 100 : 0}%` 
                       }}
                     />
                   </div>
@@ -327,7 +327,7 @@ export default function AdminRoomAvailability() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {(property.safari_rooms || []).map((room) => (
+                {(property.rooms || []).map((room) => (
                   <div key={room.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
@@ -441,7 +441,7 @@ export default function AdminRoomAvailability() {
                 ))}
               </div>
 
-              {(!property.safari_rooms || property.safari_rooms.length === 0) && (
+              {(!property.rooms || property.rooms.length === 0) && (
                 <div className="text-center py-8 text-gray-500">
                   <Bed className="h-8 w-8 mx-auto mb-2 text-gray-300" />
                   <p>No rooms configured for this property</p>

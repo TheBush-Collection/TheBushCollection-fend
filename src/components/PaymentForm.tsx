@@ -352,7 +352,7 @@ export default function PaymentForm({ bookingDetails, customerDetails, onPayment
         const token = localStorage.getItem('authToken') || localStorage.getItem('token');
         const payResp = await api.post('/payments/initiate', {
           amount: paymentAmount,
-          currency: 'KES',
+          currency: 'USD',
           description: `Booking Payment - ${bookingReference}`,
           email: customerDetails.email,
           firstName: (customerDetails.name || '').split(' ')[0] || 'Guest',

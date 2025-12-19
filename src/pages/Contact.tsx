@@ -5,11 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, Phone, Mail, Clock, Send, MessageCircle, Calendar, Users, HelpCircle, AlertTriangle } from 'lucide-react';
+import { MapPin, Phone, Mail, Clock, Send, MessageCircle, Calendar, Users, HelpCircle, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import FAQModal from '@/components/FAQModal';
 import { subscribeToMailchimp, parseFullName } from '@/lib/mailchimp';
+
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -23,6 +24,7 @@ export default function Contact() {
     interests: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSubscribeModal, setShowSubscribeModal] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,8 +102,57 @@ export default function Contact() {
     }
   ];
 
+  
+
   return (
     <div className="min-h-screen">
+      {/* Floating subscribe button */}
+      <button
+        onClick={() => setShowSubscribeModal(true)}
+        aria-label="Subscribe to newsletter"
+        className="fixed right-8 bottom-8 z-50 flex items-center gap-4 bg-[#c9a961] text-black px-5 py-3 rounded-full shadow-lg hover:opacity-95"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8m-18 8h18" />
+        </svg>
+        <span className="font-medium">Subscribe to Newsletter</span>
+      </button>
+
+      {/* Subscribe Modal */}
+      {showSubscribeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowSubscribeModal(false)} />
+
+          <div className="relative z-50 w-full max-w-xl px-4">
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
+              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-[#c9a961] rounded-full w-12 h-12 flex items-center justify-center shadow-lg">
+                <ArrowLeft className="w-5 h-5 text-white" />
+              </div>
+
+              <button
+                onClick={() => setShowSubscribeModal(false)}
+                className="absolute top-2 right-2 text-white text-xl leading-none p-2 z-20"
+                aria-label="Close subscribe modal"
+              >
+                ×
+              </button>
+
+              <div className="bg-[#0f0e0d] border border-[#c9a961] rounded-lg p-6 text-white shadow-2xl">
+                <div className="text-center mb-4">
+                  <h3 className="text-2xl font-semibold">Subscribe to Our Newsletter</h3>
+                  <p className="text-sm text-white/70 mt-2">Get exclusive safari deals, travel tips, and updates delivered to your inbox.</p>
+                </div>
+
+                <div className="mt-4">
+                  <NewsletterCard onClose={() => setShowSubscribeModal(false)} />
+                </div>
+
+                <p className="text-xs text-white/50 mt-4 text-center">We respect your privacy. Unsubscribe at any time.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Hero Section */}
       <section className="relative py-24 bg-gradient-to-r from-cyan-600 to-blue-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -264,6 +315,7 @@ export default function Contact() {
 
             {/* Additional Info */}
             <div className="space-y-8">
+              {/* (Newsletter moved to floating button + modal) */}
               {/* Quick Actions */}
               <Card>
                 <CardHeader>
@@ -407,6 +459,40 @@ export default function Contact() {
           </div>
         </div>
       </footer>
+      {/* single modal handled above (dark-themed). Duplicate UI removed */}
     </div>
+  );
+}
+
+function NewsletterCard({ onClose }: { onClose?: () => void }) {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handle = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!email || !email.includes('@')) return toast.error('Enter a valid email');
+    setLoading(true);
+    try {
+      const res = await subscribeToMailchimp({ email });
+      if (res.success) {
+        toast.success('Subscribed — check your inbox');
+        setEmail('');
+        onClose?.();
+      } else {
+        toast.error(res.error || 'Subscription failed');
+      }
+    } catch (err) {
+      console.error('Subscribe error:', err);
+      toast.error('Subscription failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handle} className="flex gap-2">
+      <Input placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} />
+      <Button type="submit" disabled={loading}>{loading ? 'Subscribing...' : 'Subscribe'}</Button>
+    </form>
   );
 }

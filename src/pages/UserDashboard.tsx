@@ -228,25 +228,31 @@ function BookingsTab({ bookings, cancelBooking }: { bookings: UserBooking[]; can
   const handleDownloadReceipt = async (booking: SafariBooking) => {
     try {
       setDownloadingReceipt(booking.id);
-      const res = await api.get(`/bookings/receipt/${booking.bookingId}`);
-      if (!res.data || !res.data.receipt) throw new Error('No receipt returned');
-      const r = res.data.receipt;
+      // Request PDF from server (server will generate PDF when ?format=pdf)
+      const res = await api.get(`/bookings/receipt/${booking.bookingId}?format=pdf`, { responseType: 'blob' });
+      if (!res || !res.data) throw new Error('No receipt returned');
 
-      const paymentTermLabel = r.paymentTerm === 'deposit' ? 'Deposit (partial)' : 'Full payment';
-      const balanceDue = (r.costs?.total || 0) - (r.amountPaid || 0);
-      const balanceLine = r.paymentTerm === 'deposit' ? `Balance Due: $${balanceDue.toFixed(2)} (due ${r.paymentSchedule?.balanceDueDate || 'N/A'})\n` : '';
+      const contentType = res.headers && (res.headers['content-type'] || res.headers['Content-Type'] || '');
+      // If server returned something that's not a PDF (e.g. JSON error), show it instead of saving a broken file
+      if (!contentType.toLowerCase().includes('application/pdf')) {
+        // attempt to read text from blob and show error
+        const text = await new Response(res.data).text();
+        console.error('Receipt endpoint returned non-PDF response:', { status: res.status, headers: res.headers, body: text });
+        toast.error('Failed to generate PDF receipt: ' + (text?.substring(0, 200) || 'server error'));
+        return;
+      }
 
-      const receiptContent = `BOOKING RECEIPT\n=====================================\nDate Generated: ${new Date(r.generatedAt || Date.now()).toLocaleDateString()}\n\nBOOKING INFORMATION\nBooking ID: ${r.bookingId}\nConfirmation #: ${r.confirmationNumber}\nStatus: ${r.status}\n\nCUSTOMER DETAILS\nName: ${r.customerName}\nEmail: ${r.customerEmail}\nPhone: ${r.customerPhone || 'N/A'}\n\nSTAY INFORMATION\nType: ${r.bookingType}\nCheck-in: ${new Date(r.checkInDate).toLocaleDateString()}\nCheck-out: ${new Date(r.checkOutDate).toLocaleDateString()}\nNights: ${r.nights}\nGuests: ${r.totalGuests}\n\nCOST BREAKDOWN\nTotal: $${(r.costs?.total || 0).toFixed(2)}\nAmount Paid: $${(r.amountPaid || 0).toFixed(2)}\nPayment Term: ${paymentTermLabel}\n${balanceLine}\n=====================================\nThank you for your booking!`;
-
-      const element = document.createElement('a');
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(receiptContent));
-      element.setAttribute('download', `receipt_${booking.bookingId}.txt`);
-      element.style.display = 'none';
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-
-      toast.success('Receipt downloaded successfully');
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const filename = `Receipt_${booking.bookingId}.pdf`;
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('PDF receipt downloaded');
     } catch (error) {
       toast.error('Failed to download receipt');
       console.error('Receipt download error:', error);

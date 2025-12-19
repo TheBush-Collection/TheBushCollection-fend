@@ -55,10 +55,10 @@ const mapBackendToUi = (b: any): SafariBooking => {
     guest_name: b.customerName || b.guest_name,
     guest_email: b.customerEmail || b.guest_email,
     guest_phone: b.customerPhone || b.guest_phone,
-    property_name: b.property?.name || b.property_name || (b.safari_properties && b.safari_properties.name),
+    property_name: b.property?.name || b.property_name || (b.safari_properties && b.safari_properties.name) || b.propertyName || b.property?.title,
     safari_properties: b.property ? { name: b.property.name } : (b.safari_properties || null),
     package_id: b.package?._id || b.packageId || b.package || b.package_id,
-    room_name: (b.rooms && b.rooms[0] && b.rooms[0].roomName) || b.room_name,
+    room_name: (b.rooms && b.rooms[0] && (b.rooms[0].roomName || b.rooms[0].room_name || b.rooms[0].name)) || b.room_name || b.room?.name || (b.safari_rooms && b.safari_rooms.name) || b.roomName,
     check_in: b.checkInDate ? new Date(b.checkInDate).toISOString() : b.check_in,
     check_out: b.checkOutDate ? new Date(b.checkOutDate).toISOString() : b.check_out,
     total_guests: b.totalGuests ?? b.total_guests ?? (b.adults || 0) + (b.children || 0),
@@ -103,6 +103,15 @@ export const useBackendBookings = () => {
       // controller returns { data: bookings, total }
       const data = res.data?.data ?? res.data ?? [];
       const mapped = (Array.isArray(data) ? data : []).map(mapBackendToUi);
+      // Debug: log a sample mapped booking and its raw backend object to aid troubleshooting
+      try {
+        if (mapped && mapped.length > 0) {
+          console.debug('[useBackendBookings] sample mapped booking:', mapped[0]);
+          console.debug('[useBackendBookings] sample raw booking payload:', mapped[0]._raw);
+        }
+      } catch (e) {
+        // ignore
+      }
       setBookings(mapped);
       if (res.data?.total !== undefined) setTotal(res.data.total);
       return mapped;
