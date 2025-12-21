@@ -40,10 +40,32 @@ export default function ReviewForm({ propertyId, packageId, bookingId: initialBo
   const [comment, setComment] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Filter bookings for current user (completed bookings that can be reviewed)
-  const userBookings = bookings.filter(b => 
-    b.status?.toLowerCase() === 'confirmed' || b.status?.toLowerCase() === 'fully-paid'
-  );
+  // Filter bookings for current user (completed or past bookings that can be reviewed)
+  const isReviewable = (b: any) => {
+    const status = (b.status || '').toLowerCase();
+    const allowed = new Set([
+      'completed',
+      'fully-paid',
+      'fully_paid',
+      'confirmed',
+      'deposit-paid',
+      'deposit_paid'
+    ]);
+    if (allowed.has(status)) return true;
+    // If status doesn't indicate completion, treat past check-out dates as reviewable
+    try {
+      const out = b.check_out ? new Date(b.check_out) : null;
+      if (out && !isNaN(out.getTime())) {
+        const now = new Date();
+        if (out < now) return true;
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+    return false;
+  };
+
+  const userBookings = bookings.filter(isReviewable);
 
   // Auto-select first booking if available and none selected
   useEffect(() => {
