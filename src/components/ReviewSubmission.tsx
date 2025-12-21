@@ -33,20 +33,57 @@ export default function ReviewSubmission() {
     comment: ''
   });
 
-  // Get user's completed bookings (past check-out dates) that are not cancelled
-  const getReviewableBookings = () => {
-    const now = new Date();
-    return bookings.filter(booking =>
-      booking.user_id === user?.id &&
-      new Date(booking.check_out) < now &&
-      booking.status !== 'cancelled' && // Exclude cancelled bookings
-      canReviewBooking(booking.id, user?.id)
-    );
+  // Determine if a booking belongs to the current user by checking multiple possible shapes
+  const bookingBelongsToUser = (b: any) => {
+    if (!user) return false;
+    // Direct user id fields
+    if (b.user_id && String(b.user_id) === String(user.id)) return true;
+    if (b._raw?.user && (String(b._raw.user._id || b._raw.user) === String(user.id))) return true;
+
+    // Match by email (guest/customer email)
+    const userEmail = (user.email || '').toLowerCase();
+    const candidateEmails = new Set<string>();
+    if (b.guest_email) candidateEmails.add(String(b.guest_email).toLowerCase());
+    if (b.guestEmail) candidateEmails.add(String(b.guestEmail).toLowerCase());
+    if (b._raw?.customerEmail) candidateEmails.add(String(b._raw.customerEmail).toLowerCase());
+    if (b._raw?.customer?.email) candidateEmails.add(String(b._raw.customer.email).toLowerCase());
+    if (b._raw?.guest?.email) candidateEmails.add(String(b._raw.guest.email).toLowerCase());
+    if (b.customerEmail) candidateEmails.add(String(b.customerEmail).toLowerCase());
+    if (candidateEmails.has(userEmail)) return true;
+
+    // Match by guest name (best-effort)
+    const name = (user.fullName || user.name || '').toLowerCase();
+    if (name) {
+      if ((b.guest_name || b.customerName || b._raw?.guest?.name || b._raw?.customer?.name) && String((b.guest_name || b.customerName || b._raw?.guest?.name || b._raw?.customer?.name)).toLowerCase().includes(name)) return true;
+    }
+
+    return false;
   };
 
+  const now = new Date();
+  const isPastCheckout = (b: any) => {
+    try {
+      const out = b.check_out ? new Date(b.check_out) : (b._raw?.check_out ? new Date(b._raw.check_out) : null);
+      return out && !isNaN(out.getTime()) && out < now;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const allowedStatuses = new Set(['completed', 'fully-paid', 'fully_paid', 'confirmed', 'deposit-paid', 'deposit_paid']);
+
+  const getReviewableBookings = () =>
+    bookings.filter((booking: any) =>
+      bookingBelongsToUser(booking) &&
+      booking.status !== 'cancelled' &&
+      (allowedStatuses.has((booking.status || '').toLowerCase()) || isPastCheckout(booking)) &&
+      canReviewBooking(booking.id, user?.id)
+    );
+
   const reviewableBookings = getReviewableBookings();
-  const alreadyReviewedBookings = bookings.filter(booking =>
-    booking.user_id === user?.id && !canReviewBooking(booking.id, user?.id)
+
+  const alreadyReviewedBookings = bookings.filter((booking: any) =>
+    bookingBelongsToUser(booking) && !canReviewBooking(booking.id, user?.id)
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
