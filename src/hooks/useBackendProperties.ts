@@ -181,22 +181,7 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
     fetchProperties(options);
   }, [options, fetchProperties]);
 
-  // Periodic polling to refresh properties automatically (helps public pages reflect admin changes)
-  // Configure interval via VITE_POLL_INTERVAL_MS (milliseconds). Default: 15000 (15s).
-  const POLL_INTERVAL_MS = Number(import.meta.env.VITE_POLL_INTERVAL_MS) || 15000;
-
-  useEffect(() => {
-    // Only start polling if interval > 0
-    if (!POLL_INTERVAL_MS || POLL_INTERVAL_MS <= 0) return;
-    const id = setInterval(() => {
-      try {
-        fetchProperties(options);
-      } catch (e) {
-        // ignore polling errors
-      }
-    }, POLL_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [fetchProperties, options, POLL_INTERVAL_MS]);
+  // Polling removed: frontend will no longer auto-refresh properties.
 
   const addProperty = async (propertyData: Partial<Property>) => {
     try {
