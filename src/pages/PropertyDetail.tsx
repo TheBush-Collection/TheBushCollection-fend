@@ -298,7 +298,7 @@ export default function PropertyDetail() {
     const isCurrentVideo = isVideo(currentMedia);
 
     return (
-      <div className={`relative ${size === 'small' ? 'w-24 h-20' : 'w-full h-48'} rounded-lg overflow-hidden bg-gray-100`}>
+      <div className={`relative ${size === 'small' ? 'w-24 h-20' : 'w-full h-full'} rounded-lg overflow-hidden bg-gray-100`}>
         {isCurrentVideo ? (
           <div className="relative w-full h-full">
             <video
@@ -663,7 +663,7 @@ export default function PropertyDetail() {
                         amenities: roomGroup.amenities,
                         images: roomGroup.images
                       }} 
-                      size="small" 
+                      size="large" 
                     />
                     {/* View Details Button */}
                     <div className="absolute top-4 right-4 z-10">

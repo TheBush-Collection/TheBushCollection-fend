@@ -414,7 +414,5 @@ function BookingsTab({ bookings, cancelBooking }: { bookings: UserBooking[]; can
     </div>
   );
 }
-function notifyBooking(id: string, arg1: string, arg2: boolean) {
-  throw new Error('Function not implemented.');
-}
+// `notifyBooking` is supplied by the `useBackendBookings` hook; no local stub required.
 

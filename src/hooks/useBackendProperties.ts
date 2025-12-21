@@ -181,6 +181,23 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
     fetchProperties(options);
   }, [options, fetchProperties]);
 
+  // Periodic polling to refresh properties automatically (helps public pages reflect admin changes)
+  // Configure interval via VITE_POLL_INTERVAL_MS (milliseconds). Default: 15000 (15s).
+  const POLL_INTERVAL_MS = Number(import.meta.env.VITE_POLL_INTERVAL_MS) || 15000;
+
+  useEffect(() => {
+    // Only start polling if interval > 0
+    if (!POLL_INTERVAL_MS || POLL_INTERVAL_MS <= 0) return;
+    const id = setInterval(() => {
+      try {
+        fetchProperties(options);
+      } catch (e) {
+        // ignore polling errors
+      }
+    }, POLL_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [fetchProperties, options, POLL_INTERVAL_MS]);
+
   const addProperty = async (propertyData: Partial<Property>) => {
     try {
       const toArray = (v: unknown) => {
@@ -368,16 +385,21 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
       } catch (e) {
         // ignore
       }
-      const payload = {
-        name: roomData.name,
-        type: roomData.type,
-        price: roomData.price,
-        max_guests: roomData.maxGuests || roomData.max_guests,
-        amenities: roomData.amenities,
-        images: roomData.images,
-        description: roomData.description,
+      // Allow arbitrary room fields to be updated (including availability, available_from, booked_until, etc.)
+      const payload: Record<string, unknown> = {
+        ...roomData,
       };
 
+      // Normalize common naming differences
+      if ('maxGuests' in roomData && !('max_guests' in payload)) {
+        payload.max_guests = (roomData as any).maxGuests;
+      }
+
+      // Backend expects `availableForBooking` (server Room model). Map `available` -> `availableForBooking`.
+      if ('available' in payload && !('availableForBooking' in payload)) {
+        payload.availableForBooking = (payload as any).available;
+        delete (payload as any).available;
+      }
   // Debug: log token/header state before request
   try {
     const debugToken = localStorage.getItem('authToken') || localStorage.getItem('token');
@@ -388,6 +410,30 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
   }
 
   const response = await api.put(`/rooms/${roomId}`, payload);
+
+      // Optimistically update local properties state so UI reflects changes immediately
+      try {
+        setProperties((prev) => prev.map((prop) => {
+          if (!prop.rooms) return prop;
+          const rooms = prop.rooms.map((r) => {
+            if (r.id === roomId || r._id === roomId) {
+              return {
+                ...r,
+                ...roomData,
+                // ensure boolean conversions
+                available: typeof (roomData as any).available === 'boolean' ? (roomData as any).available : r.available,
+                available_from: (roomData as any).available_from ?? (roomData as any).availableFrom ?? r.available_from,
+                booked_until: (roomData as any).booked_until ?? (roomData as any).bookedUntil ?? r.booked_until,
+              } as Room;
+            }
+            return r;
+          });
+          return { ...prop, rooms } as unknown as Property;
+        }));
+      } catch (e) {
+        // ignore optimistic update errors
+      }
+
       return response.data;
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to update room';

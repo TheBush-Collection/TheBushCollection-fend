@@ -62,8 +62,9 @@ export async function subscribeToMailchimp(contact: MailchimpContact): Promise<{
   try {
     // Send to your backend endpoint instead of directly to Mailchimp
     // This protects your API key from being exposed in the browser
+    // Prefer explicit backend URL; fall back to localhost in dev for convenience
     const BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || '';
-    const backendUrl = BACKEND_BASE || '';
+    const backendUrl = BACKEND_BASE || (import.meta.env.DEV ? 'http://localhost:5000' : '');
     const response = await fetch(`${backendUrl}/api/mailchimp/subscribe`, {
       method: 'POST',
       headers: {
@@ -73,12 +74,30 @@ export async function subscribeToMailchimp(contact: MailchimpContact): Promise<{
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `HTTP ${response.status}`);
+      // Try to parse JSON error, but fall back to text if the response is HTML or plain text
+      let errorText = `HTTP ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorText = errorData.message || JSON.stringify(errorData);
+      } catch (parseErr) {
+        try {
+          errorText = await response.text();
+        } catch (_) {
+          // keep default
+        }
+      }
+
+      throw new Error(errorText);
     }
 
-    const result = await response.json();
-    return { success: true };
+    // On success, prefer JSON and return response data (include mailchimp_status if provided)
+    try {
+      const respData = await response.json();
+      return { success: true, data: respData, mailchimp_status: respData.mailchimp_status || respData.status };
+    } catch (_) {
+      // If response isn't JSON, still indicate success
+      return { success: true };
+    }
   } catch (error) {
     console.error('Mailchimp subscription error:', error);
     return {

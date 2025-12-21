@@ -656,7 +656,7 @@ export default function Index() {
   );
 }
 
-function NewsletterForm() {
+function NewsletterForm({ onClose }: { onClose?: () => void }) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   // const toast = useToast();
@@ -668,8 +668,16 @@ function NewsletterForm() {
     try {
       const res = await subscribeToMailchimp({ email });
       if (res.success) {
-        toast.success('Subscribed — check your inbox for updates');
+        // Backend may return mailchimp_status (pending/subscribed) to indicate whether
+        // Mailchimp will send a confirmation email (pending) or the member is active (subscribed)
+        const status = (res as any).mailchimp_status || (res as any).data?.status;
+        if (status === 'pending') {
+          toast('Please check your email to confirm your subscription', { type: 'info' });
+        } else {
+          toast.success('Subscribed — check your inbox for updates');
+        }
         setEmail('');
+        if (onClose) onClose();
       } else {
         toast.error(res.error || 'Subscription failed');
       }
