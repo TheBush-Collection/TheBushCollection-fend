@@ -7,13 +7,22 @@ import { Badge } from '@/components/ui/badge';
 import { Star, MapPin, Users, Filter, Search, Sparkles, Award, Globe } from 'lucide-react';
 import slugify from '@/lib/slugify';
 import PropertyCard from '@/components/PropertyCard';
-import { useBackendProperties } from '@/hooks/useBackendProperties';
+import { useBackendProperties, Property } from '@/hooks/useBackendProperties';
 
 const Collections = () => {
   const { properties, loading, error } = useBackendProperties();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedLocation, setSelectedLocation] = useState('all');
+
+  // Debug: Log properties to check if externalUrl is included
+  if (properties.length > 0) {
+    console.log('Collections - Sample property with externalUrl:', {
+      name: properties[0].name,
+      externalUrl: properties[0].externalUrl,
+      hasExternalUrl: !!properties[0].externalUrl
+    });
+  }
 
   // Show loading state
   if (loading) {
@@ -423,8 +432,19 @@ const Collections = () => {
                                       variant="outline" 
                                       className="flex-1 border-[#c9a961]/30 text-[#c9a961] hover:bg-[#c9a961]/10 hover:border-[#c9a961]"
                                       onClick={() => {
-                                        const slug = (property as any).slug || slugify(property.name) || property.id;
-                                        window.location.href = `/property/${slug}`;
+                                        console.log('View Details clicked for:', {
+                                          name: property.name,
+                                          externalUrl: property.externalUrl,
+                                          hasExternalUrl: !!property.externalUrl
+                                        });
+                                        if (property.externalUrl) {
+                                          console.log('Redirecting to external URL:', property.externalUrl);
+                                          window.location.href = property.externalUrl;
+                                        } else {
+                                          const slug = (property as any).slug || slugify(property.name) || property.id;
+                                          console.log('Going to internal property page:', `/property/${slug}`);
+                                          window.location.href = `/property/${slug}`;
+                                        }
                                       }}
                                     >
                                       View Details
@@ -432,8 +452,19 @@ const Collections = () => {
                                     <Button
                                       className="flex-1 bg-[#c9a961] hover:bg-[#b8935a] text-white font-semibold"
                                       onClick={() => {
-                                        const slug = (property as any).slug || slugify(property.name) || property.id;
-                                        window.location.href = `/book?property=${slug}`;
+                                        console.log('Book Now clicked for:', {
+                                          name: property.name,
+                                          externalUrl: property.externalUrl,
+                                          hasExternalUrl: !!property.externalUrl
+                                        });
+                                        if (property.externalUrl) {
+                                          console.log('Redirecting to external URL:', property.externalUrl);
+                                          window.location.href = property.externalUrl;
+                                        } else {
+                                          const slug = (property as any).slug || slugify(property.name) || property.id;
+                                          console.log('Going to internal booking page:', `/book?property=${slug}`);
+                                          window.location.href = `/book?property=${slug}`;
+                                        }
                                       }}
                                     >
                                       Book Now

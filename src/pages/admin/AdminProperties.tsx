@@ -28,6 +28,7 @@ type Property = {
   maxGuests: number;
   fullyBooked: boolean;
   featured?: boolean;
+  externalUrl?: string | null;
   rooms: Room[];
   safari_zone?: string;
 };
@@ -67,6 +68,7 @@ export default function AdminProperties() {
     maxGuests: prop.maxGuests || 2,
     fullyBooked: false,
     featured: prop.featured || false,
+    externalUrl: prop.externalUrl || null,
     rooms: (prop.rooms || []).map(room => ({
       id: room.id || room._id,
       name: room.name,
@@ -103,7 +105,8 @@ export default function AdminProperties() {
     price: 0,
     maxGuests: 2,
     amenities: '',
-    images: ''
+    images: '',
+    externalUrl: ''
   });
 
   // Edit property form state
@@ -118,7 +121,8 @@ export default function AdminProperties() {
     price: 0,
     maxGuests: 2,
     amenities: '',
-    images: ''
+    images: '',
+    externalUrl: ''
   });
 
   // New room form state
@@ -264,7 +268,8 @@ export default function AdminProperties() {
       price: newProperty.price,
       maxGuests: newProperty.maxGuests,
       amenities: amenitiesArray,
-          images: imagesArray.length > 0 ? imagesArray : ['https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&h=600&fit=crop'],
+      images: imagesArray.length > 0 ? imagesArray : ['https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=800&h=600&fit=crop'],
+      externalUrl: newProperty.externalUrl || null,
     };
 
     try {
@@ -314,7 +319,8 @@ export default function AdminProperties() {
       price: property.price,
       maxGuests: property.maxGuests,
       amenities: property.amenities.join(', '),
-      images: property.images.map(img => img.trim()).filter(img => img).join(', ')
+      images: property.images.map(img => img.trim()).filter(img => img).join(', '),
+      externalUrl: (property as any).externalUrl || ''
     });
     setIsEditingProperty(true);
   };
@@ -356,7 +362,8 @@ export default function AdminProperties() {
       price: editPropertyForm.price,
       maxGuests: editingProperty.maxGuests,
       amenities: amenitiesArray,
-      images: imagesArray.length > 0 ? imagesArray : (editingProperty.images || []).filter(isValidMediaUrl)
+      images: imagesArray.length > 0 ? imagesArray : (editingProperty.images || []).filter(isValidMediaUrl),
+      externalUrl: editPropertyForm.externalUrl || null
     };
 
     try {
@@ -375,7 +382,7 @@ export default function AdminProperties() {
   };
 
   const handleAddRoom = async () => {
-    if (!newRoom.name || !newRoom.price || !selectedPropertyId || !newRoom.quantity) {
+    if (!newRoom.name || !newRoom.type || !newRoom.price || !selectedPropertyId || !newRoom.quantity) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -424,7 +431,7 @@ export default function AdminProperties() {
   };
 
   const handleUpdateRoom = async () => {
-    if (!editingRoom || !selectedProperty || !editRoomForm.name || !editRoomForm.price) {
+    if (!editingRoom || !selectedProperty || !editRoomForm.name || !editRoomForm.type || !editRoomForm.price) {
       toast.error('Please fill in all required fields');
       return;
     }
@@ -886,6 +893,19 @@ export default function AdminProperties() {
                     </p>
                   </div>
 
+                  <div>
+                    <Label>External Booking URL (Optional)</Label>
+                    <Input
+                      placeholder="https://www.mwazaro.com/ (Redirect users to external site for booking)"
+                      value={newProperty.externalUrl}
+                      onChange={(e) => setNewProperty({...newProperty, externalUrl: e.target.value})}
+                      type="url"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Leave empty for normal internal booking flow. If set, users will be redirected to this URL when clicking View Details or Book Now.
+                    </p>
+                  </div>
+
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
@@ -1108,21 +1128,49 @@ export default function AdminProperties() {
                         />
                       </div>
                       
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Room Type</Label>
-                          <Select value={newRoom.type} onValueChange={(value) => setNewRoom({...newRoom, type: value})}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="tent">Tent</SelectItem>
-                              <SelectItem value="suite">Suite</SelectItem>
-                              <SelectItem value="family-lodge">Family Lodge</SelectItem>
-                              <SelectItem value="luxury-tent">Luxury Tent</SelectItem>
-                            </SelectContent>
-                          </Select>
+                      <div>
+                        <Label>Room Type *</Label>
+                        <Input
+                          type="text"
+                          placeholder="e.g., Tent, Suite, Villa, Beachfront Room, etc."
+                          value={newRoom.type}
+                          onChange={(e) => setNewRoom({...newRoom, type: e.target.value})}
+                          className="mb-2"
+                        />
+                        <p className="text-xs text-gray-500 mb-3">Or select a preset:</p>
+                        <div className="grid grid-cols-2 gap-2 mb-4">
+                          <button
+                            type="button"
+                            onClick={() => setNewRoom({...newRoom, type: 'tent'})}
+                            className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-100 text-left"
+                          >
+                            Tent
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setNewRoom({...newRoom, type: 'suite'})}
+                            className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-100 text-left"
+                          >
+                            Suite
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setNewRoom({...newRoom, type: 'family-lodge'})}
+                            className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-100 text-left"
+                          >
+                            Family Lodge
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setNewRoom({...newRoom, type: 'luxury-tent'})}
+                            className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-100 text-left"
+                          >
+                            Luxury Tent
+                          </button>
                         </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label>Price per Night *</Label>
                           <Input
@@ -1319,6 +1367,19 @@ export default function AdminProperties() {
                 </p>
               </div>
 
+              <div>
+                <Label>External Booking URL (Optional)</Label>
+                <Input
+                  placeholder="https://www.mwazaro.com/ (Redirect users to external site for booking)"
+                  value={editPropertyForm.externalUrl}
+                  onChange={(e) => setEditPropertyForm({...editPropertyForm, externalUrl: e.target.value})}
+                  type="url"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Leave empty for normal internal booking flow. If set, users will be redirected to this URL when clicking View Details or Book Now.
+                </p>
+              </div>
+
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -1359,21 +1420,49 @@ export default function AdminProperties() {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Room Type</Label>
-                  <Select value={editRoomForm.type} onValueChange={(value) => setEditRoomForm({...editRoomForm, type: value})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="tent">Tent</SelectItem>
-                      <SelectItem value="suite">Suite</SelectItem>
-                      <SelectItem value="family-lodge">Family Lodge</SelectItem>
-                      <SelectItem value="luxury-tent">Luxury Tent</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div>
+                <Label>Room Type *</Label>
+                <Input
+                  type="text"
+                  placeholder="e.g., Tent, Suite, Villa, Beachfront Room, etc."
+                  value={editRoomForm.type}
+                  onChange={(e) => setEditRoomForm({...editRoomForm, type: e.target.value})}
+                  className="mb-2"
+                />
+                <p className="text-xs text-gray-500 mb-3">Or select a preset:</p>
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setEditRoomForm({...editRoomForm, type: 'tent'})}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-100 text-left"
+                  >
+                    Tent
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditRoomForm({...editRoomForm, type: 'suite'})}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-100 text-left"
+                  >
+                    Suite
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditRoomForm({...editRoomForm, type: 'family-lodge'})}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-100 text-left"
+                  >
+                    Family Lodge
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditRoomForm({...editRoomForm, type: 'luxury-tent'})}
+                    className="px-3 py-2 text-sm border border-gray-300 rounded hover:bg-gray-100 text-left"
+                  >
+                    Luxury Tent
+                  </button>
                 </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Price per Night *</Label>
                   <Input

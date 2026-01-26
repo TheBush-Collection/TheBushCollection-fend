@@ -452,6 +452,12 @@ export default function BookNow() {
         });
         console.log('Found property:', property);
         
+        // Redirect to external URL if property has one
+        if (property && property.externalUrl) {
+          window.location.href = property.externalUrl;
+          return;
+        }
+        
         if (property) {
           setSelectedProperty(property);
           

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -78,6 +78,20 @@ export default function PropertyDetail() {
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [roomDetailsOpen, setRoomDetailsOpen] = useState(false);
   const [roomDetailImageIndex, setRoomDetailImageIndex] = useState(0);
+
+  // Allow looking up by id, slug, or generated slug from name
+  const property = properties.find(p => {
+    const pId = p.id || (p as any)._id;
+    const pSlug = (p as any).slug || '';
+    return pId === id || pSlug === id || slugify(p.name) === id;
+  });
+
+  // Redirect to external URL if property has one
+  useEffect(() => {
+    if (property && property.externalUrl) {
+      window.location.href = property.externalUrl;
+    }
+  }, [property]);
 
   // Image navigation functions
   const nextImage = () => {
@@ -206,13 +220,9 @@ export default function PropertyDetail() {
   }
 
   // allow looking up by id, slug, or generated slug from name
-  const property = properties.find(p => {
-    const pId = p.id || (p as any)._id;
-    const pSlug = (p as any).slug || '';
-    return pId === id || pSlug === id || slugify(p.name) === id;
-  });
+  const propertybyId = property;
 
-  if (!property) {
+  if (!propertybyId) {
     return (
       <div className="min-h-screen bg-[#1a1816] flex items-center justify-center">
         <div className="text-center">
@@ -227,7 +237,7 @@ export default function PropertyDetail() {
   }
 
   // Map backend rooms to expected format and group by name
-  const rooms = (property.rooms || []).map(room => ({
+  const rooms = (propertybyId.rooms || []).map(room => ({
     id: room.id,
     name: room.name,
     description: room.description || `${room.name} - ${room.type} room accommodating up to ${room.maxGuests || room.max_guests} guests with modern amenities and stunning views`,
@@ -472,7 +482,7 @@ export default function PropertyDetail() {
       <motion.section 
         className="relative h-screen bg-cover bg-center overflow-hidden"
         style={{
-          backgroundImage: `url('${property.images[selectedImageIndex] || property.images[0] || '/images/default-property.jpg'}')`,
+          backgroundImage: `url('${propertybyId.images[selectedImageIndex] || propertybyId.images[0] || '/images/default-property.jpg'}')`,
         }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -483,7 +493,7 @@ export default function PropertyDetail() {
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70"></div>
         
         {/* Navigation Arrows */}
-        {property.images.length > 1 && (
+        {propertybyId.images.length > 1 && (
           <>
             <button
               onClick={prevImage}
@@ -520,15 +530,15 @@ export default function PropertyDetail() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.3 }}
           >
-            <div className="text-[#c9a961] text-xl tracking-widest">{property.type?.toUpperCase() || 'LODGE'}</div>
-            <div className="text-white text-3xl md:text-4xl font-light mt-2">{property.name}</div>
-            <div className="text-[#c9a961] text-sm tracking-wider mt-2">{property.location}</div>
+            <div className="text-[#c9a961] text-xl tracking-widest">{propertybyId.type?.toUpperCase() || 'LODGE'}</div>
+            <div className="text-white text-3xl md:text-4xl font-light mt-2">{propertybyId.name}</div>
+            <div className="text-[#c9a961] text-sm tracking-wider mt-2">{propertybyId.location}</div>
           </motion.div>
         </div>
 
         {/* Scroll Indicator */}
         <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 z-30">
-          {[...Array(Math.min(5, property.images.length))].map((_, i) => (
+          {[...Array(Math.min(5, propertybyId.images.length))].map((_, i) => (
             <button
               key={i}
               onClick={() => setSelectedImageIndex(i)}
@@ -551,7 +561,7 @@ export default function PropertyDetail() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-3xl md:text-4xl font-light text-[#1a1816] mb-4">
-              {property.name} - {property.location}
+              {propertybyId.name} - {propertybyId.location}
             </h2>
             <div className="text-xl text-[#c9a961] mb-2">00° 11' 14" E89° 27' 81"</div>
             <div className="flex justify-center items-center gap-1 mb-6">
@@ -560,7 +570,7 @@ export default function PropertyDetail() {
               ))}
             </div>
             <p className="text-lg md:text-xl text-gray-700 leading-relaxed max-w-3xl mx-auto font-serif">
-              {property.description || 'Experience unparalleled luxury in the heart of the African wilderness. Our exclusive safari lodges combines authentic wildlife encounters with world-class hospitality, offering you an unforgettable journey through pristine landscapes. Each moment is carefully crafted to immerse you in the natural beauty and rich biodiversity of this remarkable ecosystem, while providing the comfort and elegance you deserve.'}
+              {propertybyId.description || 'Experience unparalleled luxury in the heart of the African wilderness. Our exclusive safari lodges combines authentic wildlife encounters with world-class hospitality, offering you an unforgettable journey through pristine landscapes. Each moment is carefully crafted to immerse you in the natural beauty and rich biodiversity of this remarkable ecosystem, while providing the comfort and elegance you deserve.'}
             </p>
           </motion.div>
         </div>
@@ -604,7 +614,7 @@ export default function PropertyDetail() {
                 }}
               >
                 <img 
-                  src={property.images[index % property.images.length]} 
+                  src={propertybyId.images[index % propertybyId.images.length]} 
                   alt={item.title}
                   className="w-full h-full object-cover"
                 />
@@ -668,7 +678,7 @@ export default function PropertyDetail() {
                     {/* View Details Button */}
                     <div className="absolute top-4 right-4 z-10">
                       <Link
-                        to={`/property/${(property as any).slug || slugify(property.name)}/room/${roomGroup.sampleRoomSlug || slugify(roomGroup.name)}`}
+                        to={`/property/${(property as any).slug || slugify(propertybyId.name)}/room/${roomGroup.sampleRoomSlug || slugify(roomGroup.name)}`}
                         className="flex items-center gap-2 bg-[#c9a961] hover:bg-[#8b6f47] text-white px-5 py-2.5 rounded-md text-sm font-medium transition-all duration-300 shadow-lg"
                       >
                         <ImageIcon className="w-4 h-4" />
@@ -725,7 +735,7 @@ export default function PropertyDetail() {
                   </div>
                   
                   <Link 
-                    to={`/book?property=${property.id}&room=${roomGroup.sampleRoomId}`}
+                    to={`/book?property=${propertybyId.id}&room=${roomGroup.sampleRoomId}`}
                     className="block"
                   >
                     <Button 
@@ -747,7 +757,7 @@ export default function PropertyDetail() {
           )}
 
           <div className="text-center mt-12">
-            <Link to={`/book?property=${property.id}`}>
+            <Link to={`/book?property=${propertybyId.id}`}>
               <Button className="bg-[#c9a961] hover:bg-[#b8935a] text-white px-8 py-6 text-lg">
                 Book Your Stay
               </Button>
@@ -762,7 +772,7 @@ export default function PropertyDetail() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
             <div>
               <h3 className="text-[#c9a961] font-semibold mb-2">Location</h3>
-              <p className="text-white/70">{property.location}</p>
+              <p className="text-white/70">{propertybyId.location}</p>
             </div>
             <div>
               <h3 className="text-[#c9a961] font-semibold mb-2">Contact</h3>
@@ -771,7 +781,7 @@ export default function PropertyDetail() {
             </div>
             <div>
               <h3 className="text-[#c9a961] font-semibold mb-2">Book Now</h3>
-              <Link to={`/book?property=${property.id}`}>
+              <Link to={`/book?property=${propertybyId.id}`}>
                 <Button className="bg-[#c9a961] hover:bg-[#b8935a] text-white">
                   Reserve Your Stay
                 </Button>
@@ -845,7 +855,7 @@ export default function PropertyDetail() {
                     {/* Property branding overlay */}
                     <div className="absolute top-4 left-4">
                       <div className="bg-[#c9a961] text-white px-4 py-2 rounded-lg font-semibold">
-                        {property.name}
+                        {propertybyId.name}
                       </div>
                     </div>
                   </>
@@ -955,7 +965,7 @@ export default function PropertyDetail() {
 
                 {/* Booking Button */}
                 <div className="mt-12 flex justify-center">
-                  <Link to={`/book?property=${property.id}&room=${selectedRoom.id}`}>
+                  <Link to={`/book?property=${propertybyId.id}&room=${selectedRoom.id}`}>
                     <Button 
                       className="bg-[#c9a961] hover:bg-[#b8935a] text-white px-12 py-6 text-xl rounded-full font-semibold shadow-lg"
                     >

@@ -31,6 +31,7 @@ type Property = {
   reviews?: number;
   numReviews?: number;
   featured?: boolean;
+  externalUrl?: string | null;
   rooms?: Room[];
   safari_rooms?: Room[];
 };
@@ -446,23 +447,44 @@ export default function PropertyCard({ property }: PropertyCardProps) {
               <span className="text-[#333033]/60 text-sm ml-1">per night</span>
             </div>
             <div className="flex gap-2">
-              <Link to={`/property/${propertySlug}`}>
-                <Button 
-                  className="bg-[#ebe9d8] hover:bg-[#333033] text-[#333033] hover:text-[#ebe9d8] border-2 border-[#333033] transition-all duration-300"
-                  size="sm"
-                >
-                  View Details
-                </Button>
-              </Link>
-              <Link to={`/book?property=${propertySlug}`}>
-                <Button
-                  className="bg-[#333033] hover:bg-[#ebe9d8] text-[#ebe9d8] hover:text-[#333033] border-2 border-[#333033] transition-all duration-300"
-                  disabled={fullyBooked}
-                  size="sm"
-                >
-                  {fullyBooked ? 'Fully Booked' : 'Book Now'}
-                </Button>
-              </Link>
+              {property.externalUrl ? (
+                <>
+                  <Button 
+                    onClick={() => window.location.href = property.externalUrl}
+                    className="bg-[#ebe9d8] hover:bg-[#333033] text-[#333033] hover:text-[#ebe9d8] border-2 border-[#333033] transition-all duration-300"
+                    size="sm"
+                  >
+                    View Details
+                  </Button>
+                  <Button
+                    onClick={() => window.location.href = property.externalUrl}
+                    className="bg-[#333033] hover:bg-[#ebe9d8] text-[#ebe9d8] hover:text-[#333033] border-2 border-[#333033] transition-all duration-300"
+                    size="sm"
+                  >
+                    Book Now
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link to={`/property/${propertySlug}`}>
+                    <Button 
+                      className="bg-[#ebe9d8] hover:bg-[#333033] text-[#333033] hover:text-[#ebe9d8] border-2 border-[#333033] transition-all duration-300"
+                      size="sm"
+                    >
+                      View Details
+                    </Button>
+                  </Link>
+                  <Link to={`/book?property=${propertySlug}`}>
+                    <Button
+                      className="bg-[#333033] hover:bg-[#ebe9d8] text-[#ebe9d8] hover:text-[#333033] border-2 border-[#333033] transition-all duration-300"
+                      disabled={fullyBooked}
+                      size="sm"
+                    >
+                      {fullyBooked ? 'Fully Booked' : 'Book Now'}
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

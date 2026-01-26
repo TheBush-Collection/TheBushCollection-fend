@@ -18,6 +18,7 @@ export interface Property {
   images: string[];
   videos?: string[];
   featured: boolean;
+  externalUrl?: string | null;
   rooms?: Room[];
   createdAt?: string;
   updatedAt?: string;
@@ -158,6 +159,7 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
             images: Array.isArray(prop.images) ? (prop.images as string[]).map(i => normalizeMediaUrl(i) || '') : [],
             videos: Array.isArray(prop.videos) ? (prop.videos as string[]).map(v => normalizeMediaUrl(v) || '') : [],
             featured: (prop.featured as boolean) || false,
+            externalUrl: (prop.externalUrl as string | null) || null,
             rooms,
             createdAt: prop.createdAt as string,
             updatedAt: prop.updatedAt as string,
@@ -204,6 +206,7 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
         images: toArray(propertyData.images),
         videos: toArray(propertyData.videos),
         featured: propertyData.featured,
+        externalUrl: propertyData.externalUrl || null,
       };
 
   const response = await api.post(`/properties/admin/properties`, payload);
@@ -258,6 +261,7 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
         images: toArray(propertyData.images),
         videos: toArray(propertyData.videos),
         featured: propertyData.featured,
+        externalUrl: propertyData.externalUrl || null,
       };
 
   const response = await api.put(`/properties/admin/properties/${id}`, payload);
@@ -309,6 +313,7 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
           images: Array.isArray(response.data.images) ? (response.data.images as string[]).map(i => normalizeMediaUrl(i) || '') : [],
           videos: Array.isArray(response.data.videos) ? (response.data.videos as string[]).map(v => normalizeMediaUrl(v) || '') : [],
           featured: response.data.featured || false,
+          externalUrl: (response.data.externalUrl as string | null) || null,
           rooms: response.data.rooms || [],
         };
         return transformedProp;
