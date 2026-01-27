@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, User, LogOut, ChevronDown, Settings, Calendar, Star, AlertTriangle } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ThemeToggle } from './ThemeToggle';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -14,10 +14,27 @@ import {
 } from '@/components/ui/dropdown-menu';
 import UserBookingsModal from '@/components/UserBookingsModal';
 
+
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showNav, setShowNav] = useState(true);
+  const lastScrollY = useRef(window.scrollY);
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY.current && currentScrollY > 50) {
+        setShowNav(false); // scrolling down
+      } else {
+        setShowNav(true); // scrolling up
+      }
+      lastScrollY.current = currentScrollY;
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Support both backend user shape and frontend user properties
   const displayName =
@@ -36,7 +53,7 @@ export default function Navigation() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className="bg-[#efe7d1] sticky top-0 z-50 border-b border-[#e6dcc7]">
+    <nav className={`bg-[#efe7d1] sticky top-0 z-50 border-b border-[#e6dcc7] transition-transform duration-300 ${showNav ? 'translate-y-0' : '-translate-y-full'}`}> 
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
         <div className="flex justify-between items-center py-6">
           {/* Logo */}

@@ -11,52 +11,52 @@ export default function About() {
 
   const stats = [
     { icon: Users, label: 'Happy Travelers', value: '1,000+' },
-    { icon: Globe, label: 'Destinations', value: '5+' },
+    { icon: Globe, label: 'Destinations', value: '3+' },
     { icon: Award, label: 'Years Experience', value: '2+' },
-    { icon: Star, label: 'Average Rating', value: '4.9' }
+    { icon: Star, label: 'Average Rating', value: '4.8' }
   ];
 
   const team = [
     {
       name: 'Andre Du Plessis',
       role: 'Founder & CEO',
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face',
+      image: '',
       bio: 'Safari enthusiast with 20+ years of African travel experience'
     },
     {
-      name: 'Paul',
-      role: 'Head of Operations',
-      image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=face',
+      name: 'James Mwangi',
+      role: 'Head of IT',
+      image: 'https://westus31-mediap.svc.ms/transform/thumbnail?provider=spo&farmid=194147&inputFormat=jpeg&cs=fFNQTw&docid=https%3A%2F%2Fmy.microsoftpersonalcontent.com%2F_api%2Fv2.0%2Fdrives%2Fb!UHvAJHRZv0uHtY6cWKy5LhPq4UG_8gRHvcdyi-WzL1rWc8fM8bbUQaApuV5hXGy_%2Fitems%2F01GBRSVX6E3BPKML4XKBCKVKAYJSIMVK2V%3Ftempauth%3Dv1e.eyJzaXRlaWQiOiIyNGMwN2I1MC01OTc0LTRiYmYtODdiNS04ZTljNThhY2I5MmUiLCJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvbXkubWljcm9zb2Z0cGVyc29uYWxjb250ZW50LmNvbUA5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQiLCJleHAiOiIxNzY4MzA1NjAwIn0.B_dTR2Xl9MsMGk4SjyraLmtng55917bKu43amr2QBN-iPGxox4vUHi1xkfxgy85cPl58bRkj-xuG3P8g2tp97RHD6vhhJbDbQ2dRt9_AwujqMIhaFd3PGvG0mXaZCO8GCsiJ_qyznHaZXpVS95vltH7o7WCnObH0dw3XpxgEeoa49GCQhZ9THVlA8z2ybrG-5iYHZ07yRtJlQ2_ZtRfymNpGXmyO2BCrnHxXU8m2Qs5a99x3uSDnp3ZCxEFBfHW-igBMmREZzQ4frDlSm5y3FRm5iGXaBpnaUmBUqcFUXPK9O8MELq5041qhJfEFbp0HSSLijp84WbDh5hBzM_rAU8ynhahWk0sMvj1lkLmN2ge-3KHCSVHf81T4t8e_xg2q88dL-NEKD60Fcjb7dEqucG3hYxBIB2e1pfSqf-Wjen51qtk0U0A9_r-Q1DXnga44678QP97LIVAH7b1ttmqi__iu3jzUN2-gDxT_dNeYPA5ANU7O-fGopQXc3Gyus-7W.hLrn1URfkgQOLej6T7p-qrgKQCHVOHmX2n-P48patkA%26version%3DPublished&cb=63903813516&encodeFailures=1&width=503&height=755',
       bio: 'Expert in luxury travel and wildlife conservation'
     },
     {
       name: 'Linda Ogutu',
       role: 'Head of Reservations & Sales',
-      image: '/images/Linda.jpeg',
+      image: 'https://westus31-mediap.svc.ms/transform/thumbnail?provider=spo&farmid=194147&inputFormat=jpeg&cs=fFNQTw&docid=https%3A%2F%2Fmy.microsoftpersonalcontent.com%2F_api%2Fv2.0%2Fdrives%2Fb!UHvAJHRZv0uHtY6cWKy5LhPq4UG_8gRHvcdyi-WzL1rWc8fM8bbUQaApuV5hXGy_%2Fitems%2F01GBRSVX5VQCDHUL3LOFCJSAFQ5ZIOJ2FZ%3Ftempauth%3Dv1e.eyJzaXRlaWQiOiIyNGMwN2I1MC01OTc0LTRiYmYtODdiNS04ZTljNThhY2I5MmUiLCJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvbXkubWljcm9zb2Z0cGVyc29uYWxjb250ZW50LmNvbUA5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQiLCJleHAiOiIxNzY4MzA1NjAwIn0.zXNHsNj2FrsrdG3SkQGgvdTTJ9_Wunya-3x1Of9yU-wG8SL1xVwXIwPDZ9-MHoSFRx-zF1HMtTFpu68dmOY-88MyHuehehdJ28T9_20qS90X5Rb0LGg___KoDIfAGtMlIMOpSkuZcGKTA1edFYfkCHfEl0MzXmNJr8-qWl3Zo7OPW9QwWlG3mIuyBNjZXMgwtYIDXzXb41iEKNV1cntufWqxCx9rPTfBUg2vf-52xXlGLuJPmjYNrdlukEEFXpVbIg4a_sJe6LtrVLwU9qbrMgVsLwuQ3EcnbzR-IyNrugHTeWW3WqoR0Cog8EhT9nL4snm8NAZgQn8NxlpMYQDVJ1lWtX8mjGqgXvyVeWeHYy42GfgK3hdJp_duZvTmJGz9NEm0y0S4xbtzCz6JgLIUrL--OkGKN4mNX1ZLBG2aSMtthccYI46j_P4y9N0zCc3qVhnQ0lNHPQyasKeCch8Fgv_bgwk6Nic8g9MrrVJaFk0CQNFpOxMmua7mCxXfElKu.3J5D6cWsIQ-jdvx-lo5_1_rKeev9tnljuejVVz6Qe4c%26version%3DPublished&cb=63903809112&encodeFailures=1&width=503&height=755',
       bio: 'A passionate hotelier dedicated to creating memorable guest experiences while driving sales growth and operational excellence.'
     },
     {
       name: 'Paul',
-      role: 'Head of Operations',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face',
+      role: 'General Manager',
+      image: '',
       bio: 'Born in Kenya, passionate about sharing African culture'
     },
     {
       name: 'Molly Obondi',
       role: 'Sales and reservations',
-      image: '/images/Molly.jpeg',
+      image: 'https://westus31-mediap.svc.ms/transform/thumbnail?provider=spo&farmid=194147&inputFormat=jpeg&cs=fFNQTw&docid=https%3A%2F%2Fmy.microsoftpersonalcontent.com%2F_api%2Fv2.0%2Fdrives%2Fb!UHvAJHRZv0uHtY6cWKy5LhPq4UG_8gRHvcdyi-WzL1rWc8fM8bbUQaApuV5hXGy_%2Fitems%2F01GBRSVX2NLUTGCVORNVAYVNOYXFEM5ZEY%3Ftempauth%3Dv1e.eyJzaXRlaWQiOiIyNGMwN2I1MC01OTc0LTRiYmYtODdiNS04ZTljNThhY2I5MmUiLCJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvbXkubWljcm9zb2Z0cGVyc29uYWxjb250ZW50LmNvbUA5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQiLCJleHAiOiIxNzY4MzA1NjAwIn0.0kdb0J2rJWUe2v0BWJTOFtoG8Jg3mmixxsEGyUpwryubqTiMNTqfBwf3GziWEHa2jJPPdLWe2Ool-ksO_428mvPAzeA6DRBE74AZ8dgLIAw5m5JI22jX6E07DmiAblDKRMHyWO-9869_GA5G5zGiZDyfAbqM9pc0Nq31tv74WRWwjfcdRZFLJqqK5R-8dUJKH9qymHxcuCpfq-OQPQaGYdgzkcg7ZNVbztmySmoFHRa9OTnAzat5ROdpnaDepXDLNqk94xbX2q2-1nfFo7RBDqKxOhArgO_yltVFzhiEwFU99bAv_jHHsWYqScKWhRXSXl6UY84ssGmvz_s0GgqZmB683vYc3aMW65P8Ya80bdUJ1KywPCp_VVXCViT3yVTBjKCVmtgMQj9BI0kOKaRyMWdN-CQ_6EMaIKb1_yH7Loh1jZw7dUtzcR10ryRiPoIDtvbfKSs-5goDUK1ig1Gr3P8bPJsXgLCofUNc_QA6fhyvGoQ6H_awSxf3j-Zj2LJy.b6cCga4D8IPI-XTGFrlj01IIprapiqmeGo6Ixb6g9jE%26version%3DPublished&cb=63903809112&encodeFailures=1&width=503&height=755',
       bio: 'With a genuine love for hospitality, takes pride in connecting guests with the perfect stay experience.'
     },
     {
       name: 'Christine',
       role: 'Procurement Officer',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face',
+      image: 'https://westus31-mediap.svc.ms/transform/thumbnail?provider=spo&farmid=194147&inputFormat=jpeg&cs=fFNQTw&docid=https%3A%2F%2Fmy.microsoftpersonalcontent.com%2F_api%2Fv2.0%2Fdrives%2Fb!UHvAJHRZv0uHtY6cWKy5LhPq4UG_8gRHvcdyi-WzL1rWc8fM8bbUQaApuV5hXGy_%2Fitems%2F01GBRSVX7BMEAP7OOQGJB2K6SUJIWIBVHV%3Ftempauth%3Dv1e.eyJzaXRlaWQiOiIyNGMwN2I1MC01OTc0LTRiYmYtODdiNS04ZTljNThhY2I5MmUiLCJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvbXkubWljcm9zb2Z0cGVyc29uYWxjb250ZW50LmNvbUA5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQiLCJleHAiOiIxNzY4MzA1NjAwIn0.E2zDvGWCGB_qeOlNwsuR0gvqniJWE7GrCCXxfVqN6l7IB1yXFdJpqTqFF-Y6i_PVFKH9oofCJSPFRuJEWmwF_OfUZkhuYgmpqZN_fOp9tnMcfs_32en0FQwr8ASzzCnXdZ_q3icZGavClLO4f07nqvXHNK6MTwJwZpBV7TZy_fAobmcjWZqDjfcJ8SPhyL0bGGh2PhkNqxrHYqGToRmYy8JLVn9EdyvAE7dFFUfNULu8SIOkWSidUQirwRG_CXgD6OYM2sAK5aQrcbJ2rxpJCXLKnUHD___oOtNxMxtW56n_e2YAyrR0M_ShNip-MxOTjsHtgIRamweWB-g-F1B6S_wKM9SRcDCOuXPdeLZKR8jEhNzRW13ddH5092IK5DgjwGIny3kC-8Fo0ZYIjBHZHSUFNGgx7oVg6KJHvLwMg_0wgu_nRAcdiFGcn6-z_JWsLWLuF86v2e48FLHfUHFi0Y9a7i2JU4K8FCKyH8p9PLLsVSzjSEIE5UO9nO2qNUDu.kCt977tEq3aP4HsVzdFlF-fzokM0AVqfMqm7T-O_qpI%26version%3DPublished&cb=63903809112&encodeFailures=1&width=503&height=755',
       bio: 'Born in Kenya, passionate about sharing African culture'
     },
     {
       name: 'Timsheldon',
       role: 'IT Support Officer',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop&crop=face',
+      image: 'https://westus31-mediap.svc.ms/transform/thumbnail?provider=spo&farmid=194147&inputFormat=jpeg&cs=fFNQTw&docid=https%3A%2F%2Fmy.microsoftpersonalcontent.com%2F_api%2Fv2.0%2Fdrives%2Fb!UHvAJHRZv0uHtY6cWKy5LhPq4UG_8gRHvcdyi-WzL1rWc8fM8bbUQaApuV5hXGy_%2Fitems%2F01GBRSVX3D7YAWS4K76ND25RTQL7X642OJ%3Ftempauth%3Dv1e.eyJzaXRlaWQiOiIyNGMwN2I1MC01OTc0LTRiYmYtODdiNS04ZTljNThhY2I5MmUiLCJhdWQiOiIwMDAwMDAwMy0wMDAwLTBmZjEtY2UwMC0wMDAwMDAwMDAwMDAvbXkubWljcm9zb2Z0cGVyc29uYWxjb250ZW50LmNvbUA5MTg4MDQwZC02YzY3LTRjNWItYjExMi0zNmEzMDRiNjZkYWQiLCJleHAiOiIxNzY4MzA1NjAwIn0.lF9j-wzYG6_hhVB0jwS0LQXa5eJEE1SErr8d1-oCdwjkOXLyc9UgtU4V8UoaftR6IbTIG0NAubliY6iHrSiqQlsFN_TzGZHMPNWBoNCourknpKySI-byNsoO67qmG7QX_bGG2YVgZC2T1XpO3DYzLq2FsRpGyxoPOinWEI-LGWN4N86OS6EpNOM2v0i6o91mG1cyOPnVHqqhWODTu9JRgLVYZHucvblSk5IS5wwmLFinKqT0vvbswXtlRehe5aGM20YwzGM_eH1NegtPMeTaXAIHbB9lmRcWPyHRwqK4OEURdhFritV3zF6f8K72gq0XTNnBD4_zrBsgyFtrVchw4hDKR1t3GryZ6fcPd_RaAPYmt34wtwYXuqKCo84wWJkdALaw4-FidoZD1lEnIzDZmu4AXponr952W-AXJmgrxr5G5dc1vWwo3lIH4o835uYO28bZ71CnaeboYCy_I2B3c2yV2zO-cEIhHfjTAJRTj7TYlZ_S2p3hA92oR54av_mP.kUmm9t2j-2pSTOyEAVheHWYhESz0GHvz_WZew44OWHE%26version%3DPublished&cb=63903809112&encodeFailures=1&width=503&height=755',
       bio: 'Born in Kenya, passionate about sharing African culture'
     }
   ];
@@ -473,16 +473,22 @@ heartfelt warmth and authenticity.
               }}
               transition={{ duration: 0.3 }}
             >
-              <Card className="bg-[#ebe9d8] text-center hover:shadow-lg transition-shadow w-[280px] h-[300px] flex flex-col">
-                <CardContent className="p-6 flex flex-col h-full">
-                  <img
-                    src={team[0].image}
-                    alt={team[0].name}
-                    className="w-20 h-20 rounded-full mx-auto mb-3 object-cover flex-shrink-0"
-                  />
-                  <h3 className="text-lg font-semibold text-[#333033] mb-1 break-words">{team[0].name}</h3>
-                  <p className="text-[#333033] font-medium mb-2 text-sm break-words">{team[0].role}</p>
-                  <p className="text-[#333033] text-xs break-words">{team[0].bio}</p>
+              <Card className="bg-transparent text-center hover:shadow-lg transition-shadow w-[280px] h-[300px] flex flex-col group overflow-hidden relative">
+                {/* Full-cover image as background */}
+                <img
+                  src={team[0].image}
+                  alt={team[0].name}
+                  className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ease-out group-hover:opacity-30"
+                />
+                <CardContent className="p-6 flex flex-col h-full relative z-10">
+                  {/* Overlay content (hidden by default, appears on hover) - glass gradient, left aligned */}
+                  <div className="absolute inset-0 p-6 opacity-0 transition-all duration-300 ease-out group-hover:opacity-100 bg-gradient-to-br from-black/50 via-black/30 to-black/10 backdrop-blur-md text-white flex items-start">
+                    <div className="max-w-[260px]">
+                      <h3 className="text-2xl md:text-3xl font-bold mb-2 leading-tight">{team[0].name}</h3>
+                      <p className="text-sm md:text-base font-medium mb-4 text-white/90">{team[0].role}</p>
+                      <p className="text-sm leading-relaxed text-white/90">{team[0].bio}</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </motion.div>
@@ -509,16 +515,21 @@ heartfelt warmth and authenticity.
                   }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Card className="bg-[#ebe9d8] text-center hover:shadow-lg transition-shadow w-[280px] h-[300px] flex flex-col">
-                    <CardContent className="p-6 flex flex-col h-full">
-                      <img
-                        src={member.image}
-                        alt={member.name}
-                        className="w-20 h-20 rounded-full mx-auto mb-3 object-cover flex-shrink-0"
-                      />
-                      <h3 className="text-lg font-semibold text-[#333033] mb-1 break-words">{member.name}</h3>
-                      <p className="text-[#333033] font-medium mb-2 text-sm break-words">{member.role}</p>
-                      <p className="text-[#333033] text-xs break-words">{member.bio}</p>
+                  <Card className="bg-transparent text-center hover:shadow-lg transition-shadow w-[280px] h-[300px] flex flex-col group overflow-hidden relative">
+                    {/* Full-cover image as background */}
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ease-out group-hover:opacity-30"
+                    />
+                    <CardContent className="p-6 flex flex-col h-full relative z-10">
+                      <div className="absolute inset-0 p-6 opacity-0 transition-all duration-300 ease-out group-hover:opacity-100 bg-gradient-to-br from-black/50 via-black/30 to-black/10 backdrop-blur-md text-white flex items-start">
+                          <div className="max-w-[260px]">
+                            <h3 className="text-2xl md:text-3xl font-bold mb-2 leading-tight">{member.name}</h3>
+                            <p className="text-sm md:text-base font-medium mb-4 text-white/90">{member.role}</p>
+                            <p className="text-sm leading-relaxed text-white/90">{member.bio}</p>
+                          </div>
+                        </div>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -535,16 +546,19 @@ heartfelt warmth and authenticity.
                   }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Card className="text-center hover:shadow-lg transition-shadow w-[280px] h-[300px] flex flex-col">
-                    <CardContent className="p-6 flex flex-col h-full">
-                      <img
-                        src={member.image}
-                        alt={member.name}
-                        className="w-20 h-20 rounded-full mx-auto mb-3 object-cover flex-shrink-0"
-                      />
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1 break-words">{member.name}</h3>
-                      <p className="text-orange-600 font-medium mb-2 text-sm break-words">{member.role}</p>
-                      <p className="text-gray-600 text-xs break-words">{member.bio}</p>
+                  <Card className="bg-transparent text-center hover:shadow-lg transition-shadow w-[280px] h-[300px] flex flex-col group overflow-hidden relative">
+                    {/* Full-cover image as background */}
+                    <img
+                      src={member.image}
+                      alt={member.name}
+                      className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ease-out group-hover:opacity-30"
+                    />
+                    <CardContent className="p-6 flex flex-col h-full relative z-10">
+                      <div className="absolute inset-0 flex flex-col items-center justify-center px-4 opacity-0 transition-all duration-300 ease-out group-hover:opacity-100 group-hover:bg-white/20 group-hover:backdrop-blur-md">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1 break-words">{member.name}</h3>
+                        <p className="text-orange-600 font-medium mb-2 text-sm break-words">{member.role}</p>
+                        <p className="text-gray-600 text-xs break-words max-w-[220px]">{member.bio}</p>
+                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -627,7 +641,7 @@ heartfelt warmth and authenticity.
               variants={fadeInRight}
             >
               <img
-                src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=600&h=400&fit=crop"
+                src="https://www.azolifesciences.com/image-handler/ts/20220215094450/ri/1000/src/images/Article_Images/ImageForArticle_714_16449362895935733.jpg"
                 alt="Wildlife conservation"
                 className="rounded-lg shadow-lg"
               />
