@@ -23,66 +23,7 @@ import { toast } from 'sonner';
 import PaymentForm from '@/components/PaymentForm';
 import PesapalPaymentForm from '@/components/PesapalPaymentForm';
 import { AmenitySelector } from '@/components/AmenitySelector';
-
-// Country codes data
-const countryCodes = [
-  { code: '+1', country: 'US', name: 'United States', flag: '🇺🇸' },
-  { code: '+1', country: 'CA', name: 'Canada', flag: '🇨🇦' },
-  { code: '+44', country: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
-  { code: '+33', country: 'FR', name: 'France', flag: '🇫🇷' },
-  { code: '+49', country: 'DE', name: 'Germany', flag: '🇩🇪' },
-  { code: '+39', country: 'IT', name: 'Italy', flag: '🇮🇹' },
-  { code: '+34', country: 'ES', name: 'Spain', flag: '🇪🇸' },
-  { code: '+31', country: 'NL', name: 'Netherlands', flag: '🇳🇱' },
-  { code: '+41', country: 'CH', name: 'Switzerland', flag: '🇨🇭' },
-  { code: '+43', country: 'AT', name: 'Austria', flag: '🇦🇹' },
-  { code: '+32', country: 'BE', name: 'Belgium', flag: '🇧🇪' },
-  { code: '+45', country: 'DK', name: 'Denmark', flag: '🇩🇰' },
-  { code: '+46', country: 'SE', name: 'Sweden', flag: '🇸🇪' },
-  { code: '+47', country: 'NO', name: 'Norway', flag: '🇳🇴' },
-  { code: '+358', country: 'FI', name: 'Finland', flag: '🇫🇮' },
-  { code: '+351', country: 'PT', name: 'Portugal', flag: '🇵🇹' },
-  { code: '+30', country: 'GR', name: 'Greece', flag: '🇬🇷' },
-  { code: '+48', country: 'PL', name: 'Poland', flag: '🇵🇱' },
-  { code: '+420', country: 'CZ', name: 'Czech Republic', flag: '🇨🇿' },
-  { code: '+36', country: 'HU', name: 'Hungary', flag: '🇭🇺' },
-  { code: '+7', country: 'RU', name: 'Russia', flag: '🇷🇺' },
-  { code: '+86', country: 'CN', name: 'China', flag: '🇨🇳' },
-  { code: '+81', country: 'JP', name: 'Japan', flag: '🇯🇵' },
-  { code: '+82', country: 'KR', name: 'South Korea', flag: '🇰🇷' },
-  { code: '+91', country: 'IN', name: 'India', flag: '🇮🇳' },
-  { code: '+61', country: 'AU', name: 'Australia', flag: '🇦🇺' },
-  { code: '+64', country: 'NZ', name: 'New Zealand', flag: '🇳🇿' },
-  { code: '+27', country: 'ZA', name: 'South Africa', flag: '🇿🇦' },
-  { code: '+254', country: 'KE', name: 'Kenya', flag: '🇰🇪' },
-  { code: '+255', country: 'TZ', name: 'Tanzania', flag: '🇹🇿' },
-  { code: '+256', country: 'UG', name: 'Uganda', flag: '🇺🇬' },
-  { code: '+250', country: 'RW', name: 'Rwanda', flag: '🇷🇼' },
-  { code: '+20', country: 'EG', name: 'Egypt', flag: '🇪🇬' },
-  { code: '+212', country: 'MA', name: 'Morocco', flag: '🇲🇦' },
-  { code: '+234', country: 'NG', name: 'Nigeria', flag: '🇳🇬' },
-  { code: '+233', country: 'GH', name: 'Ghana', flag: '🇬🇭' },
-  { code: '+55', country: 'BR', name: 'Brazil', flag: '🇧🇷' },
-  { code: '+52', country: 'MX', name: 'Mexico', flag: '🇲🇽' },
-  { code: '+54', country: 'AR', name: 'Argentina', flag: '🇦🇷' },
-  { code: '+56', country: 'CL', name: 'Chile', flag: '🇨🇱' },
-  { code: '+57', country: 'CO', name: 'Colombia', flag: '🇨🇴' },
-  { code: '+51', country: 'PE', name: 'Peru', flag: '🇵🇪' },
-  { code: '+971', country: 'AE', name: 'UAE', flag: '🇦🇪' },
-  { code: '+966', country: 'SA', name: 'Saudi Arabia', flag: '🇸🇦' },
-  { code: '+965', country: 'KW', name: 'Kuwait', flag: '🇰🇼' },
-  { code: '+974', country: 'QA', name: 'Qatar', flag: '🇶🇦' },
-  { code: '+973', country: 'BH', name: 'Bahrain', flag: '🇧🇭' },
-  { code: '+968', country: 'OM', name: 'Oman', flag: '🇴🇲' },
-  { code: '+962', country: 'JO', name: 'Jordan', flag: '🇯🇴' },
-  { code: '+961', country: 'LB', name: 'Lebanon', flag: '🇱🇧' },
-  { code: '+60', country: 'MY', name: 'Malaysia', flag: '🇲🇾' },
-  { code: '+65', country: 'SG', name: 'Singapore', flag: '🇸🇬' },
-  { code: '+66', country: 'TH', name: 'Thailand', flag: '🇹🇭' },
-  { code: '+84', country: 'VN', name: 'Vietnam', flag: '🇻🇳' },
-  { code: '+63', country: 'PH', name: 'Philippines', flag: '🇵🇭' },
-  { code: '+62', country: 'ID', name: 'Indonesia', flag: '🇮🇩' }
-];
+import countryCodes from '@/data/countryCodes.json';
 
 interface RoomBooking {
   roomId: string;
@@ -1700,15 +1641,33 @@ export default function BookNow() {
                       value={bookingData.countryCode} 
                       onValueChange={(value) => setBookingData({...bookingData, countryCode: value})}
                     >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Select country">
+                          {countryCodes.find(c => c.code === bookingData.countryCode) && (
+                            <div className="flex items-center gap-2">
+                              <img 
+                                src={countryCodes.find(c => c.code === bookingData.countryCode)?.flagImage} 
+                                alt="flag" 
+                                className="h-6 w-10 object-contain"
+                                onError={(e) => {e.currentTarget.style.display = 'none'}}
+                              />
+                              <span>{bookingData.countryCode}</span>
+                            </div>
+                          )}
+                        </SelectValue>
                       </SelectTrigger>
-                      <SelectContent className="max-h-60">
+                      <SelectContent className="max-h-64 w-72">
                         {countryCodes.map((country) => (
                           <SelectItem key={`${country.code}-${country.country}`} value={country.code}>
-                            <div className="flex items-center gap-2">
-                              <span>{country.flag}</span>
-                              <span>{country.code}</span>
+                            <div className="flex items-center gap-3">
+                              <img 
+                                src={country.flagImage} 
+                                alt={country.name} 
+                                className="h-6 w-10 object-contain flex-shrink-0"
+                                onError={(e) => {e.currentTarget.style.display = 'none'}}
+                              />
+                              <span className="font-medium">{country.name}</span>
+                              <span className="text-gray-500 text-sm">{country.code}</span>
                             </div>
                           </SelectItem>
                         ))}
@@ -1723,9 +1682,6 @@ export default function BookNow() {
                       className="flex-1"
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Selected: {countryCodes.find(c => c.code === bookingData.countryCode)?.name || 'Country'}
-                  </p>
                 </div>
 
                 <div>
