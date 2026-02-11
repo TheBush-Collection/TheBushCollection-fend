@@ -121,12 +121,14 @@ export default function Index() {
     return matchesSearch && matchesType && !isNairobiHotel;
   });
 
-  // Featured properties excluding Nairobi hotels
-  const featuredProperties = properties.filter(
-    property =>
-      property.featured &&
-      !property.location?.toLowerCase().includes('nairobi') &&
-      !property.name?.toLowerCase().includes('nairobi')
+  const normalizedCategory = (value?: string) => (value || 'bush').toLowerCase();
+
+  const bushProperties = filteredProperties.filter(
+    property => normalizedCategory(property.category) === 'bush'
+  );
+
+  const beachProperties = filteredProperties.filter(
+    property => normalizedCategory(property.category) === 'beach'
   );
 
   // Filter out undefined/null types and get unique property types
@@ -348,21 +350,21 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Featured Properties */}
-      {featuredProperties.length > 0 && (
+      {/* Bush Properties */}
+      {bushProperties.length > 0 && (
         <section className="py-16 bg-[#1a1816]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold text-[#ffffff] mb-4">
-                Featured Destinations
+                Bush Properties
               </h2>
               <p className="text-xl text-[#ffffff]/80">
-                Handpicked luxury safari experiences
+                Explore our bush safari collection
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredProperties.map((property) => (
+              {bushProperties.map((property) => (
                 <PropertyCard key={property.id} property={property} />
               ))}
             </div>
@@ -370,21 +372,21 @@ export default function Index() {
         </section>
       )}
 
-      {/* All Properties */}
+      {/* Beach Properties */}
       <section className="py-16 bg-[#2a2623]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-[#ffffff] mb-4">
-              All Safari Destinations
+              Beach Properties
             </h2>
             <p className="text-xl text-[#ffffff]/80">
-              {filteredProperties.length} properties available
+              {beachProperties.length} properties available
             </p>
           </div>
 
-          {filteredProperties.length > 0 ? (
+          {beachProperties.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProperties.map((property) => (
+              {beachProperties.map((property) => (
                 <PropertyCard key={property.id} property={property} />
               ))}
             </div>
@@ -670,7 +672,7 @@ function NewsletterForm({ onClose }: { onClose?: () => void }) {
       if (res.success) {
         // Backend may return mailchimp_status (pending/subscribed) to indicate whether
         // Mailchimp will send a confirmation email (pending) or the member is active (subscribed)
-        const status = (res as any).mailchimp_status || (res as any).data?.status;
+  const status = res.mailchimp_status || (res.data as { status?: string } | undefined)?.status;
         if (status === 'pending') {
           toast('Please check your email to confirm your subscription', { type: 'info' });
         } else {

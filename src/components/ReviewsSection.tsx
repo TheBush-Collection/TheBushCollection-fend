@@ -29,18 +29,18 @@ export default function ReviewsSection() {
 
   if (loading) {
     return (
-      <section className="py-16 bg-gray-50">
+  <section className="py-16 bg-[#efe7d1]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#5C3B22] mb-4">
               Guest Reviews
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-[#6E6B6B]">
               What our guests say about their safari experiences
             </p>
           </div>
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#d9732b]"></div>
           </div>
         </div>
       </section>
@@ -49,19 +49,19 @@ export default function ReviewsSection() {
 
   if (error) {
     return (
-      <section className="py-16 bg-gray-50">
+  <section className="py-16 bg-[#efe7d1]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-[#5C3B22] mb-4">
               Guest Reviews
             </h2>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-[#6E6B6B]">
               What our guests say about their safari experiences
             </p>
           </div>
           <div className="text-center py-12">
             <p className="text-red-600 mb-2">Error loading reviews</p>
-            <p className="text-gray-600 text-sm">{error}</p>
+            <p className="text-[#6E6B6B] text-sm">{error}</p>
           </div>
         </div>
       </section>
@@ -78,17 +78,17 @@ export default function ReviewsSection() {
   const closeDialog = () => setIsDialogOpen(false);
 
   return (
-    <section className="py-16 bg-gray-50">
+  <section className="py-16 bg-[#efe7d1]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-[#5C3B22] mb-4">
             Guest Reviews
           </h2>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-[#6E6B6B]">
             What our guests say about their safari experiences
           </p>
           {reviews.length > 0 && (
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-[#758774] mt-2">
               {reviews.length} reviews • Average rating: {averageRating} ⭐
             </p>
           )}
@@ -96,7 +96,7 @@ export default function ReviewsSection() {
           <div className="mt-6 flex justify-center">
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
+                <Button size="lg" className="bg-[#d9732b] hover:bg-[#5C3B22]">
                   Share Your Experience
                 </Button>
               </DialogTrigger>
@@ -127,17 +127,17 @@ export default function ReviewsSection() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 text-gray-600">
+          <div className="text-center py-12 text-[#6E6B6B]">
             No reviews available yet. Be the first to share your safari experience!
           </div>
         )}
 
         {reviews.length > 6 && (
           <div className="text-center mt-8">
-            <p className="text-gray-600 mb-4">
+            <p className="text-[#6E6B6B] mb-4">
               Showing {displayReviews.length} of {reviews.length} reviews
             </p>
-            <button className="text-orange-500 hover:text-orange-600 font-medium">
+            <button className="text-[#d9732b] hover:text-[#5C3B22] font-medium">
               View all reviews →
             </button>
           </div>

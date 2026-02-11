@@ -8,6 +8,7 @@ export interface Property {
   location: string;
   description: string;
   type: string;
+  category?: string;
   basePricePerNight?: number;
   price?: number;
   maxGuests: number;
@@ -33,6 +34,10 @@ export interface Room {
   max_guests?: number;
   maxGuests?: number;
   available: boolean;
+  available_from?: string;
+  booked_until?: string;
+  availableFrom?: string;
+  bookedUntil?: string;
   amenities: string[];
   images: string[];
   description?: string;
@@ -149,6 +154,7 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
             location: (prop.location as string) || '',
             description: (prop.description as string) || '',
             type: (prop.type as string) || 'lodge',
+            category: ((prop.category as string) || 'bush').toLowerCase(),
             basePricePerNight: (prop.basePricePerNight as number) || 0,
             price: (prop.basePricePerNight as number) || 0,
             maxGuests: (prop.maxGuests as number) || 2,
@@ -198,6 +204,7 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
         location: propertyData.location,
         description: propertyData.description,
         type: propertyData.type,
+        category: propertyData.category || 'bush',
         basePricePerNight: propertyData.price || propertyData.basePricePerNight,
         maxGuests: propertyData.maxGuests,
         rating: propertyData.rating,
@@ -219,6 +226,7 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
           location: (propertyData.location as string) || '',
           description: (propertyData.description as string) || '',
           type: (propertyData.type as string) || 'lodge',
+          category: (propertyData.category as string) || 'bush',
           basePricePerNight: propertyData.price || propertyData.basePricePerNight,
           price: propertyData.price || propertyData.basePricePerNight,
           maxGuests: (propertyData.maxGuests as number) || 2,
@@ -253,6 +261,7 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
         location: propertyData.location,
         description: propertyData.description,
         type: propertyData.type,
+        category: propertyData.category || 'bush',
         basePricePerNight: propertyData.price || propertyData.basePricePerNight,
         maxGuests: propertyData.maxGuests,
         rating: propertyData.rating,
@@ -303,6 +312,7 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
           location: response.data.location || '',
           description: response.data.description || '',
           type: response.data.type || 'lodge',
+          category: (response.data.category || 'bush').toLowerCase(),
           basePricePerNight: response.data.basePricePerNight || 0,
           price: response.data.basePricePerNight || 0,
           maxGuests: response.data.maxGuests || 2,
@@ -381,14 +391,14 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
       };
 
       // Normalize common naming differences
-      if ('maxGuests' in roomData && !('max_guests' in payload)) {
-        payload.max_guests = (roomData as any).maxGuests;
+      if (typeof roomData.maxGuests === 'number' && !('max_guests' in payload)) {
+        payload.max_guests = roomData.maxGuests;
       }
 
       // Backend expects `availableForBooking` (server Room model). Map `available` -> `availableForBooking`.
-      if ('available' in payload && !('availableForBooking' in payload)) {
-        payload.availableForBooking = (payload as any).available;
-        delete (payload as any).available;
+      if (typeof roomData.available === 'boolean' && !('availableForBooking' in payload)) {
+        payload.availableForBooking = roomData.available;
+        delete (payload as { available?: boolean }).available;
       }
   // Debug: log token/header state before request
   try {
@@ -411,9 +421,9 @@ export const useBackendProperties = (options?: UseBackendPropertiesOptions) => {
                 ...r,
                 ...roomData,
                 // ensure boolean conversions
-                available: typeof (roomData as any).available === 'boolean' ? (roomData as any).available : r.available,
-                available_from: (roomData as any).available_from ?? (roomData as any).availableFrom ?? r.available_from,
-                booked_until: (roomData as any).booked_until ?? (roomData as any).bookedUntil ?? r.booked_until,
+                available: typeof roomData.available === 'boolean' ? roomData.available : r.available,
+                available_from: roomData.available_from ?? roomData.availableFrom ?? r.available_from,
+                booked_until: roomData.booked_until ?? roomData.bookedUntil ?? r.booked_until,
               } as Room;
             }
             return r;

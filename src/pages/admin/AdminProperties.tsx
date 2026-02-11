@@ -17,6 +17,7 @@ type Property = {
   name: string;
   location: string;
   type: string;
+  category?: string;
   description: string;
   images: string[];
   amenities: string[];
@@ -53,7 +54,8 @@ export default function AdminProperties() {
     id: prop.id || prop._id || '',
     name: prop.name,
     location: prop.location || '',
-    type: prop.type || 'lodge',
+  type: prop.type || 'lodge',
+  category: (prop.category || 'bush').toLowerCase(),
     description: prop.description || '',
     images: prop.images || [],
     amenities: prop.amenities || [],
@@ -99,6 +101,7 @@ export default function AdminProperties() {
     location: '',
     description: '',
     type: 'lodge',
+    category: 'bush',
     featured: false,
     rating: 4.5,
     reviews: 0,
@@ -115,6 +118,7 @@ export default function AdminProperties() {
     location: '',
     description: '',
     type: 'lodge',
+    category: 'bush',
     featured: false,
     rating: 4.5,
     reviews: 0,
@@ -257,11 +261,13 @@ export default function AdminProperties() {
     let imagesArray = newProperty.images.split(',').map(i => i.trim()).filter(i => i);
     imagesArray = imagesArray.filter(isValidMediaUrl);
 
+    const normalizedCategory = newProperty.category?.toLowerCase() === 'beach' ? 'beach' : 'bush';
     const propertyData = {
       name: newProperty.name,
       location: newProperty.location,
       description: newProperty.description,
       type: newProperty.type,
+      category: normalizedCategory,
       featured: newProperty.featured,
       rating: newProperty.rating,
       reviews: newProperty.reviews,
@@ -291,13 +297,15 @@ export default function AdminProperties() {
         location: '',
         description: '',
         type: 'lodge',
+        category: 'bush',
         featured: false,
         rating: 4.5,
         reviews: 0,
         price: 0,
         maxGuests: 2,
         amenities: '',
-        images: ''
+        images: '',
+        externalUrl: ''
       });
       setIsAddingProperty(false);
     } catch (error) {
@@ -313,6 +321,7 @@ export default function AdminProperties() {
       location: property.location,
       description: property.description,
       type: property.type,
+      category: property.category || 'bush',
       featured: property.featured,
       rating: property.rating,
       reviews: property.reviews,
@@ -320,7 +329,7 @@ export default function AdminProperties() {
       maxGuests: property.maxGuests,
       amenities: property.amenities.join(', '),
       images: property.images.map(img => img.trim()).filter(img => img).join(', '),
-      externalUrl: (property as any).externalUrl || ''
+  externalUrl: property.externalUrl || ''
     });
     setIsEditingProperty(true);
   };
@@ -351,11 +360,13 @@ export default function AdminProperties() {
     let imagesArray = editPropertyForm.images.split(',').map(i => i.trim()).filter(i => i);
     imagesArray = imagesArray.filter(isValidMediaUrl);
 
+    const normalizedCategory = editPropertyForm.category?.toLowerCase() === 'beach' ? 'beach' : 'bush';
     const updatedData = {
       name: editPropertyForm.name,
       location: editPropertyForm.location,
       description: editPropertyForm.description,
       type: editPropertyForm.type,
+      category: normalizedCategory,
       featured: editPropertyForm.featured,
       rating: editPropertyForm.rating,
       reviews: editPropertyForm.reviews,
@@ -622,7 +633,7 @@ export default function AdminProperties() {
             </video>
 
             {/* Hidden fallback for video errors */}
-            <div className="video-fallback hidden absolute inset-0 flex items-center justify-center bg-gray-200">
+            <div className="video-fallback absolute inset-0 flex items-center justify-center bg-gray-200" style={{ display: 'none' }}>
               <div className="text-center text-gray-500">
                 <Play className="h-12 w-12 mx-auto mb-2" />
                 <span className="text-sm">Video unavailable</span>
@@ -653,9 +664,9 @@ export default function AdminProperties() {
                       }
 
                       // Show fallback on play error
-                      const fallbackDiv = container?.querySelector('.video-fallback');
-                      if (fallbackDiv && fallbackDiv.classList) {
-                        fallbackDiv.classList.remove('hidden');
+                      const fallbackDiv = container?.querySelector('.video-fallback') as HTMLElement | null;
+                      if (fallbackDiv) {
+                        fallbackDiv.style.display = 'flex';
                         e.currentTarget.classList.add('hidden');
                       }
                     });
@@ -691,13 +702,13 @@ export default function AdminProperties() {
               e.currentTarget.style.display = 'none';
               const container = e.currentTarget.closest('.relative');
               const fallback = container?.querySelector('.media-placeholder') as HTMLDivElement;
-              if (fallback) fallback.classList.remove('hidden');
+              if (fallback) fallback.style.display = 'flex';
             }}
           />
         )}
 
         {/* Fallback placeholder (hidden by default) */}
-        <div className="hidden media-placeholder absolute inset-0 flex items-center justify-center bg-gray-200 rounded-lg">
+        <div className="media-placeholder absolute inset-0 flex items-center justify-center bg-gray-200 rounded-lg" style={{ display: 'none' }}>
           <div className="text-center text-gray-500">
             <Image className="h-12 w-12 mx-auto mb-2" />
             <span className="text-sm">No media available</span>
@@ -813,7 +824,7 @@ export default function AdminProperties() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-4 gap-4">
                     <div>
                       <Label>Type</Label>
                       <Select value={newProperty.type} onValueChange={(value) => setNewProperty({...newProperty, type: value})}>
@@ -824,6 +835,18 @@ export default function AdminProperties() {
                           <SelectItem value="lodge">Lodge</SelectItem>
                           <SelectItem value="camp">Camp</SelectItem>
                           <SelectItem value="villa">Villa</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Category</Label>
+                      <Select value={newProperty.category} onValueChange={(value) => setNewProperty({...newProperty, category: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="bush">Bush</SelectItem>
+                          <SelectItem value="beach">Beach</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -956,9 +979,12 @@ export default function AdminProperties() {
               <div className="relative">
                 <MediaCarousel images={property.images} propertyId={property.id} />
                 
-                <div className="absolute top-4 left-4">
+                <div className="absolute top-4 left-4 flex items-center gap-2">
                   <Badge className={getTypeColor(property.type)}>
                     {property.type}
+                  </Badge>
+                  <Badge variant="secondary" className="bg-gray-100 text-gray-700">
+                    {(property.category || 'bush').charAt(0).toUpperCase() + (property.category || 'bush').slice(1)}
                   </Badge>
                 </div>
                 
@@ -1287,7 +1313,7 @@ export default function AdminProperties() {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div>
                   <Label>Type</Label>
                   <Select value={editPropertyForm.type} onValueChange={(value) => setEditPropertyForm({...editPropertyForm, type: value})}>
@@ -1298,6 +1324,18 @@ export default function AdminProperties() {
                       <SelectItem value="lodge">Lodge</SelectItem>
                       <SelectItem value="camp">Camp</SelectItem>
                       <SelectItem value="villa">Villa</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Category</Label>
+                  <Select value={editPropertyForm.category} onValueChange={(value) => setEditPropertyForm({...editPropertyForm, category: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bush">Bush</SelectItem>
+                      <SelectItem value="beach">Beach</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

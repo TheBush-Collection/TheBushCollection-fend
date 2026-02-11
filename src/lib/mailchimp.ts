@@ -58,7 +58,7 @@ function formatContactForMailchimp(contact: MailchimpContact): MailchimpSubscrip
  * Subscribe or update a contact in Mailchimp
  * NOTE: This uses your backend as a proxy to avoid exposing the API key to the frontend
  */
-export async function subscribeToMailchimp(contact: MailchimpContact): Promise<{ success: boolean; error?: string }> {
+export async function subscribeToMailchimp(contact: MailchimpContact): Promise<{ success: boolean; error?: string; data?: Record<string, unknown>; mailchimp_status?: string }> {
   try {
     // Send to your backend endpoint instead of directly to Mailchimp
     // This protects your API key from being exposed in the browser

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// export const API_BASE = 'http://localhost:5000';
+//export const API_BASE = 'http://localhost:5000';
 export const API_BASE = 'https://thebushcollection.onrender.com/';
 
 const api = axios.create({
@@ -9,7 +9,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
+//hello
 export const setAuthToken = (token?: string | null) => {
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Star, MapPin, Users, Calendar, Clock, Camera, Binoculars, Plane, Car, Utensils, Shield, Check, Search, Filter, Building2, ImageOff } from 'lucide-react';
+import { Star, MapPin, Users, Calendar, Clock, Camera, Binoculars, Plane, Car, Utensils, Shield, Check, Search, Filter, Building2, ImageOff, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useBackendPackages } from '@/hooks/useBackendPackages';
 import { Package } from '@/types/package';
@@ -462,26 +462,46 @@ export default function Packages() {
       </div>
     ) : (
       <div className="text-center py-16">
-        <div className="max-w-md mx-auto">
-          <Search className="h-16 w-16 mx-auto mb-4 text-[#ffffff]/30" />
-          <h3 className="text-xl font-medium text-[#ffffff] mb-2">
-            No packages found
-          </h3>
-          <p className="text-[#ffffff]/80 mb-6">
-            Try adjusting your search criteria or browse all available packages
-          </p>
-          <Button 
-            onClick={() => {
-              setSearchTerm('');
-              setCategoryFilter('all');
-              setPriceFilter('all');
-              setDurationFilter('all');
-              setSortBy('featured');
-            }}
-            className="bg-[#c9a961] hover:bg-[#8b6f47] text-[#000000]"
-          >
-            Clear All Filters
-          </Button>
+        <div className="max-w-3xl mx-auto rounded-3xl border border-[#8b6f47]/70 bg-gradient-to-br from-[#1a1816] via-[#2a2623] to-[#1a1816] px-8 py-12 shadow-2xl relative overflow-hidden">
+          <div className="absolute -top-16 -right-10 h-40 w-40 rounded-full bg-[#c9a961]/20 blur-3xl" />
+          <div className="absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-[#8b6f47]/20 blur-3xl" />
+
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#c9a961]/40 bg-[#0f0e0d]/70 px-4 py-1 text-xs uppercase tracking-[0.2em] text-[#c9a961] mb-6">
+              <Sparkles className="h-3 w-3" />
+              Curating Experiences
+            </div>
+
+            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#c9a961]/15 text-[#c9a961]">
+              <Search className="h-7 w-7" />
+            </div>
+
+            <h3 className="text-3xl md:text-4xl font-semibold text-[#ffffff] mb-3">
+              The next chapters are being written
+            </h3>
+            <p className="text-[#ffffff]/80 mb-6 leading-relaxed">
+              Our curators are polishing a new collection of bush escapes and beach retreats.
+              Expect early-morning game drives, private sundowners, and seaside serenity — coming soon.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Button
+                onClick={() => {
+                  setSearchTerm('');
+                  setCategoryFilter('all');
+                  setPriceFilter('all');
+                  setDurationFilter('all');
+                  setSortBy('featured');
+                }}
+                className="bg-[#c9a961] hover:bg-[#8b6f47] text-[#000000]"
+              >
+                Reset Filters
+              </Button>
+              <span className="text-xs text-[#ffffff]/60">
+                New departures posted weekly
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     )}
