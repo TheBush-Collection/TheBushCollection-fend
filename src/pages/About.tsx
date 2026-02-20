@@ -1,18 +1,36 @@
 import React, { useRef } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, Users, Globe, Award, Heart, Camera, Compass, Shield } from 'lucide-react';
+import {
+  Star,
+  Users,
+  Globe,
+  Award,
+  Heart,
+  Camera,
+  Compass,
+  Shield,
+  TreePine,
+  GraduationCap,
+  Handshake,
+  Eye,
+  Target,
+  Quote,
+  Leaf,
+  BookOpen,
+  CheckCircle
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { motion, useScroll, useTransform, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 export default function About() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const stats = [
-    { icon: Users, label: 'Happy Travelers', value: '1,000+' },
-    { icon: Globe, label: 'Destinations', value: '3+' },
-    { icon: Award, label: 'Years Experience', value: '2+' },
+    { icon: Globe, label: 'Countries', value: 'Kenya & Tanzania' },
+    { icon: Award, label: 'Years of Heritage', value: '40+' },
+    { icon: Users, label: 'Record Visitors in 2023', value: 'Historic High' },
     { icon: Star, label: 'Average Rating', value: '4.8' }
   ];
 
@@ -32,7 +50,7 @@ export default function About() {
     {
       name: 'Linda Otieno',
       role: 'Head of Reservations & Sales',
-      image: 'https://res.cloudinary.com/dfaakg2ds/image/upload/v1769681709/Linda_sgvaok.jpg',
+      image: 'https://res.cloudinary.com/dfaakg2ds/image/upload/v1771577013/linda2_k2ipao.jpg',
       bio: 'A passionate hotelier dedicated to creating memorable guest experiences while driving sales growth and operational excellence.'
     },
     {
@@ -93,7 +111,6 @@ export default function About() {
     visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } }
   };
 
-  // Text morphing variants
   const textVariants = {
     hidden: { opacity: 0, y: 20, scale: 0.95 },
     visible: {
@@ -123,105 +140,112 @@ export default function About() {
 
   const values = [
     {
+      icon: Handshake,
+      title: 'Community Partnerships',
+      description: 'All of our properties – now and in the future – are founded in partnership with local communities. This is critical for the long-term preservation of our primary asset – our wildlife.'
+    },
+    {
+      icon: GraduationCap,
+      title: 'Educating the Next Generation',
+      description: 'In 2025 each of our properties will be required to enter into educating the next generation of conservationists.'
+    },
+    {
       icon: Heart,
-      title: 'Conservation First',
-      description: 'We support local conservation efforts and sustainable tourism practices that protect wildlife and ecosystems.'
+      title: 'Direct Community Impact',
+      description: 'All donor funding goes directly to schools and communities – because we believe education is at the forefront of conservation.'
     },
     {
-      icon: Users,
-      title: 'Community Impact',
-      description: 'Our tours directly benefit local communities through employment, cultural exchange, and economic development.'
-    },
-    {
-      icon: Camera,
-      title: 'Authentic Experiences',
-      description: 'We create genuine, immersive experiences that connect you with the real Africa beyond typical tourist attractions.'
-    },
-    {
-      icon: Shield,
-      title: 'Safety & Quality',
-      description: 'Your safety is our priority. We maintain the highest standards in accommodations, transportation, and guides.'
+      icon: CheckCircle,
+      title: 'Recognized Programmes',
+      description: 'We maintain externally recognized conservation and community programmes that hold us to the highest standards of environmental and social responsibility.'
     }
   ];
 
   return (
     <div ref={containerRef} className="min-h-screen">
-      
-      {/* Hero Section */}
-<motion.section
-  className="relative py-24 text-white overflow-hidden"
-  initial="hidden"
-  animate="visible"
-  variants={fadeInUp}
->
-  {/* Background Video */}
-  <div className="absolute inset-0 w-full h-full">
-    <video
-      className="w-full h-full object-cover"
-      autoPlay
-      loop
-      muted
-      playsInline
-    >
-      <source src="/images/16.mp4" type="video/mp4" />
-      Your browser does not support the video tag.
-    </video>
-    {/* Optional overlay for better text readability */}
-    <div className="absolute inset-0 bg-black/50"></div>
-  </div>
 
-  {/* Content */}
-  <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
-    <motion.h1
-      className="text-5xl md:text-6xl font-bold mb-6"
-      variants={letterVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {'Experience is Everything'.split('').map((letter, index) => (
-        <motion.span
-          key={index}
-          variants={letterVariants}
-          className="inline-block"
-        >
-          {letter === ' ' ? '\u00A0' : letter}
-        </motion.span>
-      ))}
-    </motion.h1>
-    <motion.p
-      className="text-xl md:text-2xl text-green-100 max-w-3xl mx-auto mb-8"
-      variants={fadeInUp}
-      initial="hidden"
-      animate="visible"
-      transition={{ delay: 0.3, duration: 0.8 }}
-    >
-      Spanning the breadth of Kenya and Tanzania, The Bush Collection brings together a group of
-affordable lodges & camps - all in optimal locations - that deliver exceptional hospitality with
-heartfelt warmth and authenticity.
-    </motion.p>
-    <motion.div
-      className="flex flex-col sm:flex-row gap-4 justify-center"
-      variants={staggerContainer}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={staggerItem}>
-        <Link to="/packages">
-          <Button size="lg" className="bg-[#333033] hover:bg-[#ebe9d8] border-[#333033] hover:border-[#ebe9d8] border-2 px-8 py-3">
-            Explore Our Packages
-          </Button>
-        </Link>
-      </motion.div>
-      <motion.div variants={staggerItem}>
-        <Link to="/contact">
-          <Button size="lg" variant="outline" className="bg-[#ebe9d8] border-[#333033] text-[#333033] hover:bg-[#333033] hover:text-[#ebe9d8] px-8 py-3">
-            Contact Us
-          </Button>
-        </Link>
-      </motion.div>
-    </motion.div>
-  </div>
-</motion.section>
+      {/* Hero Section */}
+      <motion.section
+        className="relative py-32 md:py-44 text-white overflow-hidden"
+        initial="hidden"
+        animate="visible"
+        variants={fadeInUp}
+      >
+        {/* Background Video */}
+        <div className="absolute inset-0 w-full h-full">
+          <video
+            className="w-full h-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+          >
+            <source src="/images/16.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70"></div>
+        </div>
+
+        {/* Content */}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10">
+          <motion.div
+            className="inline-block mb-6 px-4 py-1.5 rounded-full border border-white/30 bg-white/10 backdrop-blur-sm"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
+            <span className="text-sm font-medium tracking-wider uppercase">Over 40 Years of Safari Heritage</span>
+          </motion.div>
+          <motion.h1
+            className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
+            variants={letterVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            {'Experience is Everything'.split('').map((letter, index) => (
+              <motion.span
+                key={index}
+                variants={letterVariants}
+                className="inline-block"
+              >
+                {letter === ' ' ? '\u00A0' : letter}
+              </motion.span>
+            ))}
+          </motion.h1>
+          <motion.p
+            className="text-lg md:text-2xl text-white/90 max-w-3xl mx-auto mb-10 leading-relaxed"
+            variants={fadeInUp}
+            initial="hidden"
+            animate="visible"
+            transition={{ delay: 0.3, duration: 0.8 }}
+          >
+            Spanning the breadth of Kenya and Tanzania, The Bush Collection brings together a group of
+            affordable lodges &amp; camps — all in optimal locations — that deliver exceptional hospitality with
+            heartfelt warmth and authenticity.
+          </motion.p>
+          <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center"
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.div variants={staggerItem}>
+              <Link to="/packages">
+                <Button size="lg" className="bg-[#333033] hover:bg-[#ebe9d8] hover:text-[#333033] border-[#333033] hover:border-[#ebe9d8] border-2 px-8 py-3 text-base">
+                  Explore Our Packages
+                </Button>
+              </Link>
+            </motion.div>
+            <motion.div variants={staggerItem}>
+              <Link to="/contact">
+                <Button size="lg" variant="outline" className="bg-[#ebe9d8] border-[#333033] text-[#333033] hover:bg-[#333033] hover:text-[#ebe9d8] px-8 py-3 text-base">
+                  Contact Us
+                </Button>
+              </Link>
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.section>
 
       {/* Stats Section */}
       <motion.section
@@ -244,32 +268,42 @@ heartfelt warmth and authenticity.
                 <div className="w-12 h-12 bg-[#ebe9d8] rounded-full flex items-center justify-center mx-auto mb-4">
                   <Icon className="h-6 w-6 text-[#333033]" />
                 </div>
-                <div className="text-3xl font-bold text-[#ebe9d8] mb-2">{value}</div>
-                <div className="text-[#ebe9d8]">{label}</div>
+                <div className="text-2xl md:text-3xl font-bold text-[#ebe9d8] mb-2">{value}</div>
+                <div className="text-[#ebe9d8] text-sm">{label}</div>
               </motion.div>
             ))}
           </div>
         </div>
       </motion.section>
 
-      {/* Our Story Section */}
-      <section className="py-16 bg-[#333033]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 bg-[#333033]">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      {/* Who We Are Section */}
+      <section className="py-20 bg-[#333033]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: '-50px' }}
               variants={fadeInLeft}
             >
+              <motion.div
+                className="inline-flex items-center gap-2 mb-4 text-[#ebe9d8]/70 text-sm font-medium tracking-widest uppercase"
+                variants={fadeInUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+              >
+                <TreePine className="h-4 w-4" />
+                Our Heritage
+              </motion.div>
               <motion.h2
-                className="text-3xl md:text-4xl font-bold text-[#ebe9d8] mb-6"
+                className="text-3xl md:text-5xl font-bold text-[#ebe9d8] mb-8 leading-tight"
                 variants={textVariants}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
               >
-                {'Our Story'.split('').map((letter, index) => (
+                {'Who We Are'.split('').map((letter, index) => (
                   <motion.span
                     key={index}
                     variants={letterVariants}
@@ -279,32 +313,32 @@ heartfelt warmth and authenticity.
                   </motion.span>
                 ))}
               </motion.h2>
-              <div className="space-y-4 text-[#ebe9d8] leading-relaxed">
+              <div className="space-y-5 text-[#ebe9d8]/90 leading-relaxed text-lg">
                 <motion.p variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                  Founded in 2023 by safari enthusiast Andre, The Bush Collection began as a small operation with a big dream: to share the incredible wildlife and landscapes of Africa with travelers from around the world.
+                  A family-developed safari brand with <span className="text-[#ebe9d8] font-semibold">deep heritage in tourism and conservation</span> in East Africa. Our business is derived from over 40 years of safari camp and lodge hospitality, with additional experience in the luxury destination sector.
                 </motion.p>
                 <motion.p variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                  What started as guided tours for friends and family has grown into one of Africa's most trusted safari companies. We've maintained our commitment to authentic experiences, conservation, and supporting local communities every step of the way.
+                  Our new and exciting venture comes at a time when the safari sector has never been so popular, with a <span className="text-[#ebe9d8] font-semibold">record number of travellers</span> visiting East Africa in 2023.
                 </motion.p>
                 <motion.p variants={fadeInUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                  Today, we work with local guides, conservation organizations, and communities across Tanzania and Kenya to create life-changing experiences that benefit both travelers and the places they visit.
+                  We are growing our Collection from not only our owned product, but welcoming in independent brands that hold the same service and quality ethic as we do — and who can capitalise on our exceptional market reach. We aim to develop <span className="text-[#ebe9d8] font-semibold italic">'tourism-conservation partnerships'</span>.
                 </motion.p>
               </div>
               <motion.div
-                className="mt-8"
+                className="mt-8 flex flex-wrap gap-3"
                 variants={staggerContainer}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
               >
                 <motion.div variants={staggerItem}>
-                  <Badge className="bg-green-100 text-green-800 mr-2">Conservation Partner</Badge>
+                  <Badge className="bg-[#ebe9d8] text-[#333033] px-3 py-1">40+ Years Heritage</Badge>
                 </motion.div>
                 <motion.div variants={staggerItem}>
-                  <Badge className="bg-blue-100 text-blue-800 mr-2">Community Focused</Badge>
+                  <Badge className="bg-[#ebe9d8] text-[#333033] px-3 py-1">Family Brand</Badge>
                 </motion.div>
                 <motion.div variants={staggerItem}>
-                  <Badge className="bg-orange-100 text-orange-800">Award Winning</Badge>
+                  <Badge className="bg-[#ebe9d8] text-[#333033] px-3 py-1">Tourism-Conservation Partnerships</Badge>
                 </motion.div>
               </motion.div>
             </motion.div>
@@ -315,11 +349,11 @@ heartfelt warmth and authenticity.
               viewport={{ once: true, margin: '-50px' }}
               variants={fadeInRight}
             >
-              <div className="bg-[#ebe9d8] p-4 rounded-lg">
+              <div className="bg-[#ebe9d8] p-4 rounded-2xl">
                 <img
-                 src="/images/PNG-LOGO (1).png"
-                 alt="Safari landscape"
-                 className="rounded-lg shadow-lg"
+                  src="/images/PNG-LOGO (1).png"
+                  alt="The Bush Collection"
+                  className="rounded-xl shadow-lg"
                 />
               </div>
               <motion.div
@@ -332,8 +366,8 @@ heartfelt warmth and authenticity.
                 <div className="flex items-center">
                   <Compass className="h-6 w-6 text-green-600 mr-3" />
                   <div>
-                    <div className="font-semibold text-[#333033]">2+ Years</div>
-                    <div className="text-sm text-[#333033]">Safari Experience</div>
+                    <div className="font-semibold text-[#333033]">40+ Years</div>
+                    <div className="text-sm text-[#333033]">Safari Heritage</div>
                   </div>
                 </div>
               </motion.div>
@@ -342,9 +376,110 @@ heartfelt warmth and authenticity.
         </div>
       </section>
 
-      {/* Values Section */}
+      {/* Vision & Mission Section */}
+      <section className="py-20 bg-[#ebe9d8]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            {/* Vision */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-50px' }}
+              variants={fadeInLeft}
+            >
+              <Card className="h-full bg-[#333033] border-none overflow-hidden relative group">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-green-400 to-green-600 rounded-l-lg"></div>
+                <CardContent className="p-8 md:p-10">
+                  <motion.div
+                    className="w-16 h-16 bg-[#ebe9d8] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
+                    whileHover={{ rotate: 5 }}
+                  >
+                    <Eye className="h-8 w-8 text-[#333033]" />
+                  </motion.div>
+                  <h3 className="text-2xl md:text-3xl font-bold text-[#ebe9d8] mb-4">Our Vision</h3>
+                  <p className="text-[#ebe9d8]/90 text-lg leading-relaxed">
+                    To be the preferred choice for travelers seeking <span className="font-semibold text-[#ebe9d8]">comfort, authenticity and unforgettable experiences</span> in every destination we serve.
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Mission */}
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: '-50px' }}
+              variants={fadeInRight}
+            >
+              <Card className="h-full bg-[#333033] border-none overflow-hidden relative group">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-amber-400 to-amber-600 rounded-l-lg"></div>
+                <CardContent className="p-8 md:p-10">
+                  <motion.div
+                    className="w-16 h-16 bg-[#ebe9d8] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300"
+                    whileHover={{ rotate: -5 }}
+                  >
+                    <Target className="h-8 w-8 text-[#333033]" />
+                  </motion.div>
+                  <h3 className="text-2xl md:text-3xl font-bold text-[#ebe9d8] mb-4">Our Mission</h3>
+                  <p className="text-[#ebe9d8]/90 text-lg leading-relaxed">
+                    To provide exceptional, personalized experiences in comfortable, welcoming environments, where every guest feels <span className="font-semibold text-[#ebe9d8]">at home and connected to the beauty of nature</span>.
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Founder Quote Section */}
       <motion.section
-        className="py-16 bg-[#ebe9d8]"
+        className="py-20 bg-[#333033] relative overflow-hidden"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-50px' }}
+        variants={fadeInUp}
+      >
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-10 left-10 w-64 h-64 border-2 border-[#ebe9d8] rounded-full"></div>
+          <div className="absolute bottom-10 right-10 w-96 h-96 border-2 border-[#ebe9d8] rounded-full"></div>
+        </div>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <motion.div
+            className="mb-8"
+            initial={{ opacity: 0, scale: 0 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, type: 'spring' }}
+          >
+            <Quote className="h-16 w-16 text-[#ebe9d8]/20 mx-auto" />
+          </motion.div>
+          <motion.blockquote
+            className="text-xl md:text-2xl lg:text-3xl text-[#ebe9d8] font-light italic leading-relaxed mb-10"
+            variants={fadeInUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+          >
+            "It is essential to me that the communities we collaborate with are actively engaged in safeguarding our wildlife, viewing it as a <span className="font-semibold not-italic text-[#ebe9d8]">valuable opportunity</span> rather than a mere commodity."
+          </motion.blockquote>
+          <motion.div
+            className="flex flex-col items-center gap-2"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+          >
+            <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#ebe9d8]/50 to-transparent mb-4"></div>
+            <p className="text-[#ebe9d8] font-bold text-xl tracking-wide">Andre du Plessis</p>
+            <p className="text-[#ebe9d8]/60 text-sm font-medium tracking-widest uppercase">Proud Owner</p>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Expressing Our Values Section */}
+      <motion.section
+        className="py-20 bg-[#ebe9d8]"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-50px' }}
@@ -352,17 +487,27 @@ heartfelt warmth and authenticity.
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            className="text-center mb-12"
+            className="text-center mb-16"
             variants={fadeInUp}
           >
+            <motion.div
+              className="inline-flex items-center gap-2 mb-4 text-[#333033]/60 text-sm font-medium tracking-widest uppercase"
+              variants={fadeInUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+            >
+              <Leaf className="h-4 w-4" />
+              What Drives Us
+            </motion.div>
             <motion.h2
-              className="text-3xl md:text-4xl font-bold text-[#333033] mb-4"
+              className="text-3xl md:text-5xl font-bold text-[#333033] mb-6"
               variants={textVariants}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
             >
-              {'Our Values'.split('').map((letter, index) => (
+              {'Expressing Our Values'.split('').map((letter, index) => (
                 <motion.span
                   key={index}
                   variants={letterVariants}
@@ -373,13 +518,13 @@ heartfelt warmth and authenticity.
               ))}
             </motion.h2>
             <motion.p
-              className="text-xl text-[#333033] max-w-3xl mx-auto"
+              className="text-xl text-[#333033]/80 max-w-3xl mx-auto leading-relaxed"
               variants={fadeInUp}
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
             >
-              Everything we do is guided by our commitment to conservation, community, and creating authentic experiences
+              Conservation, community, and education are not just values — they are the foundation of everything we build.
             </motion.p>
           </motion.div>
 
@@ -398,15 +543,15 @@ heartfelt warmth and authenticity.
                 }}
                 transition={{ duration: 0.3 }}
               >
-                <Card className="h-full hover:shadow-lg transition-shadow bg-[#333033]">
-                  <CardContent className="p-6">
+                <Card className="h-full hover:shadow-lg transition-shadow bg-[#333033] border-none">
+                  <CardContent className="p-8">
                     <div className="flex items-start">
-                      <div className="w-12 h-12 bg-[#ebe9d8] rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                        <Icon className="h-6 w-6 text-green-600" />
+                      <div className="w-14 h-14 bg-[#ebe9d8] rounded-2xl flex items-center justify-center mr-5 flex-shrink-0">
+                        <Icon className="h-7 w-7 text-[#333033]" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold text-[#ebe9d8] mb-2">{title}</h3>
-                        <p className="text-[#ebe9d8]">{description}</p>
+                        <h3 className="text-xl font-bold text-[#ebe9d8] mb-3">{title}</h3>
+                        <p className="text-[#ebe9d8]/85 leading-relaxed">{description}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -568,30 +713,50 @@ heartfelt warmth and authenticity.
         </div>
       </motion.section>
 
-      {/* Conservation Section */}
+      {/* Conservation Partnership Section */}
       <motion.section
-        className="py-16 bg-green-600 text-white"
+        className="py-20 relative overflow-hidden"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-50px' }}
         variants={fadeInUp}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        {/* Background image with overlay */}
+        <div className="absolute inset-0">
+          <img
+            src="https://www.azolifesciences.com/image-handler/ts/20220215094450/ri/1000/src/images/Article_Images/ImageForArticle_714_16449362895935733.jpg"
+            alt="Wildlife conservation"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-green-900/90 via-green-800/85 to-green-900/90"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: '-50px' }}
               variants={fadeInLeft}
             >
+              <motion.div
+                className="inline-flex items-center gap-2 mb-4 text-green-200/80 text-sm font-medium tracking-widest uppercase"
+                variants={fadeInUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+              >
+                <TreePine className="h-4 w-4" />
+                Conservation & Community
+              </motion.div>
               <motion.h2
-                className="text-3xl md:text-4xl font-bold mb-6"
+                className="text-3xl md:text-5xl font-bold mb-8 text-white"
                 variants={textVariants}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
               >
-                {'Conservation Partnership'.split('').map((letter, index) => (
+                {'Tourism-Conservation'.split('').map((letter, index) => (
                   <motion.span
                     key={index}
                     variants={letterVariants}
@@ -600,51 +765,82 @@ heartfelt warmth and authenticity.
                     {letter === ' ' ? '\u00A0' : letter}
                   </motion.span>
                 ))}
+                <br />
+                {'Partnerships'.split('').map((letter, index) => (
+                  <motion.span
+                    key={`line2-${index}`}
+                    variants={letterVariants}
+                    className="inline-block"
+                  >
+                    {letter === ' ' ? '\u00A0' : letter}
+                  </motion.span>
+                ))}
               </motion.h2>
               <motion.div
-                className="space-y-4 text-green-100"
+                className="space-y-5 text-green-50/90 text-lg leading-relaxed"
                 variants={staggerContainer}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
               >
                 <motion.p variants={staggerItem}>
-                  We believe that tourism should benefit wildlife and local communities. That's why we partner with conservation organizations and donate 5% of our profits to wildlife protection initiatives.
+                  All of our properties – now and in the future – are <span className="font-semibold text-white">founded in partnership with local communities</span>. This is critical for the long-term preservation of our primary asset – our wildlife.
                 </motion.p>
                 <motion.p variants={staggerItem}>
-                  Our tours are designed to minimize environmental impact while maximizing positive contributions to conservation efforts and local economies.
+                  In 2025, each of our properties will be required to enter into <span className="font-semibold text-white">educating the next generation of conservationists</span>. All donor funding goes directly to schools and communities – because we believe education is at the forefront of conservation.
                 </motion.p>
               </motion.div>
               <motion.div
-                className="mt-8 flex flex-wrap gap-4"
+                className="mt-8 flex flex-wrap gap-3"
                 variants={staggerContainer}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
               >
                 <motion.div variants={staggerItem}>
-                  <Badge className="bg-white text-green-600">Carbon Neutral Tours</Badge>
+                  <Badge className="bg-white/20 text-white backdrop-blur-sm border border-white/30 px-3 py-1">Community Partnerships</Badge>
                 </motion.div>
                 <motion.div variants={staggerItem}>
-                  <Badge className="bg-white text-green-600">Local Community Support</Badge>
+                  <Badge className="bg-white/20 text-white backdrop-blur-sm border border-white/30 px-3 py-1">Education First</Badge>
                 </motion.div>
                 <motion.div variants={staggerItem}>
-                  <Badge className="bg-white text-green-600">Wildlife Protection</Badge>
+                  <Badge className="bg-white/20 text-white backdrop-blur-sm border border-white/30 px-3 py-1">Wildlife Protection</Badge>
+                </motion.div>
+                <motion.div variants={staggerItem}>
+                  <Badge className="bg-white/20 text-white backdrop-blur-sm border border-white/30 px-3 py-1">Recognized Programmes</Badge>
                 </motion.div>
               </motion.div>
             </motion.div>
+
+            {/* Right side - impact highlights */}
             <motion.div
-              className="relative"
+              className="space-y-6"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, margin: '-50px' }}
-              variants={fadeInRight}
+              variants={staggerContainer}
             >
-              <img
-                src="https://www.azolifesciences.com/image-handler/ts/20220215094450/ri/1000/src/images/Article_Images/ImageForArticle_714_16449362895935733.jpg"
-                alt="Wildlife conservation"
-                className="rounded-lg shadow-lg"
-              />
+              {[
+                { icon: BookOpen, title: 'Education', text: 'Funding goes directly to schools and communities to nurture future conservationists.' },
+                { icon: Handshake, title: 'Local Partnerships', text: 'Every property is built on a foundation of collaboration with the communities around it.' },
+                { icon: Shield, title: 'Recognized Standards', text: 'Externally recognized conservation and community programmes ensure accountability.' }
+              ].map((item, index) => (
+                <motion.div
+                  key={index}
+                  variants={staggerItem}
+                  className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-6 hover:bg-white/15 transition-colors duration-300"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <item.icon className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-bold text-lg mb-1">{item.title}</h4>
+                      <p className="text-green-50/80 leading-relaxed">{item.text}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
             </motion.div>
           </div>
         </div>
@@ -652,7 +848,7 @@ heartfelt warmth and authenticity.
 
       {/* CTA Section */}
       <motion.section
-        className="py-16 bg-[#ebe9d8]"
+        className="py-20 bg-[#ebe9d8]"
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-50px' }}
@@ -660,7 +856,7 @@ heartfelt warmth and authenticity.
       >
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <motion.h2
-            className="text-3xl md:text-4xl font-bold text-[#333033] mb-4"
+            className="text-3xl md:text-5xl font-bold text-[#333033] mb-6"
             variants={textVariants}
             initial="hidden"
             whileInView="visible"
@@ -677,13 +873,13 @@ heartfelt warmth and authenticity.
             ))}
           </motion.h2>
           <motion.p
-            className="text-xl text-[#333033] mb-8"
+            className="text-xl text-[#333033]/80 mb-10 leading-relaxed"
             variants={fadeInUp}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
           >
-            Join thousands of travelers who have experienced the magic of Africa with us
+            Join travelers from around the world who have experienced the magic of East Africa with a brand built on 40 years of heritage, authenticity, and heart.
           </motion.p>
           <motion.div
             className="flex flex-col sm:flex-row gap-4 justify-center"
