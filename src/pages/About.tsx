@@ -30,16 +30,16 @@ export default function About() {
   const stats = [
     { icon: Globe, label: 'Countries', value: 'Kenya & Tanzania' },
     { icon: Award, label: 'Years of Heritage', value: '40+' },
-    { icon: Users, label: 'Record Visitors in 2023', value: 'Historic High' },
-    { icon: Star, label: 'Average Rating', value: '4.8' }
+    { icon: Users, label: 'Record Visitors in 2025', value: 'Historic High' },
+    { icon: Star, label: 'Average Rating', value: '4.5' }
   ];
 
   const team = [
     {
       name: 'Andre Du Plessis',
-      role: 'Founder & CEO',
-      image: '',
-      bio: 'Safari enthusiast with 20+ years of African travel experience'
+      role: 'Founder & Proud Owner',
+      image: 'https://res.cloudinary.com/dfaakg2ds/image/upload/v1772024009/Andre_Pic_wyfgwy.png',
+      bio: 'Safari enthusiast with 40+ years of African travel experience'
     },
     {
       name: 'James Mwangi',
@@ -54,16 +54,16 @@ export default function About() {
       bio: 'A passionate hotelier dedicated to creating memorable guest experiences while driving sales growth and operational excellence.'
     },
     {
-      name: 'Paul',
-      role: 'General Manager',
-      image: '',
-      bio: 'Born in Kenya, passionate about sharing African culture'
-    },
-    {
       name: 'Molly Obondi',
       role: 'Sales and reservations',
       image: 'https://res.cloudinary.com/dfaakg2ds/image/upload/v1769681709/Molly_uutxyb.jpg',
       bio: 'With a genuine love for hospitality, takes pride in connecting guests with the perfect stay experience.'
+    },
+    {
+      name: 'Paul Muchiri',
+      role: 'General Manager',
+      image: 'https://res.cloudinary.com/dfaakg2ds/image/upload/v1772015030/Paul_jguahv.png',
+      bio: 'Born in Kenya, passionate about sharing African culture'
     },
     {
       name: 'Christine Mutie',

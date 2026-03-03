@@ -6,6 +6,8 @@ interface User {
   email: string
   fullName?: string
   name?: string
+  avatar?: string
+  provider?: string
 }
 
 interface AuthState {
@@ -76,7 +78,9 @@ export const useAuthState = (): AuthState & AuthExtras => {
           setUser({
             id: response.data.user.id,
             email: response.data.user.email,
-            fullName: response.data.user.fullName
+            fullName: response.data.user.fullName,
+            avatar: response.data.user.avatar,
+            provider: response.data.user.provider,
           })
         }
       } catch (error) {

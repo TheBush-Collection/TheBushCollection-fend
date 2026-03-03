@@ -1,10 +1,6 @@
-import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Star, MapPin, Users, Calendar, Clock, Camera, Binoculars, Plane, Car, Utensils, Shield, Check, Search, Filter, Building2, ImageOff, Sparkles } from 'lucide-react';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Star, MapPin, Users, Calendar, Clock, Check, Search, ChevronDown, ArrowRight, ArrowUpRight, ImageOff, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useBackendPackages } from '@/hooks/useBackendPackages';
 import { Package } from '@/types/package';
@@ -16,6 +12,27 @@ export default function Packages() {
   const [priceFilter, setPriceFilter] = useState('all');
   const [durationFilter, setDurationFilter] = useState('all');
   const [sortBy, setSortBy] = useState<'featured' | 'price-low' | 'price-high' | 'rating' | 'duration'>('featured');
+
+  /* ── dropdown state ── */
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [priceOpen, setPriceOpen] = useState(false);
+  const [durationOpen, setDurationOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+  const catRef = useRef<HTMLDivElement>(null);
+  const priceRef = useRef<HTMLDivElement>(null);
+  const durRef = useRef<HTMLDivElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (catRef.current && !catRef.current.contains(e.target as Node)) setCategoryOpen(false);
+      if (priceRef.current && !priceRef.current.contains(e.target as Node)) setPriceOpen(false);
+      if (durRef.current && !durRef.current.contains(e.target as Node)) setDurationOpen(false);
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) setSortOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   // Convert price filter to min/max values for API
   const getPriceRange = (filter: string) => {
@@ -73,539 +90,639 @@ export default function Packages() {
     return sortedPackages.filter(p => p.featured);
   }, [sortedPackages]);
 
+  /* ── price label helper ── */
+  const priceLabel = (v: string) => {
+    if (v === 'budget') return 'Under $2,500';
+    if (v === 'mid') return '$2,500 – $3,500';
+    if (v === 'luxury') return '$3,500+';
+    return 'All Prices';
+  };
+
+  const sortLabel = (v: string) => {
+    if (v === 'price-low') return 'Price: Low → High';
+    if (v === 'price-high') return 'Price: High → Low';
+    if (v === 'rating') return 'Highest Rated';
+    if (v === 'duration') return 'Duration';
+    return 'Featured First';
+  };
+
+  /* ── LOADING ── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#1a1816]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-[#ffffff] mb-4">Loading packages...</h1>
-            <p className="text-[#ffffff]/80">Please wait while we load the available packages.</p>
+      <div className="min-h-screen bg-[#292524] flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative mx-auto w-14 h-14 mb-8">
+            <div className="absolute inset-0 border border-[#c9a961]/20 animate-ping" />
+            <div className="absolute inset-3 border border-[#c9a961]/40 animate-pulse" />
           </div>
+          <p className="text-white/25 text-[10px] tracking-[0.5em] uppercase font-light">Loading Packages</p>
         </div>
       </div>
     );
   }
 
+  /* ── ERROR ── */
   if (error) {
     return (
-      <div className="min-h-screen bg-[#1a1816]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-[#ffffff] mb-4">Error Loading Packages</h1>
-            <p className="text-[#ffffff]/80 mb-6">{error}</p>
-            <Button onClick={() => window.location.reload()} className="bg-[#ebe9d8] hover:bg-[#c9a961] text-[#000000]">Retry</Button>
-          </div>
+      <div className="min-h-screen bg-[#292524] flex items-center justify-center px-6">
+        <div className="text-center max-w-md">
+          <h1 className="text-2xl font-extralight text-white/80 mb-4">Something went wrong</h1>
+          <p className="text-white/30 text-sm font-light mb-8">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="h-12 px-8 bg-[#c9a961] hover:bg-[#b8943d] text-[#292524] text-xs tracking-[0.2em] uppercase font-medium transition-all duration-300"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1816]">
-      {/* Hero Section */}
-      <section className="relative py-24 bg-[#2a2623] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-[#ffffff]">
-            Safari Tour Packages
-          </h1>
-          <p className="text-xl md:text-2xl text-[#ffffff]/80 max-w-3xl mx-auto mb-8">
-            Carefully crafted safari experiences with expert guides, luxury accommodations, and unforgettable adventures
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-[#c9a961] hover:bg-[#8b6f47] text-[#000000] px-8 py-3">
-              Browse All Packages
-            </Button>
-            <Link to="/contact">
-              <Button size="lg" className="bg-[#333033] hover:bg-[#8b6f47] text-[#ffffff] px-8 py-3">
-                Custom Package
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+    <div className="min-h-screen bg-[#292524]">
 
-      {/* Search & Filters */}
-      <section className="py-12 bg-[#ebe9d8]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="bg-[#c9a961] border-[#8b6f47]">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#9ca3af] h-5 w-5" />
-                    <Input
-                      placeholder="Search packages by destination, property, activities, or highlights..."
-                      className="pl-10 h-12 bg-[#ffffff] text-[#000000] border-[#8b6f47] placeholder:text-[#9ca3af]"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="sm:w-40">
-                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                      <SelectTrigger className="h-12">
-                        <SelectValue placeholder="Category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categories.map(category => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="sm:w-40">
-                    <Select value={priceFilter} onValueChange={setPriceFilter}>
-                      <SelectTrigger className="h-12">
-                        <SelectValue placeholder="Price Range" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Prices</SelectItem>
-                        <SelectItem value="budget">Under $2,500</SelectItem>
-                        <SelectItem value="mid">$2,500 - $3,500</SelectItem>
-                        <SelectItem value="luxury">$3,500+</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="sm:w-40">
-                    <Select value={durationFilter} onValueChange={setDurationFilter}>
-                      <SelectTrigger className="h-12">
-                        <SelectValue placeholder="Duration" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Durations</SelectItem>
-                        {durations.map(duration => (
-                          <SelectItem key={duration} value={duration}>
-                            {duration} Days
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="sm:w-40">
-                    <Select value={sortBy} onValueChange={(value) => setSortBy(value as typeof sortBy)}>
-                      <SelectTrigger className="h-12">
-                        <SelectValue placeholder="Sort By" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="featured">Featured First</SelectItem>
-                        <SelectItem value="price-low">Price: Low to High</SelectItem>
-                        <SelectItem value="price-high">Price: High to Low</SelectItem>
-                        <SelectItem value="rating">Highest Rated</SelectItem>
-                        <SelectItem value="duration">Duration</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+      {/* ═══════════════════════════════════════════
+          HERO
+      ═══════════════════════════════════════════ */}
+      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
+        {/* bg image with Ken Burns */}
+        <motion.div
+          className="absolute inset-0"
+          animate={{ scale: [1, 1.08] }}
+          transition={{ duration: 30, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
+        >
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url('https://obbrmdtdcevckizykfzu.supabase.co/storage/v1/object/sign/images/Mwazaro-1.jpg?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8zMmQyZDM5YS1mOGUyLTQwNGItOTJlMy1mZjc1ZGJjYmQ5ZDUiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJpbWFnZXMvTXdhemFyby0xLmpwZyIsImlhdCI6MTc2MzYyOTcwNCwiZXhwIjoxNzk1MTY1NzA0fQ.Ihw6Bmfj9cx-SsrMzKzH0bt-4Qej5J0sfxw-JgKWllA')`
+            }}
+          />
+        </motion.div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#292524]/60 via-[#292524]/40 to-[#292524]" />
 
-{/* Featured Packages */}
-{featuredPackages.length > 0 && (
-  <section className="py-16 bg-[#1a1816]">
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-[#ffffff] mb-4">
-          Featured Safari Packages
-        </h2>
-        <p className="text-xl text-[#ffffff]/80">
-          Our most popular and highly-rated safari experiences
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {featuredPackages.map((pkg) => (
-          <Card key={pkg.id} className="overflow-hidden hover:shadow-xl transition-shadow bg-[#ebe9d8] border-[#8b6f47]">
-            <div className="relative h-64">
-              <img
-                src={pkg.image}
-                alt={pkg.name}
-                className="w-full h-full object-cover"
-              />
-              {/* Featured and Itinerary badges */}
-              <div className="absolute top-4 left-4 flex flex-col gap-2">
-                <Badge className="bg-[#f59e0b] text-white border-0">
-                  Featured
-                </Badge>
-                {pkg.itinerary && pkg.itinerary.length > 0 && (
-                  <Badge className="bg-[#003580] text-white text-xs border-0">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    Itinerary
-                  </Badge>
-                )}
-              </div>
-              <div className="absolute top-4 right-4">
-                <Badge className="bg-[#c9a961] text-[#000000] border-0">
-                  Save ${pkg.originalPrice - pkg.price}
-                </Badge>
-              </div>
+        <div className="relative z-10 text-center px-6 max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <div className="w-10 h-[1px] bg-[#c9a961]" />
+              <span className="text-[#c9a961] text-[10px] tracking-[0.5em] uppercase font-medium">Curated Journeys</span>
+              <div className="w-10 h-[1px] bg-[#c9a961]" />
             </div>
 
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="text-xl font-bold text-[#2a2623] mb-1">
-                    {pkg.name}
-                  </h3>
-                  <p className="text-sm text-[#2a2623]/80 flex items-center">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {getDisplayLocation(pkg)}
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <Star className="h-4 w-4 text-[#f59e0b] mr-1" />
-                  <span className="text-sm font-medium text-[#2a2623]">{pkg.rating}</span>
-                </div>
-              </div>
+            <h1 className="text-5xl md:text-7xl font-extralight text-white/90 leading-[1.05] mb-6">
+              Safari <span className="italic text-[#c9a961]/80">Packages</span>
+            </h1>
 
-              <div className="flex items-center gap-4 text-sm text-[#2a2623]/80 mb-4">
-                <div className="flex items-center">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>{pkg.duration}</span>
-                </div>
-                <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-1" />
-                  <span>{pkg.groupSize}</span>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <p className="text-sm text-[#2a2623] mb-2">Package Highlights:</p>
-                <div className="space-y-1">
-                  {pkg.highlights.slice(0, 3).map((highlight, index) => (
-                    <div key={index} className="flex items-center text-sm text-[#2a2623]/80">
-                      <Check className="h-3 w-3 text-[#c9a961] mr-2" />
-                      <span>{highlight}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-[#c9a961]">
-                      ${pkg.price.toLocaleString()}
-                    </span>
-                    <span className="text-sm text-[#2a2623]/60 line-through">
-                      ${pkg.originalPrice.toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#2a2623]/60">per person</p>
-                </div>
-                <Badge variant="outline" className="text-xs border-[#8b6f47] text-[#2a2623]">
-                  {pkg.category}
-                </Badge>
-              </div>
-
-              <div className="flex gap-2">
-                <Link to={`/book?package=${(pkg as any).slug || slugify(pkg.name) || pkg.id}`} className="flex-1">
-                  <Button className="w-full bg-[#c9a961] hover:bg-[#8b6f47] text-[#000000]">
-                    Book Now
-                  </Button>
-                </Link>
-                <Link to={`/package/${(pkg as any).slug || slugify(pkg.name) || pkg.id}`} className="flex-1">
-                  <Button className="w-full bg-[#333033] hover:bg-[#8b6f47] text-[#ffffff]">
-                    View Details
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </div>
-  </section>
-)}
-
-{/* All Packages */}
-<section className="py-16 bg-[#2a2623]">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="flex items-center justify-between mb-8">
-      <h2 className="text-3xl font-bold text-[#ffffff]">
-        All Safari Packages
-      </h2>
-      <div className="flex items-center gap-4">
-        <span className="text-[#ffffff]/80">
-          {sortedPackages.length} packages found
-        </span>
-      </div>
-    </div>
-
-    {sortedPackages.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {sortedPackages.map((pkg) => (
-          <Card key={pkg.id} className="overflow-hidden hover:shadow-xl transition-shadow bg-[#ebe9d8] border-[#8b6f47]">
-            <div className="relative h-64 bg-[#333033]">
-              {pkg.image ? (
-                <img
-                  src={pkg.image}
-                  alt={pkg.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[#333033] text-[#ffffff]/50">
-                  <ImageOff className="h-12 w-12" />
-                </div>
-              )}
-              {/* Itinerary indicator */}
-              {pkg.itinerary && pkg.itinerary.length > 0 && (
-                <div className="absolute top-4 left-4">
-                  <Badge className="bg-[#003580] text-white text-xs border-0">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    Itinerary
-                  </Badge>
-                </div>
-              )}
-              <div className="absolute top-4 right-4">
-                <Badge className="bg-[#c9a961] text-[#000000] border-0">
-                  Save ${pkg.originalPrice - pkg.price}
-                </Badge>
-              </div>
-              <div className="absolute bottom-4 left-4">
-                <Badge className={`${
-                  pkg.difficulty === 'easy' ? 'bg-[#34E0A1]' :
-                  pkg.difficulty === 'moderate' ? 'bg-[#f59e0b]' :
-                  'bg-[#c9a961]'
-                } text-[#000000] border-0`}>
-                  {pkg.difficulty.charAt(0).toUpperCase() + pkg.difficulty.slice(1)}
-                </Badge>
-              </div>
-            </div>
-
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="text-xl font-bold text-[#2a2623] mb-1">
-                    {pkg.name}
-                  </h3>
-                  <p className="text-sm text-[#2a2623]/80 flex items-center">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    {getDisplayLocation(pkg)}
-                  </p>
-                </div>
-                <div className="flex items-center">
-                  <Star className="h-4 w-4 text-[#f59e0b] mr-1" />
-                  <span className="text-sm font-medium text-[#2a2623]">{pkg.rating}</span>
-                  <span className="text-xs text-[#2a2623]/60 ml-1">({pkg.reviews})</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 text-sm text-[#2a2623]/80 mb-4">
-                <div className="flex items-center">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>{pkg.duration}</span>
-                </div>
-                <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-1" />
-                  <span>{pkg.groupSize}</span>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <p className="text-sm text-[#2a2623] mb-2">Package Highlights:</p>
-                <div className="space-y-1">
-                  {pkg.highlights.slice(0, 3).map((highlight, index) => (
-                    <div key={index} className="flex items-center text-sm text-[#2a2623]/80">
-                      <Check className="h-3 w-3 text-[#c9a961] mr-2" />
-                      <span>{highlight}</span>
-                    </div>
-                  ))}
-                  {pkg.highlights.length > 3 && (
-                    <p className="text-xs text-[#2a2623]/60">+{pkg.highlights.length - 3} more highlights</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-[#c9a961]">
-                      ${pkg.price.toLocaleString()}
-                    </span>
-                    <span className="text-sm text-[#2a2623]/60 line-through">
-                      ${pkg.originalPrice.toLocaleString()}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#2a2623]/60">per person</p>
-                </div>
-                <Badge variant="outline" className="text-xs border-[#8b6f47] text-[#2a2623]">
-                  {pkg.category}
-                </Badge>
-              </div>
-
-              <div className="flex gap-2">
-                <Link to={`/book?package=${(pkg as any).slug || slugify(pkg.name) || pkg.id}`} className="flex-1">
-                  <Button className="w-full bg-[#c9a961] hover:bg-[#8b6f47] text-[#000000]">
-                    Book Now
-                  </Button>
-                </Link>
-                <Link to={`/package/${(pkg as any).slug || slugify(pkg.name) || pkg.id}`} className="flex-1">
-                  <Button className="w-full bg-[#333033] hover:bg-[#8b6f47] text-[#ffffff]">
-                    View Details
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    ) : (
-      <div className="text-center py-16">
-        <div className="max-w-3xl mx-auto rounded-3xl border border-[#8b6f47]/70 bg-gradient-to-br from-[#1a1816] via-[#2a2623] to-[#1a1816] px-8 py-12 shadow-2xl relative overflow-hidden">
-          <div className="absolute -top-16 -right-10 h-40 w-40 rounded-full bg-[#c9a961]/20 blur-3xl" />
-          <div className="absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-[#8b6f47]/20 blur-3xl" />
-
-          <div className="relative z-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#c9a961]/40 bg-[#0f0e0d]/70 px-4 py-1 text-xs uppercase tracking-[0.2em] text-[#c9a961] mb-6">
-              <Sparkles className="h-3 w-3" />
-              Curating Experiences
-            </div>
-
-            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#c9a961]/15 text-[#c9a961]">
-              <Search className="h-7 w-7" />
-            </div>
-
-            <h3 className="text-3xl md:text-4xl font-semibold text-[#ffffff] mb-3">
-              The next chapters are being written
-            </h3>
-            <p className="text-[#ffffff]/80 mb-6 leading-relaxed">
-              Our curators are polishing a new collection of bush escapes and beach retreats.
-              Expect early-morning game drives, private sundowners, and seaside serenity — coming soon.
+            <p className="text-white/35 text-base md:text-lg font-light leading-relaxed max-w-2xl mx-auto mb-10">
+              Carefully crafted safari experiences with expert guides, luxury accommodations,
+              and unforgettable adventures across East Africa
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Button
-                onClick={() => {
-                  setSearchTerm('');
-                  setCategoryFilter('all');
-                  setPriceFilter('all');
-                  setDurationFilter('all');
-                  setSortBy('featured');
-                }}
-                className="bg-[#c9a961] hover:bg-[#8b6f47] text-[#000000]"
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href="#all-packages"
+                className="h-13 px-10 bg-[#c9a961] hover:bg-[#b8943d] text-[#292524] text-xs tracking-[0.2em] uppercase font-medium transition-all duration-300 flex items-center justify-center gap-3"
               >
-                Reset Filters
-              </Button>
-              <span className="text-xs text-[#ffffff]/60">
-                New departures posted weekly
-              </span>
+                <span>Browse All</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+              <Link
+                to="/contact"
+                className="h-13 px-10 border border-white/[0.12] hover:border-white/[0.25] text-white/60 hover:text-white/80 text-xs tracking-[0.2em] uppercase font-medium transition-all duration-300 flex items-center justify-center gap-3"
+              >
+                <span>Custom Package</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </Link>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
-    )}
-  </div>
-</section>
 
-      {/* Package Categories 
-      <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Browse by Safari Type
-            </h2>
-            <p className="text-xl text-gray-600">
-              Find the perfect safari experience for your adventure style
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {categories.map(category => {
-              const categoryPackages = tourPackages.filter(p => p.category === category);
-              const avgPrice = Math.round(categoryPackages.reduce((sum, p) => sum + p.price, 0) / categoryPackages.length);
-              const packagesWithItinerary = categoryPackages.filter(p => p.itinerary && p.itinerary.length > 0).length;
-              const icon = category.includes('Wildlife') ? Binoculars :
-                          category.includes('Luxury') ? Star :
-                          category.includes('Adventure') ? Camera :
-                          category.includes('Water') ? Car :
-                          category.includes('Desert') ? Plane :
-                          Users;
-              const IconComponent = icon;
-
-              return (
-                <Card key={category} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setCategoryFilter(category)}>
-                  <CardContent className="p-8 text-center">
-                    <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <IconComponent className="h-8 w-8 text-yellow-600" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {category}
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      {categoryPackages.length} packages available
-                      {packagesWithItinerary > 0 && (
-                        <span className="text-blue-600"> • {packagesWithItinerary} with detailed itineraries</span>
-                      )}
-                    </p>
-                    <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
-                      <span className="flex items-center">
-                        From ${avgPrice.toLocaleString()}
-                      </span>
-                      <span className="flex items-center">
-                        <Star className="h-4 w-4 mr-1 text-yellow-500" />
-                        {(categoryPackages.reduce((sum, p) => sum + p.rating, 0) / categoryPackages.length).toFixed(1)}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section> */}
-
-      {/* CTA Section */}
-      <section className="py-16 bg-[#ebe9d8] text-[#2a2623]">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-[#2a2623]">
-            Ready for Your Safari Adventure?
-          </h2>
-          <p className="text-xl mb-8 text-[#2a2623]/80">
-            Book your dream safari package today and create memories that will last a lifetime
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-[#c9a961] hover:bg-[#8b6f47] text-[#000000] px-8 py-3">
-              Book Any Package
-            </Button>
-            <Link to="/contact">
-              <Button size="lg" className="bg-[#333033] hover:bg-[#8b6f47] text-[#ffffff] px-8 py-3">
-                Speak to Expert
-              </Button>
-            </Link>
-          </div>
+        {/* Vertical accent */}
+        <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden lg:block">
+          <span className="text-[9px] tracking-[0.5em] uppercase text-white/10 font-light [writing-mode:vertical-lr] rotate-180">
+            Est. 1983 — Curated Safari Experiences
+          </span>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-[#2a2623] text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      {/* ═══════════════════════════════════════════
+          SEARCH & FILTERS
+      ═══════════════════════════════════════════ */}
+      <section className="relative z-20 -mt-8">
+        <div className="max-w-6xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="bg-[#322e2b] border border-white/[0.06] p-6 md:p-8"
+          >
+            {/* Search */}
+            <div className="relative mb-6">
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+              <input
+                placeholder="Search packages by destination, property, activities, or highlights…"
+                className="w-full h-13 pl-12 pr-5 bg-transparent text-white/80 border border-white/[0.08] hover:border-white/[0.15] focus:border-[#c9a961]/40 placeholder:text-white/15 text-sm font-light tracking-wide outline-none transition-all duration-300"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            {/* Filter row */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Category */}
+              <div ref={catRef} className="relative flex-1">
+                <button
+                  onClick={() => { setCategoryOpen(!categoryOpen); setPriceOpen(false); setDurationOpen(false); setSortOpen(false); }}
+                  className="w-full h-12 px-5 bg-transparent border border-white/[0.08] hover:border-white/[0.15] text-white/50 text-xs tracking-[0.15em] uppercase font-light flex items-center justify-between transition-all duration-300"
+                >
+                  <span>{categoryFilter === 'all' ? 'All Categories' : categoryFilter}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${categoryOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {categoryOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute z-50 mt-1 w-full bg-[#322e2b] border border-white/[0.08] shadow-xl max-h-52 overflow-y-auto"
+                    >
+                      <button onClick={() => { setCategoryFilter('all'); setCategoryOpen(false); }} className={`w-full text-left px-5 py-3 text-xs tracking-wide font-light transition-colors ${categoryFilter === 'all' ? 'text-[#c9a961] bg-white/[0.03]' : 'text-white/40 hover:text-white/60 hover:bg-white/[0.02]'}`}>All Categories</button>
+                      {categories.map(c => (
+                        <button key={c} onClick={() => { setCategoryFilter(c); setCategoryOpen(false); }} className={`w-full text-left px-5 py-3 text-xs tracking-wide font-light transition-colors ${categoryFilter === c ? 'text-[#c9a961] bg-white/[0.03]' : 'text-white/40 hover:text-white/60 hover:bg-white/[0.02]'}`}>{c}</button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Price */}
+              <div ref={priceRef} className="relative flex-1">
+                <button
+                  onClick={() => { setPriceOpen(!priceOpen); setCategoryOpen(false); setDurationOpen(false); setSortOpen(false); }}
+                  className="w-full h-12 px-5 bg-transparent border border-white/[0.08] hover:border-white/[0.15] text-white/50 text-xs tracking-[0.15em] uppercase font-light flex items-center justify-between transition-all duration-300"
+                >
+                  <span>{priceLabel(priceFilter)}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${priceOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {priceOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute z-50 mt-1 w-full bg-[#322e2b] border border-white/[0.08] shadow-xl"
+                    >
+                      {['all', 'budget', 'mid', 'luxury'].map(v => (
+                        <button key={v} onClick={() => { setPriceFilter(v); setPriceOpen(false); }} className={`w-full text-left px-5 py-3 text-xs tracking-wide font-light transition-colors ${priceFilter === v ? 'text-[#c9a961] bg-white/[0.03]' : 'text-white/40 hover:text-white/60 hover:bg-white/[0.02]'}`}>{priceLabel(v)}</button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Duration */}
+              <div ref={durRef} className="relative flex-1">
+                <button
+                  onClick={() => { setDurationOpen(!durationOpen); setCategoryOpen(false); setPriceOpen(false); setSortOpen(false); }}
+                  className="w-full h-12 px-5 bg-transparent border border-white/[0.08] hover:border-white/[0.15] text-white/50 text-xs tracking-[0.15em] uppercase font-light flex items-center justify-between transition-all duration-300"
+                >
+                  <span>{durationFilter === 'all' ? 'All Durations' : `${durationFilter} Days`}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${durationOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {durationOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute z-50 mt-1 w-full bg-[#322e2b] border border-white/[0.08] shadow-xl max-h-52 overflow-y-auto"
+                    >
+                      <button onClick={() => { setDurationFilter('all'); setDurationOpen(false); }} className={`w-full text-left px-5 py-3 text-xs tracking-wide font-light transition-colors ${durationFilter === 'all' ? 'text-[#c9a961] bg-white/[0.03]' : 'text-white/40 hover:text-white/60 hover:bg-white/[0.02]'}`}>All Durations</button>
+                      {durations.map(d => (
+                        <button key={d} onClick={() => { setDurationFilter(d); setDurationOpen(false); }} className={`w-full text-left px-5 py-3 text-xs tracking-wide font-light transition-colors ${durationFilter === d ? 'text-[#c9a961] bg-white/[0.03]' : 'text-white/40 hover:text-white/60 hover:bg-white/[0.02]'}`}>{d} Days</button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Sort */}
+              <div ref={sortRef} className="relative flex-1">
+                <button
+                  onClick={() => { setSortOpen(!sortOpen); setCategoryOpen(false); setPriceOpen(false); setDurationOpen(false); }}
+                  className="w-full h-12 px-5 bg-transparent border border-white/[0.08] hover:border-white/[0.15] text-white/50 text-xs tracking-[0.15em] uppercase font-light flex items-center justify-between transition-all duration-300"
+                >
+                  <span>{sortLabel(sortBy)}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${sortOpen ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {sortOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute z-50 mt-1 w-full bg-[#322e2b] border border-white/[0.08] shadow-xl"
+                    >
+                      {(['featured', 'price-low', 'price-high', 'rating', 'duration'] as const).map(v => (
+                        <button key={v} onClick={() => { setSortBy(v); setSortOpen(false); }} className={`w-full text-left px-5 py-3 text-xs tracking-wide font-light transition-colors ${sortBy === v ? 'text-[#c9a961] bg-white/[0.03]' : 'text-white/40 hover:text-white/60 hover:bg-white/[0.02]'}`}>{sortLabel(v)}</button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          FEATURED PACKAGES
+      ═══════════════════════════════════════════ */}
+      {featuredPackages.length > 0 && (
+        <section className="py-24 bg-[#292524]">
+          <div className="max-w-6xl mx-auto px-6">
+            {/* Section header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+              className="mb-16"
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-8 h-[1px] bg-[#c9a961]" />
+                <span className="text-[#c9a961] text-[10px] tracking-[0.5em] uppercase font-medium">Editor's Selection</span>
+              </div>
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <h2 className="text-3xl md:text-4xl font-extralight text-white/90 leading-tight">
+                  Featured <span className="italic text-[#c9a961]/80">Packages</span>
+                </h2>
+                <p className="text-white/30 text-sm font-light max-w-md">
+                  Our most popular and highly-rated safari experiences, handpicked by our curators
+                </p>
+              </div>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredPackages.map((pkg, i) => (
+                <motion.div
+                  key={pkg.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                >
+                  <Link
+                    to={`/package/${(pkg as any).slug || slugify(pkg.name) || pkg.id}`}
+                    className="group block bg-[#322e2b] border border-white/[0.04] hover:border-[#c9a961]/20 transition-all duration-500"
+                  >
+                    {/* Image */}
+                    <div className="relative h-64 overflow-hidden">
+                      <img
+                        src={pkg.image}
+                        alt={pkg.name}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#292524]/80 via-transparent to-transparent" />
+
+                      {/* Badges */}
+                      <div className="absolute top-4 left-4 flex flex-col gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#c9a961] text-[#292524] text-[9px] tracking-[0.2em] uppercase font-medium">
+                          <Sparkles className="w-3 h-3" /> Featured
+                        </span>
+                        {pkg.itinerary && pkg.itinerary.length > 0 && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm text-white/80 text-[9px] tracking-[0.15em] uppercase font-light">
+                            <Calendar className="w-3 h-3" /> Itinerary
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Save badge */}
+                      <div className="absolute top-4 right-4">
+                        <span className="px-3 py-1.5 bg-white/10 backdrop-blur-sm text-white/80 text-[9px] tracking-[0.15em] uppercase font-light">
+                          Save ${(pkg.originalPrice - pkg.price).toLocaleString()}
+                        </span>
+                      </div>
+
+                      {/* Bottom: location + rating */}
+                      <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
+                        <div className="flex items-center gap-1.5 text-white/70">
+                          <MapPin className="w-3 h-3" />
+                          <span className="text-xs font-light">{getDisplayLocation(pkg)}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 text-[#c9a961]" />
+                          <span className="text-white/70 text-xs font-light">{pkg.rating}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6">
+                      <h3 className="text-lg font-light text-white/90 mb-3 group-hover:text-[#c9a961] transition-colors duration-300">
+                        {pkg.name}
+                      </h3>
+
+                      {/* Meta */}
+                      <div className="flex items-center gap-4 text-white/30 text-xs font-light mb-4">
+                        <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {pkg.duration}</span>
+                        <span className="flex items-center gap-1.5"><Users className="w-3 h-3" /> {pkg.groupSize}</span>
+                      </div>
+
+                      {/* Highlights */}
+                      <div className="space-y-1.5 mb-5">
+                        {pkg.highlights.slice(0, 3).map((h, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-white/35 text-xs font-light">
+                            <Check className="w-3 h-3 text-[#c9a961]/60 flex-shrink-0" />
+                            <span>{h}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Divider */}
+                      <div className="h-[1px] bg-white/[0.06] mb-5" />
+
+                      {/* Price + CTA */}
+                      <div className="flex items-end justify-between">
+                        <div>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-xl font-light text-[#c9a961]">${pkg.price.toLocaleString()}</span>
+                            <span className="text-xs text-white/20 line-through">${pkg.originalPrice.toLocaleString()}</span>
+                          </div>
+                          <p className="text-[9px] text-white/20 tracking-wide uppercase mt-1">per person · {pkg.category}</p>
+                        </div>
+                        <span className="text-[#c9a961]/60 group-hover:text-[#c9a961] transition-colors duration-300">
+                          <ArrowUpRight className="w-5 h-5" />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ═══════════════════════════════════════════
+          ALL PACKAGES
+      ═══════════════════════════════════════════ */}
+      <section id="all-packages" className="py-24 bg-[#322e2b]">
+        <div className="max-w-6xl mx-auto px-6">
+          {/* Section header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12"
+          >
             <div>
-              <h3 className="text-xl font-bold mb-4 text-[#c9a961]">Safari Packages</h3>
-              <p className="text-[#ffffff]/80 mb-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-[1px] bg-[#c9a961]" />
+                <span className="text-[#c9a961] text-[10px] tracking-[0.5em] uppercase font-medium">Full Collection</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-extralight text-white/90 leading-tight">
+                All Safari <span className="italic text-[#c9a961]/80">Packages</span>
+              </h2>
+            </div>
+            <p className="text-white/25 text-sm font-light">
+              {sortedPackages.length} package{sortedPackages.length !== 1 ? 's' : ''} found
+            </p>
+          </motion.div>
+
+          {sortedPackages.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {sortedPackages.map((pkg, i) => (
+                <motion.div
+                  key={pkg.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.06 }}
+                >
+                  <Link
+                    to={`/package/${(pkg as any).slug || slugify(pkg.name) || pkg.id}`}
+                    className="group block bg-[#292524] border border-white/[0.04] hover:border-[#c9a961]/20 transition-all duration-500"
+                  >
+                    {/* Image */}
+                    <div className="relative h-64 overflow-hidden bg-[#1c1917]">
+                      {pkg.image ? (
+                        <img
+                          src={pkg.image}
+                          alt={pkg.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-white/10">
+                          <ImageOff className="w-10 h-10" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#292524]/80 via-transparent to-transparent" />
+
+                      {/* Badges */}
+                      <div className="absolute top-4 left-4 flex flex-col gap-2">
+                        {pkg.itinerary && pkg.itinerary.length > 0 && (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 backdrop-blur-sm text-white/80 text-[9px] tracking-[0.15em] uppercase font-light">
+                            <Calendar className="w-3 h-3" /> Itinerary
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="absolute top-4 right-4">
+                        <span className="px-3 py-1.5 bg-white/10 backdrop-blur-sm text-white/80 text-[9px] tracking-[0.15em] uppercase font-light">
+                          Save ${(pkg.originalPrice - pkg.price).toLocaleString()}
+                        </span>
+                      </div>
+
+                      {/* Bottom overlay: difficulty + location + rating */}
+                      <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className={`px-2.5 py-1 text-[8px] tracking-[0.15em] uppercase font-medium ${
+                            pkg.difficulty === 'easy' ? 'bg-emerald-500/20 text-emerald-300' :
+                            pkg.difficulty === 'moderate' ? 'bg-amber-500/20 text-amber-300' :
+                            'bg-[#c9a961]/20 text-[#c9a961]'
+                          }`}>
+                            {pkg.difficulty.charAt(0).toUpperCase() + pkg.difficulty.slice(1)}
+                          </span>
+                          <span className="flex items-center gap-1 text-white/60 text-xs font-light">
+                            <MapPin className="w-3 h-3" /> {getDisplayLocation(pkg)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 text-[#c9a961]" />
+                          <span className="text-white/70 text-xs font-light">{pkg.rating}</span>
+                          <span className="text-white/30 text-[10px]">({pkg.reviews})</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-6">
+                      <h3 className="text-lg font-light text-white/90 mb-3 group-hover:text-[#c9a961] transition-colors duration-300">
+                        {pkg.name}
+                      </h3>
+
+                      {/* Meta */}
+                      <div className="flex items-center gap-4 text-white/30 text-xs font-light mb-4">
+                        <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {pkg.duration}</span>
+                        <span className="flex items-center gap-1.5"><Users className="w-3 h-3" /> {pkg.groupSize}</span>
+                      </div>
+
+                      {/* Highlights */}
+                      <div className="space-y-1.5 mb-5">
+                        {pkg.highlights.slice(0, 3).map((h, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-white/35 text-xs font-light">
+                            <Check className="w-3 h-3 text-[#c9a961]/60 flex-shrink-0" />
+                            <span>{h}</span>
+                          </div>
+                        ))}
+                        {pkg.highlights.length > 3 && (
+                          <p className="text-white/15 text-[10px] font-light ml-5">+{pkg.highlights.length - 3} more</p>
+                        )}
+                      </div>
+
+                      {/* Divider */}
+                      <div className="h-[1px] bg-white/[0.06] mb-5" />
+
+                      {/* Price + CTA */}
+                      <div className="flex items-end justify-between">
+                        <div>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-xl font-light text-[#c9a961]">${pkg.price.toLocaleString()}</span>
+                            <span className="text-xs text-white/20 line-through">${pkg.originalPrice.toLocaleString()}</span>
+                          </div>
+                          <p className="text-[9px] text-white/20 tracking-wide uppercase mt-1">per person · {pkg.category}</p>
+                        </div>
+                        <span className="text-[#c9a961]/60 group-hover:text-[#c9a961] transition-colors duration-300">
+                          <ArrowUpRight className="w-5 h-5" />
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            /* ── Empty state ── */
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-20"
+            >
+              <div className="max-w-lg mx-auto">
+                <div className="flex items-center justify-center gap-2 mb-8">
+                  <div className="w-6 h-[1px] bg-[#c9a961]/40" />
+                  <span className="text-[#c9a961] text-[9px] tracking-[0.4em] uppercase font-medium flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3" /> Curating Experiences
+                  </span>
+                  <div className="w-6 h-[1px] bg-[#c9a961]/40" />
+                </div>
+
+                <div className="mx-auto mb-6 w-12 h-12 border border-white/[0.06] flex items-center justify-center">
+                  <Search className="w-5 h-5 text-white/15" />
+                </div>
+
+                <h3 className="text-2xl font-extralight text-white/70 mb-3">
+                  The next chapters are being written
+                </h3>
+                <p className="text-white/25 text-sm font-light leading-relaxed mb-8">
+                  Our curators are polishing a new collection of bush escapes and beach retreats.
+                  Expect early-morning game drives, private sundowners, and seaside serenity — coming soon.
+                </p>
+
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setCategoryFilter('all');
+                    setPriceFilter('all');
+                    setDurationFilter('all');
+                    setSortBy('featured');
+                  }}
+                  className="h-12 px-8 bg-[#c9a961] hover:bg-[#b8943d] text-[#292524] text-xs tracking-[0.2em] uppercase font-medium transition-all duration-300"
+                >
+                  Reset Filters
+                </button>
+                <p className="text-white/15 text-[10px] tracking-wide mt-4">New departures posted weekly</p>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          CTA SECTION
+      ═══════════════════════════════════════════ */}
+      <section className="py-24 bg-[#292524] relative overflow-hidden">
+        {/* Subtle texture */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+
+        <div className="relative z-10 max-w-3xl mx-auto text-center px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+          >
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <div className="w-10 h-[1px] bg-[#c9a961]" />
+              <span className="text-[#c9a961] text-[10px] tracking-[0.5em] uppercase font-medium">Your Journey Awaits</span>
+              <div className="w-10 h-[1px] bg-[#c9a961]" />
+            </div>
+
+            <h2 className="text-3xl md:text-5xl font-extralight text-white/90 leading-tight mb-5">
+              Ready for Your <span className="italic text-[#c9a961]/80">Safari Adventure</span>?
+            </h2>
+            <p className="text-white/30 text-base font-light leading-relaxed mb-10 max-w-xl mx-auto">
+              Book your dream safari package today and create memories that will last a lifetime
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                to="/collections"
+                className="h-13 px-10 bg-[#c9a961] hover:bg-[#b8943d] text-[#292524] text-xs tracking-[0.2em] uppercase font-medium transition-all duration-300 flex items-center justify-center gap-3"
+              >
+                <span>Explore Properties</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                to="/contact"
+                className="h-13 px-10 border border-white/[0.12] hover:border-white/[0.25] text-white/60 hover:text-white/80 text-xs tracking-[0.2em] uppercase font-medium transition-all duration-300 flex items-center justify-center gap-3"
+              >
+                <span>Speak to an Expert</span>
+                <ArrowUpRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════════════════════════
+          FOOTER
+      ═══════════════════════════════════════════ */}
+      <footer className="bg-[#1c1917] py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-6 h-[1px] bg-[#c9a961]" />
+                <span className="text-[#c9a961] text-[10px] tracking-[0.4em] uppercase font-medium">Safari Packages</span>
+              </div>
+              <p className="text-white/25 text-sm font-light leading-relaxed">
                 Creating unforgettable safari experiences across Africa's most spectacular destinations.
               </p>
             </div>
-            
+
+            {/* Package Types */}
             <div>
-              <h4 className="font-semibold mb-4 text-[#c9a961]">Package Types</h4>
-              <ul className="space-y-2 text-[#ffffff]/80">
+              <h4 className="text-white/40 text-[10px] tracking-[0.3em] uppercase font-medium mb-5">Package Types</h4>
+              <ul className="space-y-3">
                 {categories.map(category => (
                   <li key={category}>
-                    <button 
+                    <button
                       onClick={() => setCategoryFilter(category)}
-                      className="hover:text-[#c9a961] transition-colors"
+                      className="text-white/25 hover:text-[#c9a961] text-sm font-light transition-colors duration-300"
                     >
                       {category}
                     </button>
@@ -613,19 +730,21 @@ export default function Packages() {
                 ))}
               </ul>
             </div>
-            
+
+            {/* Quick Links */}
             <div>
-              <h4 className="font-semibold mb-4 text-[#c9a961]">Quick Links</h4>
-              <ul className="space-y-2 text-[#ffffff]/80">
-                <li><Link to="/about" className="hover:text-[#c9a961] transition-colors">About Us</Link></li>
-                <li><Link to="/collections" className="hover:text-[#c9a961] transition-colors">Properties</Link></li>
-                <li><Link to="/contact" className="hover:text-[#c9a961] transition-colors">Contact</Link></li>
+              <h4 className="text-white/40 text-[10px] tracking-[0.3em] uppercase font-medium mb-5">Quick Links</h4>
+              <ul className="space-y-3">
+                <li><Link to="/about" className="text-white/25 hover:text-[#c9a961] text-sm font-light transition-colors duration-300">About Us</Link></li>
+                <li><Link to="/collections" className="text-white/25 hover:text-[#c9a961] text-sm font-light transition-colors duration-300">Properties</Link></li>
+                <li><Link to="/contact" className="text-white/25 hover:text-[#c9a961] text-sm font-light transition-colors duration-300">Contact</Link></li>
               </ul>
             </div>
-            
+
+            {/* Contact */}
             <div>
-              <h4 className="font-semibold mb-4 text-[#c9a961]">Contact</h4>
-              <ul className="space-y-2 text-[#ffffff]/80">
+              <h4 className="text-white/40 text-[10px] tracking-[0.3em] uppercase font-medium mb-5">Contact</h4>
+              <ul className="space-y-3 text-white/25 text-sm font-light">
                 <li>+254 116072343</li>
                 <li>info@thebushcollection.africa</li>
                 <li>42 Claret Close, Silanga Road, Karen.</li>
@@ -633,9 +752,17 @@ export default function Packages() {
               </ul>
             </div>
           </div>
-          
-          <div className="border-t border-[#8b6f47] mt-8 pt-8 text-center text-[#ffffff]/80">
-            <p>&copy; 2024 the bush collection. All rights reserved.</p>
+
+          {/* Bottom bar */}
+          <div className="border-t border-white/[0.06] pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-white/15 text-xs font-light tracking-wide">
+              &copy; {new Date().getFullYear()} the bush collection. All rights reserved.
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-[1px] bg-[#c9a961]/30" />
+              <span className="text-[#c9a961]/30 text-[8px] tracking-[0.4em] uppercase font-light">Est. 1983</span>
+              <div className="w-6 h-[1px] bg-[#c9a961]/30" />
+            </div>
           </div>
         </div>
       </footer>

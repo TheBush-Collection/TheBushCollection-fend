@@ -25,6 +25,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import OAuthCallback from './pages/OAuthCallback';
 import CancellationRequest from './pages/CancellationRequest';
 import UserDashboard from './pages/UserDashboard';
 import { AdminLogin } from './pages/admin/AdminLogin';
@@ -173,6 +174,7 @@ function AppContent() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/auth/callback" element={<OAuthCallback />} />
         <Route path="/cancellation-request" element={<CancellationRequest />} />
         <Route path="/profile" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />

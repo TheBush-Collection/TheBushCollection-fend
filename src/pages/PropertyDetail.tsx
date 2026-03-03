@@ -9,24 +9,15 @@ import {
   Car,
   Coffee,
   Utensils,
-  Calendar,
-  Clock,
-  CheckCircle,
-  XCircle,
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
   Image as ImageIcon,
   Play,
-  Eye,
-  Plus,
-  Minus,
   X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { useBackendProperties } from '@/hooks/useBackendProperties';
 import slugify from '@/lib/slugify';
 
@@ -478,157 +469,251 @@ export default function PropertyDetail() {
 
   return (
     <div className="min-h-screen bg-[#1a1816] overflow-x-hidden">
-      {/* Hero Section with Overlay Text */}
+      {/* Hero Section */}
       <motion.section 
-        className="relative h-screen bg-cover bg-center overflow-hidden"
-        style={{
-          backgroundImage: `url('${propertybyId.images[selectedImageIndex] || propertybyId.images[0] || '/images/default-property.jpg'}')`,
-        }}
+        className="relative h-screen overflow-hidden"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-        key={selectedImageIndex}
+        transition={{ duration: 1.2 }}
       >
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70"></div>
-        
+        {/* Background Image with Ken Burns effect */}
+        <motion.div
+          className="absolute inset-0"
+          key={selectedImageIndex}
+          initial={{ scale: 1.08, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.4, ease: [0.25, 0.1, 0.25, 1] }}
+        >
+          <img
+            src={propertybyId.images[selectedImageIndex] || propertybyId.images[0] || '/images/default-property.jpg'}
+            alt={propertybyId.name}
+            className="w-full h-full object-cover"
+          />
+        </motion.div>
+
+        {/* Gradient overlays */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1a1816]/60 via-[#1a1816]/20 to-transparent z-[1]" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1816]/90 via-transparent to-[#1a1816]/30 z-[1]" />
+
+        {/* Back button */}
+        <Link
+          to="/properties"
+          className="absolute top-8 left-8 z-30 flex items-center gap-2 text-white/60 hover:text-white text-sm tracking-wide transition-colors duration-300"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="hidden sm:inline">Back to Collection</span>
+        </Link>
+
         {/* Navigation Arrows */}
         {propertybyId.images.length > 1 && (
           <>
             <button
               onClick={prevImage}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-30 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300 hover:scale-110"
+              className="absolute left-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 flex items-center justify-center border border-white/20 hover:border-white/50 hover:bg-white/10 text-white/60 hover:text-white rounded-none transition-all duration-300"
               aria-label="Previous image"
             >
-              <ChevronLeft className="w-8 h-8" />
+              <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               onClick={nextImage}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-30 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300 hover:scale-110"
+              className="absolute right-6 top-1/2 -translate-y-1/2 z-30 w-12 h-12 flex items-center justify-center border border-white/20 hover:border-white/50 hover:bg-white/10 text-white/60 hover:text-white rounded-none transition-all duration-300"
               aria-label="Next image"
             >
-              <ChevronRight className="w-8 h-8" />
+              <ChevronRight className="w-5 h-5" />
             </button>
           </>
         )}
-        
-        {/* Logo/Brand */}
-        <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20">
-          <div className="text-center">
-            <div className="text-[#c9a961] text-sm tracking-[0.3em] mb-2">THE BUSH</div>
-            <div className="text-white text-2xl tracking-[0.2em] font-light border-t border-b border-[#c9a961] py-2">
-              COLLECTION
-            </div>
+
+        {/* Hero content — bottom left editorial */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 pb-20 px-8 md:px-16">
+          <div className="max-w-7xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              <p className="text-[#c9a961] text-xs tracking-[0.4em] uppercase font-light mb-4">
+                {propertybyId.type?.toUpperCase() || 'LODGE'} · {propertybyId.location}
+              </p>
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-extralight text-white leading-[0.95] mb-6">
+                {propertybyId.name}
+              </h1>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-3.5 h-3.5 fill-[#c9a961] text-[#c9a961]" />
+                  ))}
+                </div>
+                <span className="text-white/40 text-xs tracking-[0.2em] uppercase">
+                  {propertybyId.numReviews || 0} Reviews
+                </span>
+              </div>
+            </motion.div>
           </div>
         </div>
 
-        {/* Property Badge/Name */}
-        <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-          <motion.div 
-            className="bg-black/60 backdrop-blur-sm border-2 border-[#c9a961] px-8 py-6 text-center"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-          >
-            <div className="text-[#c9a961] text-xl tracking-widest">{propertybyId.type?.toUpperCase() || 'LODGE'}</div>
-            <div className="text-white text-3xl md:text-4xl font-light mt-2">{propertybyId.name}</div>
-            <div className="text-[#c9a961] text-sm tracking-wider mt-2">{propertybyId.location}</div>
-          </motion.div>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2 z-30">
-          {[...Array(Math.min(5, propertybyId.images.length))].map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setSelectedImageIndex(i)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 hover:scale-125 ${
-                i === selectedImageIndex ? 'bg-[#c9a961] w-8' : 'bg-white/40 hover:bg-white/60'
-              }`}
-              aria-label={`Go to image ${i + 1}`}
-            />
-          ))}
-        </div>
+        {/* Slide indicators — bottom right */}
+        {propertybyId.images.length > 1 && (
+          <div className="absolute bottom-8 right-8 md:right-16 z-30 flex items-center gap-3">
+            <span className="text-white/30 text-xs tracking-wider">
+              {String(selectedImageIndex + 1).padStart(2, '0')}
+            </span>
+            <div className="flex gap-1.5">
+              {[...Array(Math.min(6, propertybyId.images.length))].map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedImageIndex(i)}
+                  className={`h-0.5 rounded-full transition-all duration-500 ${
+                    i === selectedImageIndex ? 'bg-[#c9a961] w-8' : 'bg-white/25 w-4 hover:bg-white/40'
+                  }`}
+                  aria-label={`Go to image ${i + 1}`}
+                />
+              ))}
+            </div>
+            <span className="text-white/30 text-xs tracking-wider">
+              {String(Math.min(6, propertybyId.images.length)).padStart(2, '0')}
+            </span>
+          </div>
+        )}
       </motion.section>
 
       {/* Property Info Section */}
-      <section className="bg-white py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="bg-[#f5f0ea] py-24 md:py-32">
+        <div className="max-w-7xl mx-auto px-8 md:px-16">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8 }}
+            className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-16 items-start"
           >
-            <h2 className="text-3xl md:text-4xl font-light text-[#1a1816] mb-4">
-              {propertybyId.name} - {propertybyId.location}
-            </h2>
-            <div className="text-xl text-[#c9a961] mb-2">00° 11' 14" E89° 27' 81"</div>
-            <div className="flex justify-center items-center gap-1 mb-6">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-5 h-5 fill-[#c9a961] text-[#c9a961]" />
-              ))}
+            {/* Left — title & meta */}
+            <div>
+              <p className="text-[#c9a961] text-xs tracking-[0.4em] uppercase font-light mb-6">About the Property</p>
+              <h2 className="text-4xl md:text-5xl font-extralight text-[#1a1816] leading-[1.1] mb-6">
+                {propertybyId.name}
+              </h2>
+              <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-4 h-4 text-[#c9a961]" />
+                  <span className="text-[#1a1816]/60 text-sm tracking-wide">{propertybyId.location}</span>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {propertybyId.amenities?.slice(0, 4).map((amenity, i) => (
+                  <span key={i} className="px-4 py-2 border border-[#1a1816]/10 text-[#1a1816]/60 text-xs tracking-[0.1em] uppercase">
+                    {amenity}
+                  </span>
+                ))}
+              </div>
+              <Link
+                to={`/book?property=${propertybyId.id}`}
+                className="inline-flex items-center gap-3 mt-10 text-[#c9a961] text-sm tracking-[0.15em] uppercase font-light group"
+              >
+                Reserve Your Stay
+                <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
+              </Link>
             </div>
-            <p className="text-lg md:text-xl text-gray-700 leading-relaxed max-w-3xl mx-auto font-serif">
-              {propertybyId.description || 'Experience unparalleled luxury in the heart of the African wilderness. Our exclusive safari lodges combines authentic wildlife encounters with world-class hospitality, offering you an unforgettable journey through pristine landscapes. Each moment is carefully crafted to immerse you in the natural beauty and rich biodiversity of this remarkable ecosystem, while providing the comfort and elegance you deserve.'}
-            </p>
+
+            {/* Right — description */}
+            <div>
+              <div className="w-12 h-px bg-[#c9a961] mb-8" />
+              <p className="text-lg md:text-xl text-[#1a1816]/70 leading-[1.8] font-light">
+                {propertybyId.description || 'Experience unparalleled luxury in the heart of the African wilderness. Our exclusive safari lodge combines authentic wildlife encounters with world-class hospitality, offering you an unforgettable journey through pristine landscapes. Each moment is carefully crafted to immerse you in the natural beauty and rich biodiversity of this remarkable ecosystem, while providing the comfort and elegance you deserve.'}
+              </p>
+              {propertybyId.basePricePerNight ? (
+                <div className="mt-8 pt-8 border-t border-[#1a1816]/10">
+                  <span className="text-[#1a1816]/40 text-xs tracking-[0.2em] uppercase">From</span>
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className="text-3xl font-extralight text-[#1a1816]">${propertybyId.basePricePerNight}</span>
+                    <span className="text-[#1a1816]/40 text-sm">per night</span>
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </motion.div>
         </div>
       </section>
 
       {/* Discover Our Camp Section */}
-      <section className="bg-white py-20">
+      <section className="bg-[#f5f0ea] py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-4xl md:text-5xl font-light text-[#1a1816] mb-4">
-              Discover Our Camp
-            </h2>
-            <p className="text-gray-600">Click to view →</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { title: 'Our Gallery', icon: ImageIcon, action: 'gallery', description: 'Explore stunning photography capturing the essence of our luxury safari lodge and the breathtaking wildlife encounters that await you.' },
-              { title: 'Our Rooms and Suites', icon: Users, action: 'rooms', description: 'Discover beautifully appointed accommodations offering the perfect balance of luxury comfort and authentic safari atmosphere.' },
-            ].map((item, index) => (
-              <motion.div
-                key={index}
-                className="group relative aspect-[3/4] bg-white border-2 border-[#c9a961] overflow-hidden cursor-pointer"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ scale: 1.05 }}
-                onClick={() => {
-                  if (item.action === 'rooms') {
-                    document.getElementById('rooms-section')?.scrollIntoView({ behavior: 'smooth' });
-                  } else if (item.action === 'gallery') {
-                    window.location.href = 'https://thebushcollection.pixieset.com/';
-                  }
-                }}
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-12 items-start">
+            {/* Left — editorial headline */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <p className="text-[#c9a961] text-xs tracking-[0.4em] uppercase font-light mb-4">Experience</p>
+              <h2 className="text-4xl md:text-6xl font-extralight text-[#1a1816] leading-[1.1]">
+                Discover<br />
+                <span className="italic font-light">Our Camp</span>
+              </h2>
+              <p className="text-[#1a1816]/50 text-base font-light mt-6 max-w-sm leading-relaxed">
+                We offer more than a stay — we craft experiences through nature, comfort, and thoughtful presence.
+              </p>
+              <button
+                onClick={() => document.getElementById('rooms-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="inline-flex items-center gap-3 mt-8 text-[#c9a961] text-sm tracking-[0.15em] uppercase font-light group"
               >
-                <img 
-                  src={propertybyId.images[index % propertybyId.images.length]} 
-                  alt={item.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end">
-                  <div className="p-4 w-full">
-                    <item.icon className="w-6 h-6 text-[#c9a961] mb-2" />
-                    <h3 className="text-white text-lg font-light mb-1">{item.title}</h3>
-                    <p className="text-white/80 text-xs leading-relaxed line-clamp-2">
-                      {item.description}
-                    </p>
+                Explore
+                <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
+              </button>
+            </motion.div>
+
+            {/* Right — magazine cards grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                { title: 'Our Gallery', action: 'gallery', description: 'Explore stunning photography capturing the essence of our luxury safari lodge and breathtaking wildlife encounters.' },
+                { title: 'Our Rooms & Suites', action: 'rooms', description: 'Discover beautifully appointed accommodations offering the perfect balance of luxury comfort and safari atmosphere.' },
+              ].map((item, index) => (
+                <motion.div
+                  key={index}
+                  className="group bg-white overflow-hidden cursor-pointer"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: index * 0.12 }}
+                  onClick={() => {
+                    if (item.action === 'rooms') {
+                      document.getElementById('rooms-section')?.scrollIntoView({ behavior: 'smooth' });
+                    } else if (item.action === 'gallery') {
+                      window.location.href = 'https://thebushcollection.pixieset.com/';
+                    }
+                  }}
+                >
+                  {/* Number */}
+                  <div className="px-6 pt-5 pb-3">
+                    <span className="text-[#1a1816]/30 text-xs tracking-[0.2em] font-light">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+
+                  {/* Image with hover overlay */}
+                  <div className="relative mx-6 aspect-[4/3] overflow-hidden bg-[#f5f0ea]">
+                    <img
+                      src={propertybyId.images[index % propertybyId.images.length]}
+                      alt={item.title}
+                      className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-[#1a1816]/0 group-hover:bg-[#1a1816]/60 transition-all duration-500 flex items-end p-5 opacity-0 group-hover:opacity-100">
+                      <p className="text-white/90 text-sm font-light leading-relaxed translate-y-3 group-hover:translate-y-0 transition-transform duration-500">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Title */}
+                  <div className="px-6 pt-5 pb-6">
+                    <h3 className="text-[#1a1816] text-base tracking-[0.08em] uppercase font-medium">
+                      {item.title}
+                    </h3>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -636,116 +721,104 @@ export default function PropertyDetail() {
       {/* Rooms Section */}
       <section id="rooms-section" className="bg-[#1a1816] py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-4xl md:text-5xl font-light text-white mb-4">
-              Our Rooms and Suites
-            </h2>
-            <p className="text-white/60">Discover luxury accommodation in the heart of the wild</p>
-          </motion.div>
+          {/* Header — split layout like the inspo */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7 }}
+            >
+              <p className="text-[#c9a961] text-xs tracking-[0.4em] uppercase font-light mb-4">Accommodation</p>
+              <h2 className="text-4xl md:text-6xl font-extralight text-white leading-[1.1]">
+                Our Rooms<br />
+                <span className="italic font-light">&amp; Suites</span>
+              </h2>
+              <p className="text-white/50 text-base font-light mt-6 max-w-md leading-relaxed">
+                Discover luxury accommodation in the heart of the wild — each room crafted for comfort, intimacy, and an authentic connection to nature.
+              </p>
+              <Link
+                to={`/book?property=${propertybyId.id}`}
+                className="inline-flex items-center gap-3 mt-8 text-[#c9a961] text-sm tracking-[0.15em] uppercase font-light group"
+              >
+                Book Your Stay
+                <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
+              </Link>
+            </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Right side — first two room cards in top row */}
+            <div /> {/* Spacer for layout alignment */}
+          </div>
+
+          {/* Room Cards Grid — 2-column layout like the inspo image */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {groupedRooms.slice(0, 6).map((roomGroup, index) => (
               <motion.div
                 key={roomGroup.sampleRoomId}
-                className="bg-[#1a1816] border border-[#c9a961]/20 rounded-lg overflow-hidden hover:border-[#c9a961] transition-all duration-300 shadow-lg"
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
+                transition={{ duration: 0.6, delay: index * 0.12 }}
               >
-                {roomGroup.images && roomGroup.images.length > 0 ? (
-                  <div className="relative w-full h-64 bg-[#000000] group/image">
-                    <RoomImageCarousel 
-                      room={{
-                        id: roomGroup.sampleRoomId,
-                        name: roomGroup.name,
-                        description: roomGroup.description,
-                        type: roomGroup.type,
-                        maxGuests: roomGroup.maxGuests,
-                        price: roomGroup.price,
-                        available: roomGroup.availableCount > 0,
-                        amenities: roomGroup.amenities,
-                        images: roomGroup.images
-                      }} 
-                      size="large" 
-                    />
-                    {/* View Details Button */}
-                    <div className="absolute top-4 right-4 z-10">
-                      <Link
-                        to={`/property/${(property as any).slug || slugify(propertybyId.name)}/room/${roomGroup.sampleRoomSlug || slugify(roomGroup.name)}`}
-                        className="flex items-center gap-2 bg-[#c9a961] hover:bg-[#8b6f47] text-white px-5 py-2.5 rounded-md text-sm font-medium transition-all duration-300 shadow-lg"
-                      >
-                        <ImageIcon className="w-4 h-4" />
-                        <span>View Details</span>
-                      </Link>
-                    </div>
+                <Link
+                  to={`/property/${(property as any).slug || slugify(propertybyId.name)}/room/${roomGroup.sampleRoomSlug || slugify(roomGroup.name)}`}
+                  className="group block bg-white overflow-hidden"
+                >
+                  {/* Number badge */}
+                  <div className="px-6 pt-5 pb-3">
+                    <span className="text-[#1a1816]/30 text-xs tracking-[0.2em] font-light">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
                   </div>
-                ) : (
-                  <div className="w-full h-64 bg-[#000000] flex items-center justify-center relative">
-                    <ImageIcon className="w-12 h-12 text-[#c9a961]/30" />
-                    {/* View Details Button for no image */}
-                    <div className="absolute top-4 right-4 z-10">
-                      <Link
-                        to={`/property/${(property as any).slug || slugify(property.name)}/room/${roomGroup.sampleRoomSlug || slugify(roomGroup.name)}`}
-                        className="flex items-center gap-2 bg-[#c9a961] hover:bg-[#8b6f47] text-white px-5 py-2.5 rounded-md text-sm font-medium transition-all duration-300 shadow-lg"
-                      >
-                        <ImageIcon className="w-4 h-4" />
-                        <span>View Details</span>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-                <div className="p-6 bg-[#2a2623]">
-                  <div className="mb-3">
-                    <h3 className="text-2xl font-bold text-white mb-2">{roomGroup.name}</h3>
-                    <p className="text-[#c9a961] text-base font-medium">{roomGroup.type}</p>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 text-white/80 text-sm mb-4">
-                    <Users className="w-5 h-5 text-[#c9a961]" />
-                    <span>Up to {roomGroup.maxGuests} guests</span>
-                  </div>
-                  
-                  <p className="text-white/70 text-sm mb-6 leading-relaxed">
-                    {roomGroup.description || 'Luxurious accommodation with stunning views and modern amenities.'}
-                  </p>
-                  
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold text-[#c9a961]">${roomGroup.price}</span>
-                        <span className="text-white/50 text-sm">per night</span>
+
+                  {/* Image container with hover overlay */}
+                  <div className="relative mx-6 aspect-[4/3] overflow-hidden bg-[#f5f0ea]">
+                    {roomGroup.images && roomGroup.images.length > 0 ? (
+                      <img
+                        src={roomGroup.images[0]}
+                        alt={roomGroup.name}
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ImageIcon className="w-12 h-12 text-[#c9a961]/30" />
+                      </div>
+                    )}
+
+                    {/* Hover overlay — price & description revealed */}
+                    <div className="absolute inset-0 bg-[#1a1816]/0 group-hover:bg-[#1a1816]/70 transition-all duration-500 flex flex-col justify-end p-6 opacity-0 group-hover:opacity-100">
+                      <div className="translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                        <div className="flex items-baseline gap-1 mb-2">
+                          <span className="text-2xl font-light text-[#c9a961]">${roomGroup.price}</span>
+                          <span className="text-white/50 text-xs tracking-wide">/ night</span>
+                        </div>
+                        <p className="text-white/80 text-sm font-light leading-relaxed line-clamp-2">
+                          {roomGroup.description || 'Luxurious accommodation with stunning views and modern amenities.'}
+                        </p>
+                        <div className="flex items-center gap-4 mt-3">
+                          <span className="text-white/50 text-xs flex items-center gap-1.5">
+                            <Users className="w-3.5 h-3.5" />
+                            Up to {roomGroup.maxGuests} guests
+                          </span>
+                          {roomGroup.availableCount > 0 ? (
+                            <span className="text-green-400/80 text-xs font-medium">
+                              {roomGroup.availableCount} available
+                            </span>
+                          ) : (
+                            <span className="text-red-400/80 text-xs font-medium">Fully Booked</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      {roomGroup.availableCount > 0 ? (
-                        <span className="text-green-400 text-sm font-semibold">
-                          {roomGroup.availableCount} available
-                        </span>
-                      ) : (
-                        <span className="text-red-400 text-sm font-semibold">Fully Booked</span>
-                      )}
-                    </div>
                   </div>
-                  
-                  <Link 
-                    to={`/book?property=${propertybyId.id}&room=${roomGroup.sampleRoomId}`}
-                    className="block"
-                  >
-                    <Button 
-                      className="w-full bg-[#c9a961] hover:bg-[#8b6f47] text-white font-semibold py-6 text-base rounded-md transition-all duration-300"
-                      disabled={roomGroup.availableCount === 0}
-                    >
-                      {roomGroup.availableCount > 0 ? 'Book Now' : 'Fully Booked'}
-                    </Button>
-                  </Link>
-                </div>
+
+                  {/* Room name below image */}
+                  <div className="px-6 pt-5 pb-6">
+                    <h3 className="text-[#1a1816] text-base tracking-[0.08em] uppercase font-medium">
+                      {roomGroup.name}
+                    </h3>
+                  </div>
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -756,9 +829,9 @@ export default function PropertyDetail() {
             </div>
           )}
 
-          <div className="text-center mt-12">
+          <div className="text-center mt-16">
             <Link to={`/book?property=${propertybyId.id}`}>
-              <Button className="bg-[#c9a961] hover:bg-[#b8935a] text-white px-8 py-6 text-lg">
+              <Button className="bg-[#c9a961] hover:bg-[#b8935a] text-white px-10 py-6 text-sm tracking-[0.15em] uppercase font-light rounded-none transition-all duration-300">
                 Book Your Stay
               </Button>
             </Link>
@@ -767,26 +840,44 @@ export default function PropertyDetail() {
       </section>
 
       {/* Footer Info */}
-      <section className="bg-[#1a1816] text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+      <section className="bg-[#141210] border-t border-white/[0.06]">
+        <div className="max-w-7xl mx-auto px-8 md:px-16 py-20">
+          <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-12">
+            {/* Brand */}
             <div>
-              <h3 className="text-[#c9a961] font-semibold mb-2">Location</h3>
-              <p className="text-white/70">{propertybyId.location}</p>
+              <p className="text-[#c9a961] text-xs tracking-[0.4em] uppercase font-light mb-4">The Bush Collection</p>
+              <p className="text-white/40 text-sm font-light leading-relaxed max-w-xs">
+                Authentic luxury safari experiences across Kenya and Tanzania's most pristine landscapes.
+              </p>
             </div>
+            {/* Location */}
             <div>
-              <h3 className="text-[#c9a961] font-semibold mb-2">Contact</h3>
-              <p className="text-white/70">+254 116 072343</p>
-              <p className="text-white/70">info@thebushcollection.africa</p>
+              <p className="text-white/30 text-xs tracking-[0.2em] uppercase mb-4">Location</p>
+              <p className="text-white/60 text-sm font-light leading-relaxed">{propertybyId.location}</p>
             </div>
+            {/* Contact */}
             <div>
-              <h3 className="text-[#c9a961] font-semibold mb-2">Book Now</h3>
-              <Link to={`/book?property=${propertybyId.id}`}>
-                <Button className="bg-[#c9a961] hover:bg-[#b8935a] text-white">
-                  Reserve Your Stay
-                </Button>
+              <p className="text-white/30 text-xs tracking-[0.2em] uppercase mb-4">Contact</p>
+              <p className="text-white/60 text-sm font-light mb-1">+254 116 072343</p>
+              <p className="text-white/60 text-sm font-light">info@thebushcollection.africa</p>
+            </div>
+            {/* CTA */}
+            <div>
+              <p className="text-white/30 text-xs tracking-[0.2em] uppercase mb-4">Reserve</p>
+              <Link
+                to={`/book?property=${propertybyId.id}`}
+                className="inline-flex items-center gap-2 text-[#c9a961] text-sm tracking-[0.1em] uppercase font-light hover:text-[#c9a961]/80 transition-colors duration-300 group"
+              >
+                Book Your Stay
+                <span className="transition-transform duration-300 group-hover:translate-x-1">→</span>
               </Link>
             </div>
+          </div>
+        </div>
+        <div className="border-t border-white/[0.04] py-6 px-8 md:px-16">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-white/20 text-xs tracking-wider">© 2026 The Bush Collection. All rights reserved.</p>
+            <p className="text-white/20 text-xs tracking-wider">{propertybyId.name}</p>
           </div>
         </div>
       </section>
@@ -794,57 +885,55 @@ export default function PropertyDetail() {
       {/* Room Details Modal */}
       {roomDetailsOpen && selectedRoom && (
         <div 
-          className="fixed inset-0 z-50 bg-black/95 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-[#1a1816]/95 backdrop-blur-sm overflow-y-auto"
           onClick={closeRoomDetails}
         >
-          <div className="min-h-screen p-4 md:p-8">
-            <div 
-              className="max-w-6xl mx-auto bg-[#ebe9d8] rounded-lg overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Close button */}
-              <button
-                onClick={closeRoomDetails}
-                className="absolute top-8 right-8 z-50 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300"
-                aria-label="Close"
-              >
-                <X className="w-6 h-6" />
-              </button>
+          {/* Close button — top right */}
+          <button
+            onClick={closeRoomDetails}
+            className="fixed top-6 right-6 z-[60] w-12 h-12 flex items-center justify-center border border-white/20 hover:border-white/50 hover:bg-white/10 text-white/60 hover:text-white transition-all duration-300"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
 
-              {/* Hero Image Section with Carousel */}
-              <div className="relative w-full min-h-[60vh] max-h-[80vh] bg-[#1a1816] flex items-center justify-center">
-                {selectedRoom.images && selectedRoom.images.length > 0 && (
+          <div className="min-h-screen py-12 px-4 md:px-8" onClick={(e) => e.stopPropagation()}>
+            <div className="max-w-6xl mx-auto">
+
+              {/* Hero Image */}
+              <div className="relative w-full aspect-[16/9] md:aspect-[21/9] bg-[#1a1816] overflow-hidden">
+                {selectedRoom.images && selectedRoom.images.length > 0 ? (
                   <>
                     <img
                       src={selectedRoom.images[roomDetailImageIndex]}
                       alt={selectedRoom.name}
                       className="w-full h-full object-cover"
                     />
-                    
+
                     {/* Navigation arrows */}
                     {selectedRoom.images.length > 1 && (
                       <>
                         <button
                           onClick={prevRoomDetailImage}
-                          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all duration-300"
+                          className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center border border-white/20 hover:border-white/50 hover:bg-white/10 text-white/60 hover:text-white transition-all duration-300"
                         >
-                          <ChevronLeft className="w-6 h-6" />
+                          <ChevronLeft className="w-5 h-5" />
                         </button>
                         <button
                           onClick={nextRoomDetailImage}
-                          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-all duration-300"
+                          className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center border border-white/20 hover:border-white/50 hover:bg-white/10 text-white/60 hover:text-white transition-all duration-300"
                         >
-                          <ChevronRight className="w-6 h-6" />
+                          <ChevronRight className="w-5 h-5" />
                         </button>
 
-                        {/* Image indicators */}
-                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                        {/* Indicators */}
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
                           {selectedRoom.images.map((_, idx) => (
                             <button
                               key={idx}
                               onClick={() => setRoomDetailImageIndex(idx)}
-                              className={`w-2 h-2 rounded-full transition-all ${
-                                idx === roomDetailImageIndex ? 'bg-[#c9a961] w-6' : 'bg-white/40'
+                              className={`h-0.5 rounded-full transition-all duration-500 ${
+                                idx === roomDetailImageIndex ? 'bg-[#c9a961] w-8' : 'bg-white/25 w-4 hover:bg-white/40'
                               }`}
                             />
                           ))}
@@ -852,139 +941,101 @@ export default function PropertyDetail() {
                       </>
                     )}
 
-                    {/* Property branding overlay */}
-                    <div className="absolute top-4 left-4">
-                      <div className="bg-[#c9a961] text-white px-4 py-2 rounded-lg font-semibold">
-                        {propertybyId.name}
-                      </div>
-                    </div>
+                    {/* Gradient overlay at bottom for text readability */}
+                    <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-[#1a1816] to-transparent" />
                   </>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <ImageIcon className="w-16 h-16 text-white/10" />
+                  </div>
                 )}
               </div>
 
-              {/* Room Details Section */}
-              <div className="p-8 md:p-12">
-                {/* Room Title and Type */}
-                <div className="text-center mb-8">
-                  <h2 className="text-4xl font-bold text-[#1a1816] mb-2">{selectedRoom.name}</h2>
-                  <p className="text-[#c9a961] text-lg italic">{selectedRoom.type}</p>
-                </div>
-
-                {/* Description */}
-                <div className="mb-8 text-center max-w-4xl mx-auto">
-                  <p className="text-[#1a1816]/80 leading-relaxed">
-                    {selectedRoom.description || 'A perfect room for a perfect stay, blending luxury and comfort'}
-                  </p>
-                </div>
-
-                {/* Image Placeholders (for additional room views) */}
-                <div className="grid grid-cols-3 gap-4 mb-8">
-                  {selectedRoom.images && selectedRoom.images.slice(0, 3).map((img, idx) => (
-                    <div 
-                      key={idx}
-                      className="relative aspect-[4/3] bg-[#1a1816]/10 border-2 border-[#c9a961]/30 rounded-lg overflow-hidden cursor-pointer hover:border-[#c9a961] transition-all"
-                      onClick={() => setRoomDetailImageIndex(idx)}
-                    >
-                      <img src={img} alt={`${selectedRoom.name} view ${idx + 1}`} className="w-full h-full object-cover" />
+              {/* Content area */}
+              <div className="bg-[#f5f0ea]">
+                <div className="px-8 md:px-16 py-12 md:py-16">
+                  {/* Header row — title + price */}
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8 mb-12">
+                    <div>
+                      <p className="text-[#c9a961] text-xs tracking-[0.4em] uppercase font-light mb-3">
+                        {selectedRoom.type} · {propertybyId.name}
+                      </p>
+                      <h2 className="text-4xl md:text-5xl font-extralight text-[#1a1816] leading-[1.1]">
+                        {selectedRoom.name}
+                      </h2>
                     </div>
-                  ))}
-                </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-extralight text-[#1a1816]">${selectedRoom.price}</span>
+                        <span className="text-[#1a1816]/40 text-sm">/ night</span>
+                      </div>
+                      <div className="flex items-center justify-end gap-3 mt-2 text-[#1a1816]/50 text-xs">
+                        <span className="flex items-center gap-1">
+                          <Users className="w-3.5 h-3.5" />
+                          Up to {selectedRoom.maxGuests} guests
+                        </span>
+                      </div>
+                    </div>
+                  </div>
 
-                {/* Room Features/Amenities */}
-                <div className="border-t-2 border-[#c9a961]/30 pt-8">
-                  <h3 className="text-2xl font-bold text-[#c9a961] text-center mb-6">
-                    Your {selectedRoom.type} Inclusions:
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4 max-w-4xl mx-auto">
-                    {selectedRoom.amenities && selectedRoom.amenities.length > 0 ? (
-                      selectedRoom.amenities.map((amenity, idx) => (
-                        <div key={idx} className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
+                  {/* Description */}
+                  <div className="mb-12">
+                    <div className="w-12 h-px bg-[#c9a961] mb-6" />
+                    <p className="text-[#1a1816]/60 text-lg font-light leading-[1.8] max-w-3xl">
+                      {selectedRoom.description || 'A thoughtfully designed space blending luxury and comfort, offering an authentic connection to the surrounding wilderness.'}
+                    </p>
+                  </div>
+
+                  {/* Thumbnail gallery */}
+                  {selectedRoom.images && selectedRoom.images.length > 1 && (
+                    <div className="flex gap-3 mb-12 overflow-x-auto pb-2">
+                      {selectedRoom.images.slice(0, 5).map((img, idx) => (
+                        <button
+                          key={idx}
+                          className={`relative flex-shrink-0 w-24 h-20 overflow-hidden transition-all duration-300 ${
+                            idx === roomDetailImageIndex
+                              ? 'ring-2 ring-[#c9a961] opacity-100'
+                              : 'opacity-50 hover:opacity-80'
+                          }`}
+                          onClick={() => setRoomDetailImageIndex(idx)}
+                        >
+                          <img src={img} alt={`${selectedRoom.name} view ${idx + 1}`} className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Amenities / Inclusions */}
+                  <div className="border-t border-[#1a1816]/10 pt-10 mb-12">
+                    <p className="text-[#c9a961] text-xs tracking-[0.3em] uppercase font-light mb-8">
+                      Inclusions
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-3 max-w-4xl">
+                      {(selectedRoom.amenities && selectedRoom.amenities.length > 0
+                        ? selectedRoom.amenities
+                        : ['Large Private Shower', 'Balcony & Lounge Area', 'En-suite Bathroom', 'Writing Desk', 'Complimentary Slippers', 'Bathrobes', 'Coffee Experience', 'Eco Bed Warmers', 'Laundry Services']
+                      ).map((amenity, idx) => (
+                        <div key={idx} className="flex items-center gap-3 text-[#1a1816]/60 text-sm font-light py-1">
+                          <div className="w-1 h-1 bg-[#c9a961] rounded-full flex-shrink-0" />
                           <span>{amenity}</span>
                         </div>
-                      ))
-                    ) : (
-                      <>
-                        <div className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
-                          <span>Umbrella</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
-                          <span>Large Private Shower</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
-                          <span>Challenging Paths & Obstacles</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
-                          <span>Balcony & Lounge Area</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
-                          <span>Large-on-suite Bathroom</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
-                          <span>Additional Heating*</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
-                          <span>Writing Desk & Stationery</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
-                          <span>Complementary Slippers</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
-                          <span>Eco Bed Warmers</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
-                          <span>Laundry Services*</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
-                          <span>Coffee Experience</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
-                          <span>Bathrobes</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[#1a1816]/80">
-                          <div className="w-2 h-2 bg-[#c9a961] rounded-full"></div>
-                          <span>Complementary Slippers</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Booking Button */}
-                <div className="mt-12 flex justify-center">
-                  <Link to={`/book?property=${propertybyId.id}&room=${selectedRoom.id}`}>
-                    <Button 
-                      className="bg-[#c9a961] hover:bg-[#b8935a] text-white px-12 py-6 text-xl rounded-full font-semibold shadow-lg"
-                    >
-                      Book Now
-                    </Button>
-                  </Link>
-                </div>
-
-                {/* Price Info */}
-                <div className="mt-8 text-center">
-                  <div className="text-3xl font-bold text-[#c9a961] mb-2">
-                    ${selectedRoom.price}
-                    <span className="text-lg text-[#1a1816]/60 ml-2">per night</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-4 text-[#1a1816]/60 text-sm">
-                    <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      <span>Up to {selectedRoom.maxGuests} guests</span>
+                      ))}
                     </div>
+                  </div>
+
+                  {/* CTA */}
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <Link to={`/book?property=${propertybyId.id}&room=${selectedRoom.id}`}>
+                      <Button className="bg-[#c9a961] hover:bg-[#b8935a] text-white px-12 py-6 text-sm tracking-[0.15em] uppercase font-light rounded-none transition-all duration-300">
+                        Book This Room
+                      </Button>
+                    </Link>
+                    <button
+                      onClick={closeRoomDetails}
+                      className="text-[#1a1816]/40 text-sm tracking-[0.1em] uppercase font-light hover:text-[#1a1816]/60 transition-colors duration-300"
+                    >
+                      Continue Exploring
+                    </button>
                   </div>
                 </div>
               </div>
